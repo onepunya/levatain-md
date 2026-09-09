@@ -1,0 +1,25 @@
+{
+  "name": "levatain-md",
+  "version": "2.0.0",
+  "description": "AI-First WhatsApp Bot powered by Baileys",
+  "type": "module",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0",
+    "chalk": "^5.3.0",
+    "dotenv": "^16.4.5",
+    "pino": "^9.3.2",
+    "wa-sticker-formatter": "^4.4.4",
+    "fluent-ffmpeg": "^2.1.3",
+    "yt-search": "^2.13.1"
+  }
+}
