@@ -3,7 +3,7 @@ import { getArgs } from '../../src/lib/utils.js';
 export const meta = {
     cmd:     ['setgname', 'setgdesc', 'linkgroup', 'revoklink'],
     tag:     'group',
-    aliasOnly: true,
+    aliasOnly: false,
     desc:    'Ubah nama/deskripsi group, ambil atau revoke link invite',
     isGroup: true,
     isAdmin: true,

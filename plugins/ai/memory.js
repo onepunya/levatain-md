@@ -3,7 +3,7 @@ import { getHistory, getUserMemory, clearHistory } from '../../src/ai/memory.js'
 export const meta = {
     cmd:  ['memory', 'aiclear'],
     tag:  'ai',
-    aliasOnly: true,
+    aliasOnly: false,
     desc: 'Lihat atau hapus memory AI',
 };
 

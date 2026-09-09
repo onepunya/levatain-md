@@ -1,7 +1,7 @@
 export const meta = {
     cmd:      ['tagall', 'hidetag'],
     tag:      'group',
-    aliasOnly: true,
+    aliasOnly: false,
     desc:     'Tag semua anggota group',
     isGroup:  true,
     isAdmin:  true,

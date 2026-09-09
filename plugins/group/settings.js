@@ -3,7 +3,7 @@ import { saveDb } from '../../src/core/db.js';
 export const meta = {
     cmd:     ['setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'setautodl'],
     tag:     'group',
-    aliasOnly: true,
+    aliasOnly: false,
     desc:    'Pengaturan fitur group',
     isGroup: true,
     isAdmin: true,

@@ -1,7 +1,7 @@
 export const meta = {
     cmd:     ['warn', 'unwarn', 'warnlist'],
     tag:     'group',
-    aliasOnly: true,
+    aliasOnly: false,
     desc:    'Sistem warn/strike anggota group (auto-kick di warn ke-3)',
     isGroup: true,
     isAdmin: true,

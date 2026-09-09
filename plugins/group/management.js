@@ -1,7 +1,7 @@
 export const meta = {
     cmd:     ['kick', 'promote', 'demote'],
     tag:     'group',
-    aliasOnly: true,
+    aliasOnly: false,
     desc:    'Manajemen anggota group (kick/promote/demote)',
     isGroup: true,
     isAdmin: true,

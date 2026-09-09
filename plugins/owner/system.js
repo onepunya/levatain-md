@@ -4,7 +4,7 @@ import { saveDb, loadDb } from '../../src/core/db.js';
 export const meta = {
     cmd:     ['reload', 'maintenance', 'ban', 'unban'],
     tag:     'owner',
-    aliasOnly: true,
+    aliasOnly: false,
     desc:    'Perintah sistem untuk owner',
     isOwner: true,
 };
