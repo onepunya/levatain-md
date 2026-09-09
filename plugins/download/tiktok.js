@@ -2,7 +2,7 @@ import { typing, getArgs } from '../../src/lib/utils.js';
 import { api } from '../../src/lib/api.js';
 
 export const meta = {
-    cmd:  ['tt', 'tiktok'],
+    cmd:  ['tiktok', 'tt'],
     tag:  'download',
     aliasOnly: true,
     desc: 'Download video TikTok tanpa watermark',

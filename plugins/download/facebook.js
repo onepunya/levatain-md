@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 import { typing, getArgs } from '../../src/lib/utils.js';
 
 export const meta = {
-    cmd:  ['fb', 'facebook'],
+    cmd:  ['facebook', 'fb'],
     tag:  'download',
     aliasOnly: true,
     desc: 'Download video/foto facebook',

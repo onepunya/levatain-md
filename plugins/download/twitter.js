@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 import { typing, getArgs } from '../../src/lib/utils.js';
 
 export const meta = {
-    cmd:  ['tw', 'twitter', 'x'],
+    cmd:  ['twitter', 'twi', 'x'],
     tag:  'download',
     aliasOnly: true,
     desc: 'Download foto/video dari Twitter (X)',

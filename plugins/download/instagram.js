@@ -1,7 +1,7 @@
 import { typing, getArgs, sendMediaBatch } from '../../src/lib/utils.js';
 
 export const meta = {
-    cmd:  ['ig', 'instagram'],
+    cmd:  ['instagram', 'ig'],
     tag:  'download',
     aliasOnly: true,
     desc: 'Download video/foto Instagram (termasuk carousel multi-media)',
