@@ -1,6 +1,6 @@
 export const meta = {
     cmd:  ['ping'],
-    tag:  'tools',
+    tag:  'main',
     aliasOnly: true,
     desc: 'Cek status dan kecepatan bot',
     ai: {

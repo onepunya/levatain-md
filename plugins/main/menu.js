@@ -22,7 +22,16 @@ const TAG_META = {
     main:         { emoji: '⚙️', label: 'Main' },
     general:      { emoji: '📋', label: 'Lainnya' },
 };
-const TAG_ORDER = ['ai', 'tools', 'fun', 'audiochanger', 'download', 'group', 'owner', 'main', 'general'];
+
+const KNOWN_TAG_ORDER = ['ai', 'tools', 'fun', 'audiochanger', 'download', 'group', 'owner', 'main', 'general'];
+
+const resolveTagOrder = (usedTags) => {
+    const known   = KNOWN_TAG_ORDER.filter(t => t !== 'general');
+    const unknown = [...usedTags].filter(t => !KNOWN_TAG_ORDER.includes(t)).sort();
+    return [...known, ...unknown, 'general'];
+};
+
+const labelize = (tag) => tag.charAt(0).toUpperCase() + tag.slice(1);
 
 const READMORE = '\u200E'.repeat(4001);
 
@@ -75,11 +84,11 @@ const buildMenuText = (pushname, isOwner) => {
     teaser     += `Command pakai *perintah*, atau ngobrol natural aja.`;
 
     let body = '';
-    for (const tag of TAG_ORDER) {
+    for (const tag of resolveTagOrder(Object.keys(grouped))) {
         const items = grouped[tag];
         if (!items?.length) continue;
 
-        const { emoji, label } = TAG_META[tag] || TAG_META.general;
+        const { emoji, label } = TAG_META[tag] || { emoji: '📋', label: labelize(tag) };
         body += `┏───•❲ ${emoji} *${label}* ❳\n`;
         for (const meta of items.sort((a, b) => a.cmd[0].localeCompare(b.cmd[0]))) {
             const shown = meta.aliasOnly ? [meta.cmd[0]] : meta.cmd;
