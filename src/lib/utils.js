@@ -6,6 +6,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import { PassThrough } from 'stream';
 import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import { logger } from './logger.js';
+import { MAX_MEDIA_BYTES, MediaTooLargeError, assertBufferUnderLimit, sendRemoteMedia } from './mediaLimit.js';
 
 export const toVoiceNoteOpus = buffer => new Promise((resolve, reject) => {
     const tempDir = os.tmpdir();
@@ -137,14 +138,7 @@ export async function sendAnyMedia(sock, jid, item, options = {}) {
 
     const hint = typeof item === 'string' ? '' : item.type;
     const type = (await detectRealMediaType(url)) || guessMediaType(url, hint);
-
-    const payload =
-        type === 'video' ? { video: { url }, caption } :
-        type === 'image' ? { image: { url }, caption } :
-        type === 'audio' ? { audio: { url }, mimetype: 'audio/mpeg' } :
-        { document: { url }, caption, fileName: url.split('/').pop()?.split('?')[0] || 'file', mimetype: 'application/octet-stream' };
-
-    return sock.sendMessage(jid, payload, quoted ? { quoted } : {});
+    return sendRemoteMedia(sock, jid, { url, type, caption, quoted });
 }
 
 export async function sendMediaBatch(sock, jid, items, options = {}) {
@@ -175,10 +169,23 @@ export function getMediaMessage(raw, quoted, types = ['image', 'video', 'audio',
 export async function downloadMedia(raw, quoted, types = ['image', 'video', 'audio', 'sticker']) {
     const result = getMediaMessage(raw, quoted, types);
     if (!result) return null;
+
+    const declared = Number(result.media.fileLength || 0);
+    if (declared > MAX_MEDIA_BYTES) {
+        throw new MediaTooLargeError(declared, 'upload');
+    }
+
     const stream = await downloadContentFromMessage(result.media, result.type);
     const chunks = [];
-    for await (const chunk of stream) chunks.push(chunk);
-    return { buffer: Buffer.concat(chunks), type: result.type, mimetype: result.media.mimetype || null };
+    let size = 0;
+    for await (const chunk of stream) {
+        size += chunk.length;
+        if (size > MAX_MEDIA_BYTES) throw new MediaTooLargeError(size, 'upload');
+        chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+    assertBufferUnderLimit(buffer, 'upload');
+    return { buffer, type: result.type, mimetype: result.media.mimetype || null, size };
 }
 
 export const adReply = (title, body = '') => ({

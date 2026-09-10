@@ -4,7 +4,7 @@ import { logger } from '../../src/lib/logger.js';
 export const meta = {
     cmd:  ['tod', 'truth', 'dare'],
     tag:  'fun',
-    aliasOnly: true,
+    aliasOnly: false,
     cooldown: 3,
     desc: 'Truth or Dare, pertanyaan/tantangan digenerate AI biar selalu beda',
     ai: {

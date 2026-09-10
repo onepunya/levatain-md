@@ -1,7 +1,7 @@
 import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/utils.js';
 
 export const meta = {
-    cmd:  ['slowed', 'slowedreverb'],
+    cmd:  ['slowedreverb', 'slowed'],
     tag:  'audiochanger',
     aliasOnly: true,
     desc: 'Slowed + Reverb — trend TikTok, lambat & bergema',

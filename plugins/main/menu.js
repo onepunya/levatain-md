@@ -1,117 +1,64 @@
-import { plugins } from '../../src/core/loader.js';
+import { getArgs } from '../../src/lib/utils.js';
+import { detectDevice, deviceLabel, supportsInteractive } from '../../src/lib/device.js';
+import { sendCategoryMenu, sendThumbFromUrl } from '../../src/lib/interactive.js';
+import {
+    TAG_META,
+    collectGrouped,
+    buildAllMenuText,
+    buildHomeCaption,
+    buildCategoryText,
+    buildListSections,
+    resolveMenuArg,
+    labelize,
+} from '../../src/lib/menuCatalog.js';
 
 export const meta = {
-    cmd:  ['menu', 'help', 'bantuan'],
+    cmd:  ['menu', 'allmenu'],
     tag:  'main',
-    aliasOnly: true,
-    desc: 'Tampilkan daftar semua command',
+    aliasOnly: false,
+    desc: 'Menu kategori (list Android / teks iPhone) dan allmenu',
     ai: {
-        trigger: 'User minta daftar command, menu, atau bantuan bot',
-        examples: ['menu', 'command apa aja', 'help'],
+        trigger: 'User minta daftar command, menu, bantuan, atau allmenu',
+        examples: ['menu', 'allmenu', 'command apa aja', 'help'],
     },
 };
 
-const TAG_META = {
-    ai:           { emoji: '🤖', label: 'AI & Asisten' },
-    tools:        { emoji: '🛠️', label: 'Tools' },
-    fun:          { emoji: '💌', label: 'Fun & Games' },
-    audiochanger: { emoji: '🎚️', label: 'Audio Changer' },
-    download:     { emoji: '📥', label: 'Download' },
-    group:        { emoji: '👥', label: 'Group' },
-    owner:        { emoji: '👑', label: 'Owner' },
-    main:         { emoji: '⚙️', label: 'Main' },
-    general:      { emoji: '📋', label: 'Lainnya' },
-};
+export async function run(sock, { raw, from, pushname, isOwner, command, body, device: deviceHint }) {
+    const device = deviceHint || detectDevice(raw);
+    const arg = command === 'allmenu' ? 'all' : getArgs(body);
+    const target = resolveMenuArg(arg, isOwner);
 
-const KNOWN_TAG_ORDER = ['ai', 'tools', 'fun', 'audiochanger', 'download', 'group', 'owner', 'main', 'general'];
-
-const resolveTagOrder = (usedTags) => {
-    const known   = KNOWN_TAG_ORDER.filter(t => t !== 'general');
-    const unknown = [...usedTags].filter(t => !KNOWN_TAG_ORDER.includes(t)).sort();
-    return [...known, ...unknown, 'general'];
-};
-
-const labelize = (tag) => tag.charAt(0).toUpperCase() + tag.slice(1);
-
-const READMORE = '\u200E'.repeat(4001);
-
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-const getJakartaHour = () => {
-    const hourPart = new Intl.DateTimeFormat('en-GB', {
-        timeZone: 'Asia/Jakarta',
-        hour: '2-digit',
-        hour12: false,
-    }).formatToParts(new Date()).find(p => p.type === 'hour').value;
-    return parseInt(hourPart, 10) % 24;
-};
-
-const greeting = () => {
-    const h = getJakartaHour();
-    if (h >= 4 && h < 11)  return 'Selamat pagi';
-    if (h >= 11 && h < 15) return 'Selamat siang';
-    if (h >= 15 && h < 18) return 'Selamat sore';
-    return 'Selamat malam';
-};
-
-const formatUptime = (sec) => {
-    const hari  = Math.floor(sec / 86400);
-    const jam   = Math.floor((sec % 86400) / 3600);
-    const menit = Math.floor((sec % 3600) / 60);
-    const detik = Math.floor(sec % 60);
-    return [hari && `${hari}h`, jam && `${jam}j`, menit && `${menit}m`, `${detik}d`].filter(Boolean).join(' ');
-};
-
-const buildMenuText = (pushname, isOwner) => {
-    const seenMeta = new Set();
-    const grouped  = {};
-
-    for (const [, plugin] of plugins) {
-        const meta = plugin.meta;
-        if (!meta || seenMeta.has(meta)) continue;
-        seenMeta.add(meta);
-
-        const tag = meta.tag || 'general';
-        if (tag === 'owner' && !isOwner) continue;
-
-        (grouped[tag] ??= []).push(meta);
+    if (target.type === 'all') {
+        const text = buildAllMenuText(pushname, isOwner);
+        await sendThumbFromUrl(sock, from, { caption: text, quoted: raw });
+        return;
     }
 
-    const totalCmd = [...seenMeta].reduce((n, m) => n + (m.cmd?.length || 1), 0);
-
-    let teaser  = `✦ *${global.botName}* ✦\n\n`;
-    teaser     += `${greeting()}, *${pushname || 'kamu'}* 👋\n`;
-    teaser     += `Command pakai *perintah*, atau ngobrol natural aja.`;
-
-    let body = '';
-    for (const tag of resolveTagOrder(Object.keys(grouped))) {
-        const items = grouped[tag];
-        if (!items?.length) continue;
-
-        const { emoji, label } = TAG_META[tag] || { emoji: '📋', label: labelize(tag) };
-        body += `┏───•❲ ${emoji} *${label}* ❳\n`;
-        for (const meta of items.sort((a, b) => a.cmd[0].localeCompare(b.cmd[0]))) {
-            const shown = meta.aliasOnly ? [meta.cmd[0]] : meta.cmd;
-            for (const c of shown) {
-                body += `│ • *.${c}*\n`;
-            }
+    if (target.type === 'tag') {
+        const { grouped } = collectGrouped(isOwner);
+        const items = grouped[target.tag];
+        if (!items?.length) {
+            return sock.sendMessage(from, {
+                text: `❌ Kategori *${target.tag}* tidak ditemukan.\nKetik *.menu* untuk lihat daftar.`,
+            }, { quoted: raw });
         }
-        body += `┗────────────────··\n\n`;
+        const { emoji, label } = TAG_META[target.tag] || { emoji: '📋', label: labelize(target.tag) };
+        const caption = `✦ *${global.botName}* — ${emoji} ${label}\n\n${buildCategoryText(target.tag, items)}\n\n_Ketik *.menu* kembali ke kategori · *.allmenu* semua command_`;
+        await sendThumbFromUrl(sock, from, { caption, quoted: raw });
+        return;
     }
 
-    body += `┏───•❲ 📊 *Info* ❳\n`;
-    body += `│ • ${totalCmd} command tersedia\n`;
-    body += `│ • Uptime ${formatUptime(process.uptime())}\n`;
-    body += `┗────────────────··\n\n`;
-    body += `_Ketik *.menu* kapan saja untuk lihat daftar ini lagi._`;
+    const caption = buildHomeCaption(pushname, device, isOwner);
+    const footer = supportsInteractive(device)
+        ? `${global.botName} · ${deviceLabel(device)}`
+        : `${global.botName} · ${deviceLabel(device)} (tanpa tombol)`;
 
-    return `${teaser}\n\n${READMORE}\n${body}`;
-};
-
-export async function run(sock, { raw, from, pushname, isOwner }) {
-    const sent = await sock.sendMessage(from, { text: '⏳ Menyiapkan menu...' }, { quoted: raw });
-    await sleep(800);
-
-    const text = buildMenuText(pushname, isOwner);
-    await sock.sendMessage(from, { text, edit: sent.key });
+    await sendCategoryMenu(sock, from, {
+        caption,
+        footer,
+        quoted: raw,
+        sections: buildListSections(isOwner),
+        device,
+        thumbUrl: global.thumb,
+    });
 }

@@ -1,4 +1,4 @@
-import { typing, getArgs } from '../../src/lib/utils.js';
+import { typing, getArgs, sendAnyMedia } from '../../src/lib/utils.js';
 import { api } from '../../src/lib/api.js';
 
 export const meta = {
@@ -24,10 +24,10 @@ export async function run(sock, { body, raw, from }) {
 
     try {
         const data = await api.capcut(url);
-        await sock.sendMessage(from, {
-            video: { url: data.media },
+        await sendAnyMedia(sock, from, { url: data.media, type: 'video' }, {
             caption: `🎬 *CapCut Template*\n${data.title}\n👤 ${data.author}`,
-        }, { quoted: raw });
+            quoted: raw,
+        });
     } catch (e) {
         await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
     }

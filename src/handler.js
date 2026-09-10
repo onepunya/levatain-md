@@ -8,6 +8,7 @@ import { handleAI } from './ai/index.js';
 import { plugins } from './core/loader.js';
 import { routeSessionInput } from './lib/session.js';
 import { getGroupMeta, bustGroupMetaCache } from './lib/groupCache.js';
+import { detectDevice } from './lib/device.js';
 
 const execPromise = promisify(exec);
 
@@ -184,6 +185,8 @@ export async function handler(sock, m) {
         }
     }
 
+    const device = m.device || detectDevice(raw);
+
     const baseCtx = {
         body, raw, from,
         db:        db.users[primaryId],
@@ -195,6 +198,7 @@ export async function handler(sock, m) {
         mentionedJid, sendMess,
         pushname,
         saveDb,
+        device,
     };
 
     if (body) {

@@ -1,4 +1,4 @@
-import { typing, getArgs } from '../../src/lib/utils.js';
+import { typing, getArgs, sendAnyMedia } from '../../src/lib/utils.js';
 import { api } from '../../src/lib/api.js';
 
 export const meta = {
@@ -8,7 +8,7 @@ export const meta = {
     desc: 'Download video TikTok tanpa watermark',
     ai: {
         trigger: 'User minta download video TikTok dengan URL',
-        examples: ['tt https://tiktok.com/xxx', 'download tiktok ini'],
+        examples: ['tiktok https://tiktok.com/xxx', 'download tiktok ini'],
         args: { url: 'URL TikTok' },
     },
 };
@@ -16,7 +16,7 @@ export const meta = {
 export async function run(sock, { body, raw, from }) {
     const url = getArgs(body);
     if (!url) return sock.sendMessage(from, {
-        text: '❌ Masukkan URL TikTok!\nContoh: *.tt https://vt.tiktok.com/xxx*'
+        text: '❌ Masukkan URL TikTok!\nContoh: *.tiktok https://vt.tiktok.com/xxx*'
     }, { quoted: raw });
 
     await typing(sock, from);
@@ -24,10 +24,10 @@ export async function run(sock, { body, raw, from }) {
 
     try {
         const data = await api.tiktok(url);
-        await sock.sendMessage(from, {
-            video: { url: data.media },
+        await sendAnyMedia(sock, from, { url: data.media, type: 'video' }, {
             caption: `🎵 *${data.title || 'TikTok Video'}*\n👤 ${data.author || ''}`,
-        }, { quoted: raw });
+            quoted: raw,
+        });
     } catch (e) {
         await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
     }

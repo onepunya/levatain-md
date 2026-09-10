@@ -67,7 +67,7 @@ function normalizeDownloadgramMedia(text) {
 export async function run(sock, { body, raw, from }) {
     const url = getArgs(body);
     if (!url) return sock.sendMessage(from, {
-        text: '❌ Masukkan URL Instagram!\nContoh: *.ig https://www.instagram.com/p/xxx*'
+        text: '❌ Masukkan URL Instagram!\nContoh: *.instagram https://www.instagram.com/p/xxx*'
     }, { quoted: raw });
 
     await typing(sock, from);

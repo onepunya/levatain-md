@@ -5,8 +5,9 @@ import os from 'os';
 import axios from 'axios';
 import ffmpeg from 'fluent-ffmpeg';
 import { logger } from './logger.js';
+import { MAX_MEDIA_BYTES } from './mediaLimit.js';
 
-export const MAX_FILE_SIZE = 15 * 1024 * 1024;
+export const MAX_FILE_SIZE = MAX_MEDIA_BYTES;
 
 export const cleanupTempFile = file => {
     if (!file) return;
@@ -33,21 +34,34 @@ const streamDownload = async (url, headers, outputFile, onProgress) => {
     }
 
     const total = parseInt(response.headers['content-length'] || '0', 10);
+    if (total > MAX_FILE_SIZE) {
+        response.data.destroy();
+        throw new Error(`File terlalu besar (${(total / 1024 / 1024).toFixed(1)}MB). Batas maksimal 15MB.`);
+    }
     let loaded = 0;
 
     const writer = fs.createWriteStream(outputFile);
-    if (onProgress) {
-        response.data.on('data', chunk => {
-            loaded += chunk.length;
-            if (total > 0) onProgress(Math.min(99, Math.round((loaded / total) * 100)));
-        });
-    }
+    response.data.on('data', chunk => {
+        loaded += chunk.length;
+        if (loaded > MAX_FILE_SIZE) {
+            response.data.destroy();
+            try { writer.destroy(); } catch {}
+        } else if (onProgress && total > 0) {
+            onProgress(Math.min(99, Math.round((loaded / total) * 100)));
+        }
+    });
 
     await new Promise((resolve, reject) => {
-        response.data.pipe(writer);
-        writer.on('finish', resolve);
-        writer.on('error', reject);
         response.data.on('error', reject);
+        writer.on('error', reject);
+        writer.on('finish', () => {
+            if (loaded > MAX_FILE_SIZE) {
+                reject(new Error('File terlalu besar. Batas maksimal 15MB.'));
+            } else {
+                resolve();
+            }
+        });
+        response.data.pipe(writer);
     });
 
     if (!fs.existsSync(outputFile) || fs.statSync(outputFile).size <= 0) {

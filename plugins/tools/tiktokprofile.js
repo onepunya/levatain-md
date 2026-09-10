@@ -3,7 +3,7 @@ import { typing, getArgs } from '../../src/lib/utils.js';
 import { logger } from '../../src/lib/logger.js';
 
 export const meta = {
-    cmd:  ['ttprofile', 'ttstalk', 'tiktokprofile'],
+    cmd:  ['tiktokprofile', 'ttprofile', 'ttstalk'],
     tag:  'tools',
     aliasOnly: true,
     desc: 'Cek/cari profil TikTok (followers, following, likes, bio, dll)',

@@ -14,6 +14,8 @@ import { loadPlugins, plugins } from './src/core/loader.js';
 import { handler, participantsUpdate, getCaptchaPending } from './src/handler.js';
 import { api } from './src/lib/api.js';
 import { startDashboard } from './src/lib/dashboard.js';
+import { extractBody } from './src/lib/interactive.js';
+import { detectDevice } from './src/lib/device.js';
 import { startIpWatcher } from './src/lib/iplookup.js';
 import { readGroupMetaCache, setGroupMetaCache } from './src/lib/groupCache.js';
 import { cleanTempFiles } from './src/lib/utils.js';
@@ -170,13 +172,7 @@ async function start() {
                 if (!m?.message || m.key.fromMe) continue;
                 cacheMsg(m);
 
-                const body = m.message.conversation
-                    || m.message.extendedTextMessage?.text
-                    || m.message.imageMessage?.caption
-                    || m.message.videoMessage?.caption
-                    || m.message.documentMessage?.caption
-                    || m.message.documentWithCaptionMessage?.message?.documentMessage?.caption
-                    || '';
+                const body = extractBody(m);
 
                 if (handleCaptchaAnswer(sock, m, body)) continue;
 
@@ -187,6 +183,7 @@ async function start() {
                     pushname: m.pushName || 'User',
                     isGroup:  m.key.remoteJid.endsWith('@g.us'),
                     raw:      m,
+                    device:   detectDevice(m),
                 });
             } catch (e) {
                 logger.error(`[upsert] ${e.message}`);

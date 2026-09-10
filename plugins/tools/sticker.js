@@ -2,7 +2,7 @@ import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 import { typing, downloadMedia } from '../../src/lib/utils.js';
 
 export const meta = {
-    cmd:  ['sticker', 's', 'sticker'],
+    cmd:  ['sticker', 's'],
     tag:  'tools',
     aliasOnly: true,
     desc: 'Convert gambar/video jadi stiker WhatsApp',

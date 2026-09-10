@@ -2,7 +2,7 @@ import { getLocalIps, getHostname, lookupPublicIp } from '../../src/lib/iplookup
 import { config } from '../../src/config.js';
 
 export const meta = {
-    cmd:      ['cekdash', 'dashbot', 'dashboard'],
+    cmd:      ['dashboard', 'cekdash', 'dashbot'],
     tag:      'owner',
     aliasOnly: true,
     desc:     'Cek link dashboard bot (IP publik & lokal)',

@@ -1,5 +1,5 @@
 export const meta = {
-    cmd:  ['sc', 'script'],
+    cmd:  ['script', 'sc'],
     tag:  'main',
     aliasOnly: true,
     desc: 'file scrpit bot levatain md',

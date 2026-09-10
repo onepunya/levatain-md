@@ -1,4 +1,4 @@
-import { typing, getArgs } from '../../src/lib/utils.js';
+import { typing, getArgs, sendAnyMedia } from '../../src/lib/utils.js';
 
 export const meta = {
     cmd:  ['snackvideo'],
@@ -55,10 +55,10 @@ export async function run(sock, { body, raw, from }) {
 
         videoUrl = videoUrl.replace(/&amp;/g, '&');
 
-        await sock.sendMessage(from, {
-            video: { url: videoUrl },
-            caption: '🍿 *SnackVideo Downloader*'
-        }, { quoted: raw });
+        await sendAnyMedia(sock, from, { url: videoUrl, type: 'video' }, {
+            caption: '🍿 *SnackVideo Downloader*',
+            quoted: raw,
+        });
 
     } catch (e) {
         await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });

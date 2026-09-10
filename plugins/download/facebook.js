@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { typing, getArgs } from '../../src/lib/utils.js';
+import { fetchBufferLimited } from '../../src/lib/mediaLimit.js';
 
 export const meta = {
     cmd:  ['facebook', 'fb'],
@@ -17,7 +18,7 @@ export const meta = {
 export async function run(sock, { body, raw, from }) {
     const url = getArgs(body);
     if (!url) return sock.sendMessage(from, {
-        text: '❌ Masukkan URL Facebook\nContoh: *.fb https://www.facebook.com/share/r/xxx/*'
+        text: '❌ Masukkan URL Facebook\nContoh: *.facebook https://www.facebook.com/share/r/xxx/*'
     }, { quoted: raw });
 
     await typing(sock, from);
@@ -30,16 +31,13 @@ export async function run(sock, { body, raw, from }) {
             return await sock.sendMessage(from, { text: '❌ Gagal mendapatkan link video dari Facebook.' }, { quoted: raw });
         }
 
-        const videoResponse = await axios.get(data.video, {
-            responseType: 'arraybuffer',
+        const videoBuffer = await fetchBufferLimited(data.video, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
                 'Referer': 'https://fget.io/'
             },
-            timeout: 60000
+            timeout: 60000,
         });
-
-        const videoBuffer = Buffer.from(videoResponse.data, 'binary');
 
         await sock.sendMessage(from, {
             video: videoBuffer,

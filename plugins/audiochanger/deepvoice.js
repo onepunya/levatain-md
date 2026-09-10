@@ -1,7 +1,7 @@
 import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/utils.js';
 
 export const meta = {
-    cmd:  ['deep', 'deepvoice'],
+    cmd:  ['deepvoice', 'deep'],
     tag:  'audiochanger',
     aliasOnly: true,
     desc: 'Deep Voice — suara jadi berat/dalam',

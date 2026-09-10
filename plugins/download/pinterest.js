@@ -169,8 +169,8 @@ export async function run(sock, { body, raw, from }) {
     if (!input) return sock.sendMessage(from, {
         text: '❌ Masukkan link Pinterest atau kata kunci pencarian!\n\n'
             + 'Contoh:\n'
-            + '• *.pin https://pin.it/xxxxx* _(download pin)_\n'
-            + '• *.pin kucing lucu* _(cari gambar)_',
+            + '• *.pinterest https://pin.it/xxxxx* _(download pin)_\n'
+            + '• *.pinterest kucing lucu* _(cari gambar)_',
     }, { quoted: raw });
 
     await typing(sock, from);

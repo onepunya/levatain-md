@@ -1,5 +1,5 @@
 export const meta = {
-    cmd:  ['userinfo', 'memberinfo', 'whois'],
+    cmd:  ['memberinfo', 'userinfo', 'whois'],
     tag:  'group',
     aliasOnly: true,
     desc: 'Lihat info user/member (nama, JID, LID, role, statistik bot)',

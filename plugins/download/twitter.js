@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { typing, getArgs } from '../../src/lib/utils.js';
+import { fetchBufferLimited } from '../../src/lib/mediaLimit.js';
 
 export const meta = {
     cmd:  ['twitter', 'twi', 'x'],
@@ -19,7 +20,7 @@ const USER_AGENT = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML
 export async function run(sock, { body, raw, from }) {
     const url = getArgs(body);
     if (!url) return sock.sendMessage(from, {
-        text: '❌ Masukkan URL Twitter/X!\nContoh: *.tw https://x.com/user/status/xxx*'
+        text: '❌ Masukkan URL Twitter/X!\nContoh: *.twitter https://x.com/user/status/xxx*'
     }, { quoted: raw });
 
     await typing(sock, from);
@@ -90,13 +91,11 @@ async function twitterDownload(url) {
 }
 
 async function fetchBuffer(mediaUrl) {
-    const { data } = await axios.get(mediaUrl, {
-        responseType: 'arraybuffer',
+    return fetchBufferLimited(mediaUrl, {
         headers: {
             'User-Agent': USER_AGENT,
             'Referer': 'https://twmate.com/'
         },
-        timeout: 60000
+        timeout: 60000,
     });
-    return Buffer.from(data, 'binary');
 }
