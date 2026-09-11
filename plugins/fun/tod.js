@@ -2,14 +2,36 @@ import { api } from '../../src/lib/api.js';
 import { logger } from '../../src/lib/logger.js';
 
 export const meta = {
-    cmd:  ['tod', 'truth', 'dare'],
-    tag:  'fun',
-    aliasOnly: false,
-    cooldown: 3,
-    desc: 'Truth or Dare, pertanyaan/tantangan digenerate AI biar selalu beda',
-    ai: {
-        trigger: 'User mau main truth or dare, atau minta tantangan/pertanyaan truth',
-        examples: ['tod', 'truth', 'dare'],
+    interface: {
+        cmd:  ['tod', 'truth', 'dare'],
+        tag:  'fun',
+        aliasOnly: false,
+        cooldown: 3,
+        desc: 'Truth or Dare, pertanyaan/tantangan digenerate AI biar selalu beda',
+        ai: {
+            trigger: 'User mau main truth or dare, atau minta tantangan/pertanyaan truth',
+            examples: ['tod', 'truth', 'dare'],
+        },
+        async run(sock, { raw, from, command, pushname }) {
+            let type = command;
+            if (type === 'tod') type = Math.random() < 0.5 ? 'truth' : 'dare';
+
+            const isTruth = type === 'truth';
+            const label = isTruth ? '🤔 TRUTH' : '🔥 DARE';
+            const who = pushname ? `*${pushname}*` : 'Kamu';
+
+            let question;
+            try {
+                question = await generateWithAI(type, pushname);
+            } catch (e) {
+                logger.warn(`[tod] AI gagal, pakai fallback: ${e.message}`);
+                question = pick(isTruth ? FALLBACK_TRUTH : FALLBACK_DARE);
+            }
+
+            return sock.sendMessage(from, {
+                text: `${label}\n\n${who} kebagian:\n_${question}_`,
+            }, { quoted: raw });
+        },
     },
 };
 
@@ -46,23 +68,3 @@ async function generateWithAI(type, pushname) {
     return cleaned;
 }
 
-export async function run(sock, { raw, from, command, pushname }) {
-    let type = command;
-    if (type === 'tod') type = Math.random() < 0.5 ? 'truth' : 'dare';
-
-    const isTruth = type === 'truth';
-    const label = isTruth ? '🤔 TRUTH' : '🔥 DARE';
-    const who = pushname ? `*${pushname}*` : 'Kamu';
-
-    let question;
-    try {
-        question = await generateWithAI(type, pushname);
-    } catch (e) {
-        logger.warn(`[tod] AI gagal, pakai fallback: ${e.message}`);
-        question = pick(isTruth ? FALLBACK_TRUTH : FALLBACK_DARE);
-    }
-
-    return sock.sendMessage(from, {
-        text: `${label}\n\n${who} kebagian:\n_${question}_`,
-    }, { quoted: raw });
-}

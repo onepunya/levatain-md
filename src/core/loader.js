@@ -21,13 +21,13 @@ export async function loadPlugins(dir = './plugins') {
     for (const file of files) {
         try {
             const mod = await import(`../../${file}`);
-            if (!mod.meta || !mod.run) {
-                logger.warn(`[Loader] Skip ${file} — tidak ada meta/run`);
+            if (!mod.meta?.interface?.run) {
+                logger.warn(`[Loader] Skip ${file} — tidak ada meta.interface/run`);
                 continue;
             }
-            const cmds = Array.isArray(mod.meta.cmd) ? mod.meta.cmd : [mod.meta.cmd];
+            const cmds = Array.isArray(mod.meta.interface.cmd) ? mod.meta.interface.cmd : [mod.meta.interface.cmd];
             for (const cmd of cmds) {
-                plugins.set(cmd.toLowerCase(), { meta: mod.meta, run: mod.run });
+                plugins.set(cmd.toLowerCase(), { meta: mod.meta, run: mod.meta.interface.run });
             }
             ok++;
         } catch (e) {
@@ -49,10 +49,10 @@ export async function reloadPlugins() {
     for (const file of files) {
         try {
             const mod = await import(`../../${file}?v=${v}`);
-            if (!mod.meta || !mod.run) continue;
-            const cmds = Array.isArray(mod.meta.cmd) ? mod.meta.cmd : [mod.meta.cmd];
+            if (!mod.meta?.interface?.run) continue;
+            const cmds = Array.isArray(mod.meta.interface.cmd) ? mod.meta.interface.cmd : [mod.meta.interface.cmd];
             for (const cmd of cmds) {
-                plugins.set(cmd.toLowerCase(), { meta: mod.meta, run: mod.run });
+                plugins.set(cmd.toLowerCase(), { meta: mod.meta, run: mod.meta.interface.run });
             }
             ok++;
         } catch (e) {

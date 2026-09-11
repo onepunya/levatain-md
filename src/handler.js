@@ -219,13 +219,13 @@ export async function handler(sock, m) {
             const plugin = plugins.get(stickerCmd);
             const { meta, run } = plugin;
 
-            if (meta?.isOwner && !isOwner) return sock.sendMessage(from, { text: '👑 Owner only.' });
-            if (meta?.isAdmin && !isAdmin) return sock.sendMessage(from, { text: '👤 Group admin only.' });
-            if (meta?.isGroup && !isGroup) return sock.sendMessage(from, { text: '👥 Group only.' });
+            if (meta?.interface?.isOwner && !isOwner) return sock.sendMessage(from, { text: '👑 Owner only.' });
+            if (meta?.interface?.isAdmin && !isAdmin) return sock.sendMessage(from, { text: '👤 Group admin only.' });
+            if (meta?.interface?.isGroup && !isGroup) return sock.sendMessage(from, { text: '👥 Group only.' });
 
             if (!isOwner) {
                 const cdKey  = `${primaryId}:${stickerCmd}`;
-                const cdTime = meta?.cooldown ?? 3;
+                const cdTime = meta?.interface?.cooldown ?? 3;
                 const since  = Date.now() - (cooldowns.get(cdKey) || 0);
                 const sisa   = cdTime - Math.floor(since / 1000);
                 if (sisa > 0) return sock.sendMessage(from, { text: `⏳ Tunggu ${sisa} detik lagi.` });
@@ -271,13 +271,13 @@ export async function handler(sock, m) {
         const plugin = plugins.get(command);
         const { meta, run } = plugin;
 
-        if (meta?.isOwner && !isOwner) return sock.sendMessage(from, { text: '👑 Owner only.' });
-        if (meta?.isAdmin && !isAdmin) return sock.sendMessage(from, { text: '👤 Group admin only.' });
-        if (meta?.isGroup && !isGroup) return sock.sendMessage(from, { text: '👥 Group only.' });
+        if (meta?.interface?.isOwner && !isOwner) return sock.sendMessage(from, { text: '👑 Owner only.' });
+        if (meta?.interface?.isAdmin && !isAdmin) return sock.sendMessage(from, { text: '👤 Group admin only.' });
+        if (meta?.interface?.isGroup && !isGroup) return sock.sendMessage(from, { text: '👥 Group only.' });
 
         if (!isOwner) {
             const cdKey  = `${primaryId}:${command}`;
-            const cdTime = meta?.cooldown ?? 3;
+            const cdTime = meta?.interface?.cooldown ?? 3;
             const since  = Date.now() - (cooldowns.get(cdKey) || 0);
             const sisa   = cdTime - Math.floor(since / 1000);
             if (sisa > 0) return sock.sendMessage(from, { text: `⏳ Tunggu ${sisa} detik lagi.` });

@@ -4,51 +4,52 @@ import { typing, getArgs } from '../../src/lib/utils.js';
 import { fetchBufferLimited } from '../../src/lib/mediaLimit.js';
 
 export const meta = {
-    cmd:  ['twitter', 'twi', 'x'],
-    tag:  'download',
-    aliasOnly: true,
-    desc: 'Download foto/video dari Twitter (X)',
-    ai: {
-        trigger: 'User minta download foto atau video dari Twitter/X dengan URL',
-        examples: ['tw https://x.com/user/status/xxx', 'download twitter ini'],
-        args: { url: 'URL Twitter/X' },
+    interface: {
+        cmd:  ['twitter', 'twi', 'x'],
+        tag:  'download',
+        aliasOnly: true,
+        desc: 'Download foto/video dari Twitter (X)',
+        ai: {
+            trigger: 'User minta download foto atau video dari Twitter/X dengan URL',
+            examples: ['tw https://x.com/user/status/xxx', 'download twitter ini'],
+            args: { url: 'URL Twitter/X' },
+        },
+        async run(sock, { body, raw, from }) {
+            const url = getArgs(body);
+            if (!url) return sock.sendMessage(from, {
+                text: '❌ Masukkan URL Twitter/X!\nContoh: *.twitter https://x.com/user/status/xxx*'
+            }, { quoted: raw });
+
+            await typing(sock, from);
+            await sock.sendMessage(from, { text: '⏳ Mendownload Twitter...' }, { quoted: raw });
+
+            try {
+                const result = await twitterDownload(url);
+
+                if (result.type === 'video') {
+                    const buffer = await fetchBuffer(result.links[0]);
+                    await sock.sendMessage(from, {
+                        video: buffer,
+                        caption: `🐦 *${result.title}*`,
+                    }, { quoted: raw });
+                } else {
+                    for (let i = 0; i < result.links.length; i++) {
+                        const buffer = await fetchBuffer(result.links[i]);
+                        await sock.sendMessage(from, {
+                            image: buffer,
+                            caption: i === 0 ? `🐦 *${result.title}*` : '',
+                        }, { quoted: raw });
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            }
+        },
     },
 };
 
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
-
-export async function run(sock, { body, raw, from }) {
-    const url = getArgs(body);
-    if (!url) return sock.sendMessage(from, {
-        text: '❌ Masukkan URL Twitter/X!\nContoh: *.twitter https://x.com/user/status/xxx*'
-    }, { quoted: raw });
-
-    await typing(sock, from);
-    await sock.sendMessage(from, { text: '⏳ Mendownload Twitter...' }, { quoted: raw });
-
-    try {
-        const result = await twitterDownload(url);
-
-        if (result.type === 'video') {
-            const buffer = await fetchBuffer(result.links[0]);
-            await sock.sendMessage(from, {
-                video: buffer,
-                caption: `🐦 *${result.title}*`,
-            }, { quoted: raw });
-        } else {
-            for (let i = 0; i < result.links.length; i++) {
-                const buffer = await fetchBuffer(result.links[i]);
-                await sock.sendMessage(from, {
-                    image: buffer,
-                    caption: i === 0 ? `🐦 *${result.title}*` : '',
-                }, { quoted: raw });
-            }
-        }
-    } catch (e) {
-        console.error(e);
-        await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
-    }
-}
 
 async function twitterDownload(url) {
     const { data: html } = await axios.post(

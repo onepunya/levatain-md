@@ -22,7 +22,7 @@ function pluginBreakdown() {
     for (const [, p] of plugins) {
         if (seen.has(p.run)) continue;
         seen.add(p.run);
-        const tag = p.meta?.tag || 'lainnya';
+        const tag = p.meta?.interface?.tag || 'lainnya';
         byTag[tag] = (byTag[tag] || 0) + 1;
     }
     return byTag;

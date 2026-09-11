@@ -1,14 +1,38 @@
 import { typing, getArgs, sendMediaBatch } from '../../src/lib/utils.js';
 
 export const meta = {
-    cmd:  ['instagram', 'ig'],
-    tag:  'download',
-    aliasOnly: true,
-    desc: 'Download video/foto Instagram (termasuk carousel multi-media)',
-    ai: {
-        trigger: 'User minta download dari Instagram dengan URL',
-        examples: ['ig https://instagram.com/p/xxx', 'download instagram ini'],
-        args: { url: 'URL Instagram' },
+    interface: {
+        cmd:  ['instagram', 'ig'],
+        tag:  'download',
+        aliasOnly: true,
+        desc: 'Download video/foto Instagram (termasuk carousel multi-media)',
+        ai: {
+            trigger: 'User minta download dari Instagram dengan URL',
+            examples: ['ig https://instagram.com/p/xxx', 'download instagram ini'],
+            args: { url: 'URL Instagram' },
+        },
+        async run(sock, { body, raw, from }) {
+            const url = getArgs(body);
+            if (!url) return sock.sendMessage(from, {
+                text: '❌ Masukkan URL Instagram!\nContoh: *.instagram https://www.instagram.com/p/xxx*'
+            }, { quoted: raw });
+
+            await typing(sock, from);
+            await sock.sendMessage(from, { text: '⏳ Mendownload Instagram...' }, { quoted: raw });
+
+            try {
+                const rawText = await fetchDownloadgram(url);
+                const items = normalizeDownloadgramMedia(rawText);
+
+                if (!items.length) {
+                    throw new Error('Media tidak ditemukan. Pastikan URL benar dan akun tidak di-private.');
+                }
+                const captionText = '📸 *Instagram Downloaded*';
+                await sendMediaBatch(sock, from, items, { caption: captionText, quoted: raw });
+            } catch (e) {
+                await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            }
+        },
     },
 };
 
@@ -64,25 +88,3 @@ function normalizeDownloadgramMedia(text) {
     return Array.from(itemsMap.values());
 }
 
-export async function run(sock, { body, raw, from }) {
-    const url = getArgs(body);
-    if (!url) return sock.sendMessage(from, {
-        text: '❌ Masukkan URL Instagram!\nContoh: *.instagram https://www.instagram.com/p/xxx*'
-    }, { quoted: raw });
-
-    await typing(sock, from);
-    await sock.sendMessage(from, { text: '⏳ Mendownload Instagram...' }, { quoted: raw });
-
-    try {
-        const rawText = await fetchDownloadgram(url);
-        const items = normalizeDownloadgramMedia(rawText);
-
-        if (!items.length) {
-            throw new Error('Media tidak ditemukan. Pastikan URL benar dan akun tidak di-private.');
-        }
-        const captionText = '📸 *Instagram Downloaded*';
-        await sendMediaBatch(sock, from, items, { caption: captionText, quoted: raw });
-    } catch (e) {
-        await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
-    }
-}

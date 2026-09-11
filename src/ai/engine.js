@@ -8,11 +8,12 @@ const getPluginList = () => {
     for (const [, p] of plugins) {
         if (!p.meta || seen.has(p.meta)) continue;
         seen.add(p.meta);
+        const iface = p.meta.interface || {};
         list.push({
-            cmd: p.meta.cmd,
-            tag: p.meta.tag || 'general',
-            desc: p.meta.desc || p.meta.cmd[0],
-            ai: p.meta.ai
+            cmd: iface.cmd,
+            tag: iface.tag || 'general',
+            desc: iface.desc || iface.cmd?.[0],
+            ai: iface.ai
         });
     }
     return list;

@@ -5,30 +5,31 @@ import { ProgressMessage } from '../../src/lib/progress.js';
 const SESSION_TIMEOUT = 3 * 60_000;
 
 export const meta = {
-    cmd:      ['musicgen', 'songgen', 'buatlagu'],
-    tag:      'ai',
-    aliasOnly: true,
-    desc:     'Generate lagu AI: masukin lirik lalu prompt/gaya musik secara bertahap',
-    cooldown: 5,
-    ai: {
-        trigger: 'User minta buat lagu, generate musik AI, bikin musik dari lirik',
-        examples: ['musicgen', 'buatlagu'],
+    interface: {
+        cmd:      ['musicgen', 'songgen', 'buatlagu'],
+        tag:      'ai',
+        aliasOnly: true,
+        desc:     'Generate lagu AI: masukin lirik lalu prompt/gaya musik secara bertahap',
+        cooldown: 5,
+        ai: {
+            trigger: 'User minta buat lagu, generate musik AI, bikin musik dari lirik',
+            examples: ['musicgen', 'buatlagu'],
+        },
+        async run(sock, { raw, from, primaryId }) {
+            startSession(primaryId, { from, step: 'lyrics', lyrics: '', prompt: '' }, {
+                timeout: SESSION_TIMEOUT,
+                onInput: handleInput,
+                onTimeout: session => sock.sendMessage(session.from, {
+                    text: '⏰ Sesi musicgen berakhir karena kelamaan gak ada input. Ketik `musicgen` lagi buat mulai ulang.',
+                }),
+            });
+
+            await sock.sendMessage(from, {
+                text: '🎵 Kirim *lirik* lagunya sekarang.\n\nKetik `batal` kapan aja buat keluar dari sesi ini.',
+            }, { quoted: raw });
+        },
     },
 };
-
-export async function run(sock, { raw, from, primaryId }) {
-    startSession(primaryId, { from, step: 'lyrics', lyrics: '', prompt: '' }, {
-        timeout: SESSION_TIMEOUT,
-        onInput: handleInput,
-        onTimeout: session => sock.sendMessage(session.from, {
-            text: '⏰ Sesi musicgen berakhir karena kelamaan gak ada input. Ketik `musicgen` lagi buat mulai ulang.',
-        }),
-    });
-
-    await sock.sendMessage(from, {
-        text: '🎵 Kirim *lirik* lagunya sekarang.\n\nKetik `batal` kapan aja buat keluar dari sesi ini.',
-    }, { quoted: raw });
-}
 
 async function handleInput(sock, body, ctx, session) {
     const { from, raw, primaryId } = ctx;

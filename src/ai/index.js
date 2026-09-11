@@ -102,9 +102,9 @@ export async function handleAI(sock, m, ctx) {
             return true;
         }
 
-        if (plugin.meta?.isOwner && !isOwner) return true;
-        if (plugin.meta?.isGroup && !isGroup) return true;
-        if (plugin.meta?.isAdmin && !isAdmin) return true;
+        if (plugin.meta?.interface?.isOwner && !isOwner) return true;
+        if (plugin.meta?.interface?.isGroup && !isGroup) return true;
+        if (plugin.meta?.interface?.isAdmin && !isAdmin) return true;
 
         logger.cmd(primaryId, `${aiCmd} [AI]`);
         await plugin.run(sock, {

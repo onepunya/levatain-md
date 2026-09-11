@@ -54,7 +54,7 @@ export function collectGrouped(isOwner) {
     const grouped = {};
 
     for (const [, plugin] of plugins) {
-        const meta = plugin.meta;
+        const meta = plugin.meta?.interface;
         if (!meta || seenMeta.has(meta)) continue;
         seenMeta.add(meta);
 
