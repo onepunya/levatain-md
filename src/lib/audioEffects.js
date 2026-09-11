@@ -41,6 +41,45 @@ export function applyAudioFilter(buffer, filterChain) {
     });
 }
 
+export function extractAudioClip(buffer, seconds = 20) {
+    return new Promise((resolve, reject) => {
+        const tempDir    = os.tmpdir();
+        const id          = `rec-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const inputFile   = path.join(tempDir, `${id}.in`);
+        const outputFile  = path.join(tempDir, `${id}.mp3`);
+
+        const cleanup = () => {
+            try { if (fs.existsSync(inputFile)) fs.unlinkSync(inputFile); } catch {}
+            try { if (fs.existsSync(outputFile)) fs.unlinkSync(outputFile); } catch {}
+        };
+
+        fs.writeFileSync(inputFile, buffer);
+
+        ffmpeg(inputFile)
+            .noVideo()
+            .duration(seconds)
+            .audioChannels(1)
+            .audioFrequency(44100)
+            .audioCodec('libmp3lame')
+            .format('mp3')
+            .on('end', () => {
+                try {
+                    const out = fs.readFileSync(outputFile);
+                    cleanup();
+                    resolve(out);
+                } catch (error) {
+                    cleanup();
+                    reject(error);
+                }
+            })
+            .on('error', error => {
+                cleanup();
+                reject(error);
+            })
+            .save(outputFile);
+    });
+}
+
 export function makeAudioEffectPlugin({ cmd, tag = 'audiochanger', desc, examples = [], trigger, filter, emoji = '🎧' }) {
     return {
         meta: {

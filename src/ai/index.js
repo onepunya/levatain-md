@@ -35,6 +35,10 @@ export async function handleAI(sock, m, ctx) {
 
     const cleanText = cleanTrigger(body) || 'Halo!';
 
+    const SONG_MEDIA_TYPES = { audioMessage: 'audio', videoMessage: 'video' };
+    const ownMediaType = Object.keys(raw?.message || {})[0];
+    const hasSongMedia = SONG_MEDIA_TYPES[m.quoted?.type] || SONG_MEDIA_TYPES[ownMediaType] || null;
+
     try {
         await sock.sendPresenceUpdate('composing', from);
 
@@ -51,6 +55,7 @@ export async function handleAI(sock, m, ctx) {
             pushname,
             memoryStr,
             allUsersContext,
+            hasSongMedia,
         });
 
         const { command: aiCmd, args, message: aiMessage, remember, mood, voice: wantsVoice, preReply } = result;

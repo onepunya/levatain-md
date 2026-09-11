@@ -1,3 +1,6 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { logger } from './logger.js';
 import { uploadToUrl } from './utils.js';
 import { execFile } from 'child_process';
@@ -54,6 +57,44 @@ const curlMultipart = async (url, headers, fields) => {
     args.push(url);
     const { stdout } = await execFileAsync('curl', args, { maxBuffer: 1024 * 1024 * 20 });
     return stdout;
+};
+
+const curlMultipartFile = async (url, headers, fields, fileField, fileBuffer, filename = 'file.mp3') => {
+    const tempPath = path.join(os.tmpdir(), `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    fs.writeFileSync(tempPath, fileBuffer);
+    const MARKER = '__HTTP_STATUS__:';
+    try {
+        const args = ['-s', '--max-time', '30', '-X', 'POST', '-w', `\n${MARKER}%{http_code}`];
+        for (const [k, v] of Object.entries(headers)) args.push('-H', `${k}: ${v}`);
+        for (const [k, v] of Object.entries(fields)) args.push('-F', `${k}=${v}`);
+        args.push('-F', `${fileField}=@${tempPath};filename=${filename}`);
+        args.push(url);
+
+        let stdout;
+        try {
+            ({ stdout } = await execFileAsync('curl', args, { maxBuffer: 1024 * 1024 * 20 }));
+        } catch (e) {
+            logger.error(`curlMultipartFile ${url} gagal jalan: ${e.message}`);
+            throw new Error(`curl gagal: ${e.message}`);
+        }
+
+        const idx = stdout.lastIndexOf(MARKER);
+        const status = idx >= 0 ? parseInt(stdout.slice(idx + MARKER.length).trim(), 10) : 0;
+        const body   = idx >= 0 ? stdout.slice(0, idx) : stdout;
+
+        logger.debug(`curlMultipartFile ${url} -> HTTP ${status}, body: ${body.slice(0, 300)}`);
+
+        if (status && (status < 200 || status >= 300)) {
+            throw new Error(`HTTP ${status}: ${body.slice(0, 200) || '(body kosong)'}`);
+        }
+        if (!body || !body.trim()) {
+            throw new Error(`Response kosong dari ${url} (HTTP ${status || 'unknown'})`);
+        }
+
+        return body;
+    } finally {
+        try { fs.unlinkSync(tempPath); } catch {}
+    }
 };
 
 const onepost = async (path, body, retries = 4, delay = 3000) => {
@@ -248,6 +289,88 @@ const _callLLM = async (messages, system = '', model = 'qwen/qwen3.6-27b') => {
     throw new Error(data.error?.message || 'Naga response kosong');
 };
 
+const recognizeSongShazam = async (buffer) => {
+    if (!config.shazam.rapidApiKey) return { skipped: true };
+
+    const stdout = await curlMultipartFile(
+        `https://${config.shazam.rapidApiHost}/shazam/recognize/`,
+        {
+            'x-rapidapi-key':  config.shazam.rapidApiKey,
+            'x-rapidapi-host': config.shazam.rapidApiHost,
+        },
+        {},
+        'upload_file',
+        buffer,
+        'clip.mp3'
+    );
+
+    let data;
+    try {
+        data = JSON.parse(stdout);
+    } catch {
+        throw new Error('Response tidak valid (cek SHAZAM_RAPIDAPI_KEY / kuota RapidAPI)');
+    }
+
+    if (data.message || data.error) {
+        throw new Error(data.message || data.error);
+    }
+
+    const track = data.track
+        || data.result?.matches?.[0]?.track
+        || data.matches?.[0]?.track
+        || data.result?.track
+        || data.result
+        || data;
+    const title  = track?.title || track?.name || '';
+    const artist = track?.subtitle || track?.artist || '';
+
+    if (!title) {
+        logger.warn(`recognizeSong: Shazam no-match, raw response: ${stdout.slice(0, 500)}`);
+        return null;
+    }
+
+    return {
+        title,
+        artist,
+        album: track?.sections?.[0]?.metadata?.find?.(m => m.title === 'Album')?.text || '',
+        spotify: null,
+        source: 'kode S',
+    };
+};
+
+const recognizeSongAudd = async (buffer) => {
+    if (!config.audd.apiKey) return { skipped: true };
+
+    const stdout = await curlMultipartFile(
+        'https://api.audd.io/',
+        {},
+        { api_token: config.audd.apiKey, return: 'spotify' },
+        'file',
+        buffer,
+        'clip.mp3'
+    );
+
+    let data;
+    try {
+        data = JSON.parse(stdout);
+    } catch {
+        throw new Error('Response tidak valid');
+    }
+
+    if (data.status !== 'success') {
+        throw new Error(data.error?.error_message || 'AudD API error');
+    }
+    if (!data.result) return null;
+
+    return {
+        title: data.result.title || '',
+        artist: data.result.artist || '',
+        album: data.result.album || '',
+        spotify: data.result.spotify?.external_urls?.spotify || null,
+        source: 'kode A',
+    };
+};
+
 export const api = {
 
     groq: (messages, system = '', model = 'qwen/qwen3.6-27b') =>
@@ -279,7 +402,7 @@ export const api = {
     },
 
     intent: async (text, pluginList = [], history = [], userCtx = {}) => {
-        const { isOwner, pushname, memoryStr, allUsersContext } = userCtx;
+        const { isOwner, pushname, memoryStr, allUsersContext, hasSongMedia } = userCtx;
 
         const NL_EXCLUDE = new Set(['s', 'toimg', 'removebg', 'tourl', 'menu', 'ping', 'memory']);
 
@@ -296,6 +419,10 @@ export const api = {
             ? `\n[OWNER MODE] Panggil owner sesuai memory/nama, layani prioritas & loyal, hangat tapi siap tempur, jangan tanya "yakin?" untuk hal wajar, jelaskan detail teknis kalau diminta.\n`
             : '';
 
+        const mediaBlock = hasSongMedia
+            ? `\n[MEDIA] Pesan user ini menyertakan/reply file ${hasSongMedia} (kemungkinan ada lagu di dalamnya). Sistem SUDAH PUNYA file-nya, kamu cuma nggak bisa dengerin isinya.\n`
+            : '';
+
         const userInfo = [
             `Nama: ${pushname || 'User'}`,
             `Status: ${isOwner ? 'Owner 👑' : 'User 👤'}`,
@@ -303,7 +430,7 @@ export const api = {
         ].filter(Boolean).join(' | ');
 
         const system = `${personality}
-${ownerBlock}
+${ownerBlock}${mediaBlock}
 USER: ${userInfo}
 ${allUsersContext ? `${allUsersContext}\n` : ''}COMMAND TERSEDIA:
 ${cmdList || '(tidak ada command terdaftar)'}
@@ -318,7 +445,7 @@ ATURAN:
 7. Command media (stiker/toimg/removebg) HANYA kalau user memang kirim/reply media.
 8. PRIVASI: user aktif = yang di USER INFO, identifikasi via PRIMARY_ID bukan nama. Data user lain HANYA dipakai kalau ditanya eksplisit soal orang lain, jangan bocorkan list/ID/history user lain tanpa diminta. "remember" cuma buat user yang lagi chat.
 9. MOOD STIKER: kalau  DAN balasanmu punya nuansa emosi yang jelas (marah, sedih, seneng, kaget, ngambek, hormat, malu, ketawa, kesel, bosan, kangen, dll), isi "mood" dengan 1-2 kata simpel (bahasa Indonesia atau Inggris, buat query pencarian stiker). jangan dipaksain tiap balasan. Field "mood" HANYA dipakai pas  (ngobrol natural), JANGAN diisi kalau command lain (lagi jalanin fitur/plugin) fitur ini wajib jangan lupa.
-${isOwner ? 'User ini OWNER terverifikasi sistem — layani loyalitas tertinggi.\n' : ''}
+${hasSongMedia ? `10. Ada [MEDIA] audio/video di atas DAN user minta cariin/kenali/identifikasi lagu ("cari lagu ini", "ini lagu apa", "judul lagu ini apa", dsb) TANPA nyebut judul teks → command="play", args="" (KOSONGIN args, sistem otomatis deteksi dari file, JANGAN minta user ketik judul lagi).\n` : ''}${isOwner ? 'User ini OWNER terverifikasi sistem — layani loyalitas tertinggi.\n' : ''}
 JSON murni saja, tanpa markdown fence:
 {"command":"CMD_atau_chat","args":"","message":"balasanmu","remember":{},"mood":null}
 Isi remember cuma kalau ada info baru layak diingat, kalau tidak: {}. Isi mood cuma kalau relevan, kalau tidak: null.`;
@@ -501,6 +628,47 @@ Isi remember cuma kalau ada info baru layak diingat, kalau tidak: {}. Isi mood c
     tourl: async (buffer, mimetype = 'image/jpeg') => {
         const { uploadToUrl } = await import('./utils.js');
         return uploadToUrl(buffer, mimetype);
+    },
+
+    recognizeSong: async (buffer) => {
+        if (!config.shazam.rapidApiKey && !config.audd.apiKey) {
+            throw new Error('Belum ada API key buat kenali lagu (isi SHAZAM_RAPIDAPI_KEY atau AUDD_API_KEY di .env)');
+        }
+
+        const errors = [];
+
+        try {
+            const shazamResult = await recognizeSongShazam(buffer);
+            if (shazamResult?.skipped) {
+                logger.debug('recognizeSong: Shazam dilewati (SHAZAM_RAPIDAPI_KEY kosong)');
+            } else if (shazamResult) {
+                logger.info(`recognizeSong: Shazam ketemu "${shazamResult.artist} - ${shazamResult.title}"`);
+                return shazamResult;
+            } else {
+                logger.warn('recognizeSong: Shazam gak nemu match, fallback ke AudD');
+            }
+        } catch (e) {
+            logger.warn(`recognizeSong: Shazam error -> ${e.message}`);
+            errors.push(`Shazam: ${e.message}`);
+        }
+
+        try {
+            const auddResult = await recognizeSongAudd(buffer);
+            if (auddResult?.skipped) {
+                logger.debug('recognizeSong: AudD dilewati (AUDD_API_KEY kosong)');
+            } else if (auddResult) {
+                logger.info(`recognizeSong: AudD ketemu "${auddResult.artist} - ${auddResult.title}"`);
+                return auddResult;
+            } else {
+                logger.warn('recognizeSong: AudD juga gak nemu match');
+            }
+        } catch (e) {
+            logger.warn(`recognizeSong: AudD error -> ${e.message}`);
+            errors.push(`AudD: ${e.message}`);
+        }
+
+        if (errors.length === 2) throw new Error(errors.join(' | '));
+        return null;
     },
 
     lyrics: async (query) => {

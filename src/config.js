@@ -46,6 +46,15 @@ export const config = {
         apiKey: process.env.GIPHY_API_KEY || '',
     },
 
+    audd: {
+        apiKey: process.env.AUDD_API_KEY || '',
+    },
+
+    shazam: {
+        rapidApiKey: process.env.SHAZAM_RAPIDAPI_KEY || '',
+        rapidApiHost: process.env.SHAZAM_RAPIDAPI_HOST || 'shazam-api6.p.rapidapi.com',
+    },
+
     magicHour: {
         keys: [
             process.env.MAGICHOUR_KEY_1,
