@@ -1,0 +1,1 @@
+12. Ada [MEDIA] audio/video di atas DAN user minta cariin/kenali/identifikasi lagu ("cari lagu ini", "ini lagu apa", "judul lagu ini apa", dsb) TANPA nyebut judul teks → command="play", args="" (KOSONGIN args, sistem otomatis deteksi dari file, JANGAN minta user ketik judul lagi).

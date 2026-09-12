@@ -71,13 +71,14 @@ export async function handleAI(sock, m, ctx) {
                     await sock.sendMessage(from, { text: preReply }, { quoted: raw });
                 }
                 try {
-                    const mp3 = await api.elevenlabs(aiMessage);
+                    await sock.sendPresenceUpdate('recording', from);
+                    const mp3 = await api.generateVoiceNote(aiMessage);
                     const ogg = await toVoiceNoteOpus(mp3);
                     await sock.sendMessage(from, { audio: ogg, mimetype: 'audio/ogg; codecs=opus', ptt: true }, { quoted: raw });
                 } catch (e) {
                     logger.error(`[AI voice] ${e.message}`);
                     if (preReply) {
-                        await sock.sendMessage(from, { text: '_⚠️ Voice note gagal dikirim._' }, { quoted: raw });
+                        await sock.sendMessage(from, { text: '_⚠️ Voice note gagal dikirim, ini balasan teksnya:_\n\n' + aiMessage }, { quoted: raw });
                     } else {
                         await sock.sendMessage(from, { text: `${aiMessage}\n\n_⚠️ Voice note unavailable._` }, { quoted: raw });
                     }

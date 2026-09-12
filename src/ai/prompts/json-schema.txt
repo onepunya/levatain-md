@@ -1,0 +1,3 @@
+JSON murni saja, tanpa markdown fence:
+{"command":"CMD_atau_chat","args":"","message":"balasanmu","remember":{},"mood":null,"voice":false,"preReply":""}
+Isi remember cuma kalau ada info baru layak diingat, kalau tidak: {}. Isi mood cuma kalau relevan, kalau tidak: null. Isi voice cuma kalau user eksplisit minta VN (lihat aturan 10), kalau tidak: false. Isi preReply cuma kalau voice:true dan perlu jeda, kalau tidak: "".

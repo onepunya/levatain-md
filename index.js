@@ -88,6 +88,8 @@ async function start() {
         getMessage: async (key) => msgCache.get(key.id)?.message || { conversation: '' },
     });
 
+    global.sock = sock;
+
     if (!sock.authState.creds.registered) {
         setTimeout(async () => {
             try {
