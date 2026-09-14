@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/onepunya/siswanda-fox_onepunya-/refs/heads/main/watermark-removed-44752.png" alt="Levatain-MD Banner" width="100%">
+  <img src="https://raw.githubusercontent.com/onepunya/animes/refs/heads/main/watermark-removed-47041.png" alt="Levatain-MD Banner" width="100%">
 </p>
 
 # Levatain-MD
