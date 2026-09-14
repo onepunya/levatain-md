@@ -34,7 +34,7 @@ function topUsers(db, limit = 5) {
         .slice(0, limit);
 }
 
-function getStatus() {
+export function getStatus() {
     const db = global.db || { users: {}, groups: {} };
     const totalCommands = Object.values(db.users || {}).reduce((sum, u) => sum + (u.hit || 0), 0);
     const ipInfo = getCachedIpInfo();

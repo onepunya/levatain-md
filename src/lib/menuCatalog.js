@@ -111,11 +111,7 @@ export function greetingPhrase() {
     else if (h >= 15 && h < 18) key = 'sore';
 
     const pool = GREETING_PHRASES[key];
-<<<<<<< HEAD
-    return pool[Math.floor(Math.random() * pool.length)];
-=======
     return pick(pool);
->>>>>>> c219057 (update system)
 }
 
 export function buildCategoryText(tag, items) {
