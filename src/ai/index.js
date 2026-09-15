@@ -57,6 +57,7 @@ export async function handleAI(sock, m, ctx) {
             allUsersContext,
             hasSongMedia,
         });
+        //console.log(result)
 
         const { command: aiCmd, args, message: aiMessage, remember, mood, voice: wantsVoice, preReply } = result;
 
@@ -122,6 +123,7 @@ export async function handleAI(sock, m, ctx) {
 
         db.hit = (db.hit || 0) + 1;
         await saveDb();
+        //console.log(args)
 
     } catch (e) {
         logger.error(`[AI] ${e.message}`);

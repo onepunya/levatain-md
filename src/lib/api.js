@@ -24,6 +24,11 @@ const RULES_EXEC = loadPrompt('rules-exec.txt');
 const RULES_SONG_MEDIA = loadPrompt('rules-song-media.txt');
 const JSON_SCHEMA = loadPrompt('json-schema.txt');
 
+const stripMarkdownLinks = (str) => {
+	if (typeof str !== 'string' || !str.includes('](')) return str;
+	return str.replace(/\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, '$2').trim();
+};
+
 const extractJson = (str) => {
 	const start = str.indexOf('{');
 	if (start === -1) return null;
@@ -454,7 +459,10 @@ export const api = {
 
 		const cmdList = pluginList
 			.filter(p => (p.tag !== 'owner' || isOwner) && !NL_EXCLUDE.has(p.cmd[0]))
-			.map(p => `- ${p.cmd[0]}: ${p.ai?.trigger || p.desc}`)
+			.map(p => {
+				const example = p.ai?.examples?.[0];
+				return `- ${p.cmd[0]}: ${p.ai?.trigger || p.desc}${example ? ` | format args contoh: "${example}" (args = bagian setelah command-nya, salin persis)` : ''}`;
+			})
 			.join('\n');
 
 		const personality = isOwner ? PERSONALITY_OWNER : PERSONALITY_GENERAL;
@@ -478,7 +486,7 @@ export const api = {
 			const p = JSON.parse(jsonStr);
 			return {
 				command: p.command || 'chat',
-				args: p.args || '',
+				args: stripMarkdownLinks(p.args || ''),
 				message: p.message || '',
 				remember: p.remember || {},
 				mood: p.mood || null,

@@ -109,137 +109,44 @@ const remuxFaststart = (inputFile, outputFile) => new Promise((resolve, reject) 
         .save(outputFile);
 });
 
-const convertToMp3 = (inputFile, outputFile) => new Promise((resolve, reject) => {
-    let stderrLog = '';
-    ffmpeg(inputFile)
-        .noVideo()
-        .audioCodec('libmp3lame')
-        .audioBitrate(128)
-        .format('mp3')
-        .on('stderr', line => { stderrLog += line + '\n'; })
-        .on('error', error => {
-            logger.error(`[ffmpeg convertToMp3] ${error.message}\n${stderrLog.slice(-500)}`);
-            reject(new Error('Gagal konversi ke MP3.'));
-        })
-        .on('end', () => resolve())
-        .save(outputFile);
-});
 
-const muxAudioVideo = (videoFile, audioFile, outputFile) => new Promise((resolve, reject) => {
-    let stderrLog = '';
-    ffmpeg()
-        .input(videoFile)
-        .input(audioFile)
-        .outputOptions(['-c:v copy', '-c:a aac', '-b:a 128k', '-movflags +faststart', '-shortest'])
-        .format('mp4')
-        .on('stderr', line => { stderrLog += line + '\n'; })
-        .on('error', error => {
-            logger.error(`[ffmpeg muxAudioVideo] ${error.message}\n${stderrLog.slice(-500)}`);
-            reject(new Error('Gagal menggabungkan audio & video.'));
-        })
-        .on('end', () => resolve())
-        .save(outputFile);
-});
-
-const YTULTRA_HEADERS = {
-    accept: '*/*',
-    'content-type': 'application/json',
-    origin: 'https://www.ytultra.com',
-    referer: 'https://www.ytultra.com/',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'
+const JAKY_API_KEYS = ['jK54EBE6E8', 'jK54EBE6E8'];
+let jakyKeyCursor = 0;
+const nextJakyKey = () => {
+    const key = JAKY_API_KEYS[jakyKeyCursor % JAKY_API_KEYS.length];
+    jakyKeyCursor++;
+    return key;
 };
 
-const ytultraInfo = async youtubeUrl => {
-    const res = await fetch('https://api.ytultra.com/ikool/youtube/download', {
-        method: 'POST',
-        headers: YTULTRA_HEADERS,
-        body: JSON.stringify({ url: youtubeUrl }),
+const jakyInfo = async (youtubeUrl, format, quality) => {
+    const apiUrl = `https://api.jaky.dev/v1/download/youtube?url=${encodeURIComponent(youtubeUrl)}&format=${format}&quality=${quality}`;
+    const res = await fetch(apiUrl, {
+        method: 'GET',
+        headers: { 'x-jaky-key': nextJakyKey() },
         signal: AbortSignal.timeout(30000)
     });
     const body = await res.json();
-    if (!body || body.code !== '0000' || !body.data) {
-        throw new Error(`ytultra info gagal: ${JSON.stringify(body).slice(0, 150)}`);
+    if (!body || body.status !== true || !body.result?.downloadUrl) {
+        throw new Error(`jaky info gagal: ${JSON.stringify(body).slice(0, 150)}`);
     }
-    return body.data;
+    return body.result;
 };
 
-const withMediaMeta = (medias = []) => medias
-    .filter(m => m?.url)
-    .map(m => ({ ...m, fmt: (m.format || '').toLowerCase(), size: m.fileSize || 0 }));
-
-
-const isProgressiveVideo = media => !/[?&]aitags=/.test(media.url || '');
-
-const pickVideo = medias => {
-    const videos = withMediaMeta(medias)
-        .filter(m => m.fmt.includes('.mp4') && !m.fmt.includes('m4a'))
-        .sort((a, b) => b.size - a.size);
-    if (!videos.length) throw new Error('Video tidak ditemukan di respons ytultra.');
-    return videos.find(v => v.size <= MAX_FILE_SIZE) || videos[videos.length - 1];
-};
-
-const pickAudio = medias => {
-    const audio = withMediaMeta(medias)
-        .filter(m => m.fmt.includes('.m4a') || m.fmt.includes('.weba') || m.fmt.includes('.mp3'))
-        .sort((a, b) => b.size - a.size);
-    if (!audio.length) return null;
-    return audio.find(a => a.size <= MAX_FILE_SIZE) || audio[0];
-};
-
-const downloadViaYtultra = async (youtubeUrl, format, tempDir, id, onProgress) => {
-    const info = await ytultraInfo(youtubeUrl);
-
-    if (format === 'mp3') {
-        const audio = pickAudio(info.medias);
-        if (!audio) throw new Error('Audio tidak ditemukan di respons ytultra.');
-        const ext = audio.fmt.includes('.weba') ? 'webm' : 'm4a';
-        const rawFile = path.join(tempDir, `${id}.raw.${ext}`);
-        await streamDownload(audio.url, YTULTRA_HEADERS, rawFile, onProgress);
-        await probeMedia(rawFile);
-        return { rawFile, title: info.title, thumbnail: info.imageUrl };
-    }
-
-    const video = pickVideo(info.medias);
-    const videoFile = path.join(tempDir, `${id}.video.mp4`);
-
-    if (isProgressiveVideo(video)) {
-  
-        await streamDownload(video.url, YTULTRA_HEADERS, videoFile, onProgress);
-        await probeMedia(videoFile);
-        return { rawFile: videoFile, title: info.title, thumbnail: info.imageUrl };
-    }
-
-    const audio = pickAudio(info.medias);
-    await streamDownload(video.url, YTULTRA_HEADERS, videoFile, p => onProgress && onProgress(Math.round(p * 0.7)));
-    await probeMedia(videoFile);
-
-    if (!audio) {
-        logger.warn('[yt] Tidak ada track audio terpisah, video dikirim tanpa suara.');
-        return { rawFile: videoFile, title: info.title, thumbnail: info.imageUrl };
-    }
-
-    const audioExt = audio.fmt.includes('.weba') ? 'webm' : 'm4a';
-    const audioFile = path.join(tempDir, `${id}.audio.${audioExt}`);
-    await streamDownload(audio.url, YTULTRA_HEADERS, audioFile, p => onProgress && onProgress(70 + Math.round(p * 0.25)));
-    await probeMedia(audioFile);
-
-    const muxedFile = path.join(tempDir, `${id}.muxed.mp4`);
-    try {
-        await muxAudioVideo(videoFile, audioFile, muxedFile);
-    } finally {
-        cleanupTempFile(videoFile);
-        cleanupTempFile(audioFile);
-    }
-    onProgress && onProgress(99);
-
-    return { rawFile: muxedFile, title: info.title, thumbnail: info.imageUrl };
+const downloadViaJaky = async (youtubeUrl, format, tempDir, id, onProgress) => {
+    const quality = format === 'mp3' ? 128 : 720;
+    const info = await jakyInfo(youtubeUrl, format, quality);
+    const ext = format === 'mp3' ? 'mp3' : 'mp4';
+    const rawFile = path.join(tempDir, `${id}.raw.${ext}`);
+    await streamDownload(info.downloadUrl, {}, rawFile, onProgress);
+    await probeMedia(rawFile);
+    return { rawFile, title: info.title, thumbnail: null };
 };
 
 const downloadWithRetry = async (youtubeUrl, format, tempDir, id, onProgress, attempts = 2) => {
     let lastError;
     for (let i = 0; i < attempts; i++) {
         try {
-            return await downloadViaYtultra(youtubeUrl, format, tempDir, id, onProgress);
+            return await downloadViaJaky(youtubeUrl, format, tempDir, id, onProgress);
         } catch (error) {
             lastError = error;
             logger.warn(`[yt] percobaan ${i + 1}/${attempts} gagal: ${error.message}`);
@@ -264,7 +171,8 @@ export const ytDownload = async (youtubeUrl, formatReq = 'mp4', onProgress) => {
         const { title, thumbnail } = result;
 
         if (format === 'mp3') {
-            await convertToMp3(rawFile, finalMp3);
+           
+            fs.copyFileSync(rawFile, finalMp3);
             cleanupTempFile(rawFile);
 
             if (!fs.existsSync(finalMp3) || fs.statSync(finalMp3).size <= 0) {
@@ -280,6 +188,7 @@ export const ytDownload = async (youtubeUrl, formatReq = 'mp4', onProgress) => {
             return { title, thumbnail, format: 'mp3', url: finalMp3, size, isTempFile: true };
         }
 
+        
         try {
             await remuxFaststart(rawFile, finalMp4);
         } catch {
