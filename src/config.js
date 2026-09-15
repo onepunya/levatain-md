@@ -24,13 +24,9 @@ export const config = {
     },
 
     ai: {
-        groqKeys: [
-            process.env.GROQ_KEY_1,
-            process.env.GROQ_KEY_2,
-            process.env.GROQ_KEY_3,
-            process.env.GROQ_KEY_4,
-            process.env.GROQ_KEY_5,
-        ].filter(Boolean),
+        gemini: {
+            cookie: process.env.GEMINI_COOKIE || '',
+        },
         naga: {
             apiKey: process.env.NAGA_API_KEY || '',
             model: process.env.NAGA_MODEL || 'nemotron-3-ultra-550b-a55b:free',
@@ -68,6 +64,8 @@ export const config = {
     debug: process.env.DEBUG === 'true',
 };
 
-if (config.ai.groqKeys.length === 0 && !config.ai.naga.apiKey) {
-    console.warn('[config] Peringatan: GROQ_KEY_* dan NAGA_API_KEY kosong semua, fitur AI chat tidak akan berfungsi.');
+if (!config.ai.gemini.cookie && !config.ai.naga.apiKey) {
+    console.warn('[config] Peringatan: GEMINI_COOKIE dan NAGA_API_KEY kosong semua, fitur AI chat tidak akan berfungsi.');
+} else if (!config.ai.gemini.cookie) {
+    console.warn('[config] Peringatan: GEMINI_COOKIE kosong, AI chat langsung fallback ke Naga.');
 }

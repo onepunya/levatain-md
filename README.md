@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/onepunya/animes/refs/heads/main/watermark-removed-47041.png" alt="Levatain-MD Banner" width="100%">
+  <img src="https://raw.githubusercontent.com/onepunya/siswanda-fox_onepunya-/refs/heads/main/watermark-removed-44752.png" alt="Levatain-MD Banner" width="100%">
 </p>
 
 # Levatain-MD
@@ -62,7 +62,7 @@ cp .env.example .env
 Buka `.env` dan isi minimal:
 - `PAIRING_NUMBER` — nomor WA yang mau dijadiin bot (format `628xxxxxxxxxx`, tanpa `+`)
 - `OWNER_NUMBER` — nomor WA kamu sebagai owner
-- Minimal salah satu AI key: `GROQ_KEY_1` (gratis di [console.groq.com](https://console.groq.com/keys)) atau `NAGA_API_KEY`
+- Minimal salah satu AI key: `GEMINI_KEY_1` (gratis di [Google AI Studio](https://aistudio.google.com/apikey)) atau `NAGA_API_KEY`
 
 Variabel lain (Giphy, OnePunya, Magic Hour, AudD/Shazam, translate, dashboard port, dll) bersifat opsional — lihat komentar di `.env.example` untuk penjelasan tiap variabel.
 
@@ -72,8 +72,8 @@ Semua key di bawah ini ditaruh di file `.env` (bukan `.env.example`), satu baris
 
 | Key dipakai untuk | Env var | Cara ambil |
 |---|---|---|
-| AI chat & intent engine (utama) | `GROQ_KEY_1` s/d `GROQ_KEY_5` | Daftar gratis di [console.groq.com](https://console.groq.com/), buka menu **API Keys** → **Create API Key**. Bisa isi lebih dari satu key (bot auto-rotate kalau salah satu kena rate limit) — minimal isi `GROQ_KEY_1`. |
-| AI chat (fallback) | `NAGA_API_KEY` | Join Discord server [NagaAI](https://naga.ac/) → di channel bot, ketik command `/account key get` → key langsung dikirim bot. Opsional, cuma dipakai kalau semua Groq key habis kuota. |
+| AI chat & intent engine (utama) pake cookie GEMINI cari pake devtools |
+| AI chat (fallback) | `NAGA_API_KEY` | Join Discord server [NagaAI](https://naga.ac/) → di channel bot, ketik command `/account key get` → key langsung dikirim bot. Opsional, cuma dipakai kalau semua Gemini key gagal/limit. |
 | Fitur download/tools tertentu | `ONEPUNYA_API_KEY` | OnePunya bukan layanan publik dengan pendaftaran mandiri — ini API pribadi/komunitas milik developer independen. Hubungi langsung pemiliknya lewat [GitHub](https://github.com/onepunya) atau kontak yang tertera di sana untuk minta akses key. |
 | Stiker mood/AI (Giphy) | `GIPHY_API_KEY` | Buka [developers.giphy.com](https://developers.giphy.com/) → **Create an App** → pilih **API** (bukan SDK) → copy API Key yang muncul. |
 | `.editimage` / `.aiedit` (Magic Hour) | `MAGICHOUR_KEY_1` s/d `MAGICHOUR_KEY_3` | Daftar di [magichour.ai](https://magichour.ai/) → masuk **Dashboard** → menu **API Keys** → generate key baru. Bisa isi lebih dari satu untuk auto-rotate. |
@@ -129,7 +129,7 @@ Saat pertama kali jalan, bot akan menampilkan **kode pairing** di terminal. Buka
 2. **Upload source code** bot ke direktori server (lewat file manager panel, SFTP, atau `git clone` dari repo ini kalau egg-nya mendukung).
 3. **Isi environment variable** — dua cara, pilih salah satu:
    - Buat file `.env` langsung di root project (upload manual isinya, boleh isi ulang dari `.env.example`), **atau**
-   - Kalau egg Pterodactyl-nya menyediakan slot "Environment Variables" di tab Startup, isi variabel yang sama di sana (nama variabel harus sama persis: `PAIRING_NUMBER`, `OWNER_NUMBER`, `GROQ_KEY_1`, dst).
+   - Kalau egg Pterodactyl-nya menyediakan slot "Environment Variables" di tab Startup, isi variabel yang sama di sana (nama variabel harus sama persis: `PAIRING_NUMBER`, `OWNER_NUMBER`, `GEMINI_KEY_1`, dst).
 4. **Startup command** — set ke:
    ```
    npm install && npm start
@@ -189,7 +189,7 @@ Owner bisa reload semua plugin tanpa restart proses pakai command `.reload`.
 | Masalah | Solusi |
 |---|---|
 | Bot exit langsung saat start | Cek `PAIRING_NUMBER` sudah diisi di `.env` |
-| Fitur AI chat / intent engine gak jalan | Cek minimal satu `GROQ_KEY_*` atau `NAGA_API_KEY` sudah diisi |
+| Fitur AI chat / intent engine gak jalan | Cek minimal satu `GEMINI_KEY_*` atau `NAGA_API_KEY` sudah diisi |
 | AI tidak merespon di grup | Sebut nama bot / kata `lev`, mention bot, atau reply pesan bot — di grup AI tidak auto-nyaut semua chat |
 | Fitur audio/effect error | Pastikan `ffmpeg` ter-install di sistem, cek `ffmpeg -version` |
 | Session logout terus | Hapus folder `session/`, restart bot, pairing ulang |

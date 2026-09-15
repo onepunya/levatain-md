@@ -1,28 +1,15 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import {
-	fileURLToPath
-} from 'url';
-import {
-	logger
-} from './logger.js';
-import {
-	uploadToUrl, sleep, uniqueId
-} from './utils.js';
-import {
-	execFile
-} from 'child_process';
-import {
-	promisify
-} from 'util';
-import {
-	ytHandler
-} from './youtube.js';
-import {
-	config
-} from '../config.js';
-global.yt = ytHandler
+import { fileURLToPath } from 'url';
+import { logger } from './logger.js';
+import { uploadToUrl, sleep, uniqueId } from './utils.js';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+import { ytHandler } from './youtube.js';
+import { config } from '../config.js';
+
+global.yt = ytHandler;
 
 const execFileAsync = promisify(execFile);
 
@@ -40,9 +27,7 @@ const JSON_SCHEMA = loadPrompt('json-schema.txt');
 const extractJson = (str) => {
 	const start = str.indexOf('{');
 	if (start === -1) return null;
-	let depth = 0,
-		inString = false,
-		escape = false;
+	let depth = 0, inString = false, escape = false;
 	for (let i = start; i < str.length; i++) {
 		const ch = str[i];
 		if (escape) {
@@ -82,11 +67,7 @@ const curlRequest = async (method, url, headers, body) => {
 	for (const [k, v] of Object.entries(headers)) args.push('-H', `${k}: ${v}`);
 	if (body !== undefined) args.push('--data', JSON.stringify(body));
 	args.push(url);
-	const {
-		stdout
-	} = await execFileAsync('curl', args, {
-		maxBuffer: 1024 * 1024 * 20
-	});
+	const { stdout } = await execFileAsync('curl', args, { maxBuffer: 1024 * 1024 * 20 });
 	return stdout;
 };
 
@@ -95,11 +76,7 @@ const curlMultipart = async (url, headers, fields) => {
 	for (const [k, v] of Object.entries(headers)) args.push('-H', `${k}: ${v}`);
 	for (const [k, v] of Object.entries(fields)) args.push('--form-string', `${k}=${v}`);
 	args.push(url);
-	const {
-		stdout
-	} = await execFileAsync('curl', args, {
-		maxBuffer: 1024 * 1024 * 20
-	});
+	const { stdout } = await execFileAsync('curl', args, { maxBuffer: 1024 * 1024 * 20 });
 	return stdout;
 };
 
@@ -116,11 +93,7 @@ const curlMultipartFile = async (url, headers, fields, fileField, fileBuffer, fi
 
 		let stdout;
 		try {
-			({
-				stdout
-			} = await execFileAsync('curl', args, {
-				maxBuffer: 1024 * 1024 * 20
-			}));
+			({ stdout } = await execFileAsync('curl', args, { maxBuffer: 1024 * 1024 * 20 }));
 		} catch (e) {
 			logger.error(`curlMultipartFile ${url} gagal jalan: ${e.message}`);
 			throw new Error(`curl gagal: ${e.message}`);
@@ -132,12 +105,8 @@ const curlMultipartFile = async (url, headers, fields, fileField, fileBuffer, fi
 
 		logger.debug(`curlMultipartFile ${url} -> HTTP ${status}, body: ${body.slice(0, 300)}`);
 
-		if (status && (status < 200 || status >= 300)) {
-			throw new Error(`HTTP ${status}: ${body.slice(0, 200) || '(body kosong)'}`);
-		}
-		if (!body || !body.trim()) {
-			throw new Error(`Response kosong dari ${url} (HTTP ${status || 'unknown'})`);
-		}
+		if (status && (status < 200 || status >= 300)) throw new Error(`HTTP ${status}: ${body.slice(0, 200) || '(body kosong)'}`);
+		if (!body || !body.trim()) throw new Error(`Response kosong dari ${url} (HTTP ${status || 'unknown'})`);
 
 		return body;
 	} finally {
@@ -175,10 +144,7 @@ const onepost = async (path, body, retries = 4, delay = 3000) => {
 
 const oneget = async (path, params = {}, retries = 3, delay = 2000) => {
 	for (let i = 0; i < retries; i++) {
-		const q = new URLSearchParams({
-			...params,
-			apikey: ONEPUNYA_KEY
-		}).toString();
+		const q = new URLSearchParams({ ...params, apikey: ONEPUNYA_KEY }).toString();
 
 		let textData;
 		try {
@@ -265,92 +231,97 @@ const generateFlux = (prompt) => fluxRetry(async () => {
 	throw new Error('TIMEOUT: task tidak selesai setelah 20x polling');
 });
 
-const GROQ_KEYS = config.ai.groqKeys;
+const stripThinking = (text) => text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
-let _groqIdx = 0;
-const getGroqKey = () => GROQ_KEYS[_groqIdx % GROQ_KEYS.length];
-const rotateGroq = () => {
-	_groqIdx = (_groqIdx + 1) % Math.max(GROQ_KEYS.length, 1);
-	logger.warn(`[Groq] Key exhausted → rotate ke index ${_groqIdx}`);
+const buildMessages = (system, messages) => [
+	...(system ? [{ role: 'system', content: system }] : []),
+	...messages,
+];
+
+const callGemini = async (messages, system) => {
+	let promptText = system ? `[SYSTEM INSTRUCTIONS]:\n${system}\n\n` : '';
+	messages.forEach(m => {
+		promptText += `[${m.role.toUpperCase()}]: ${m.content}\n`;
+	});
+	promptText += "\n[ASSISTANT]:";
+
+	const url = new URL("https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate");
+	url.searchParams.append("bl", "boq_assistant-bard-web-server_20260912.08_p0");
+	url.searchParams.append("f.sid", "-4966488158871472830");
+	url.searchParams.append("hl", "id");
+	url.searchParams.append("_reqid", "2266864");
+	url.searchParams.append("rt", "c");
+
+	const rawData = [
+		null,
+		JSON.stringify([
+			[promptText, 0, null, null, null, null, 0],
+			["id"],
+			["", "", "", null, null, null, null, null, null, ""]
+		])
+	];
+
+	const body = new URLSearchParams();
+	body.append("f.req", JSON.stringify(rawData));
+
+	const headers = {
+		"authority": "gemini.google.com",
+		"accept": "*/*",
+		"accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+		"content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+		"origin": "https://gemini.google.com",
+		"referer": "https://gemini.google.com/",
+		"user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36",
+		"x-same-domain": "1",
+		"cookie": config.ai.gemini.cookie
+	};
+
+	if (!config.ai.gemini.cookie) throw new Error("GEMINI_COOKIE kosong di .env");
+
+	const res = await fetch(url, {
+		method: 'POST',
+		headers: headers,
+		body: body,
+	});
+
+	if (res.status === 429 || res.status === 402) throw new Error("Rate limit tercapai.");
+	if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+
+	const rawText = await res.text();
+	let finalAnswer = "";
+	const lines = rawText.split('\n');
+
+	for (const line of lines) {
+		if (line.startsWith('[[') && line.includes('"wrb.fr"')) {
+			try {
+				const parsedLine = JSON.parse(line);
+				const wrbData = parsedLine[0];
+				if (wrbData && typeof wrbData[2] === 'string') {
+					const innerData = JSON.parse(wrbData[2]);
+					if (innerData?.[4]?.[0]?.[1]?.[0]) {
+						finalAnswer = innerData[4][0][1][0];
+					}
+				}
+			} catch (e) {}
+		}
+	}
+
+	if (finalAnswer) return stripThinking(finalAnswer);
+	throw new Error("Gagal mengambil teks balasan");
 };
 
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const NAGA_KEY = config.ai.naga.apiKey;
 const NAGA_URL = 'https://api.naga.ac/v1/chat/completions';
 const NAGA_TTS_URL = 'https://api.naga.ac/v1/audio/speech';
 
-const stripThinking = (text) => text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+const callNaga = async (messages, system) => {
+	if (!NAGA_KEY) throw new Error('Tidak ada AI key tersedia (Gemini dan Naga kosong di .env)');
 
-const _callLLM = async (messages, system = '', model = 'qwen/qwen3.6-27b') => {
 	const payload = {
-		model,
+		model: config.ai.naga.model,
 		temperature: 0.7,
 		max_tokens: 600,
-		messages: [
-			...(system ? [{
-				role: 'system',
-				content: system
-			}] : []),
-			...messages,
-		],
-		...(model.startsWith('qwen/') ? {
-			reasoning_effort: 'none'
-		} : {}),
-	};
-
-	if (GROQ_KEYS.length > 0) {
-		let lastError;
-		let modelInvalid = false;
-
-		for (let attempt = 0; attempt < GROQ_KEYS.length; attempt++) {
-			try {
-				const res = await fetch(GROQ_URL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${getGroqKey()}`
-					},
-					body: JSON.stringify(payload),
-				});
-				const data = await res.json();
-				const errMsg = data.error?.message || '';
-
-				if (data.error?.code === 'model_not_found' || errMsg.includes('does not exist')) {
-					lastError = `Model Groq "${model}" tidak valid/deprecated: ${errMsg}`;
-					modelInvalid = true;
-					break;
-				}
-
-				if (
-					res.status === 429 || res.status === 402 ||
-					data.error?.code === 'rate_limit_exceeded' ||
-					data.error?.code === 'insufficient_quota' ||
-					errMsg.includes('rate_limit') || errMsg.includes('quota') || errMsg.includes('Rate limit')
-				) {
-					lastError = errMsg || `Key ${attempt} exhausted`;
-					rotateGroq();
-					continue;
-				}
-
-				if (data.choices?.[0]?.message?.content)
-					return stripThinking(data.choices[0].message.content);
-
-				throw new Error(data.error?.message || 'Groq response kosong');
-			} catch (e) {
-				lastError = e.message;
-				rotateGroq();
-			}
-		}
-
-		if (modelInvalid) logger.warn(`[Groq] ${lastError}. Fallback ke Naga...`);
-		else logger.warn(`[Groq] Semua key exhausted (${lastError}). Fallback ke Naga...`);
-	}
-
-	if (!NAGA_KEY) throw new Error('Tidak ada AI key tersedia (Groq dan Naga kosong di .env)');
-
-	const nagaPayload = {
-		...payload,
-		model: config.ai.naga.model
+		messages: buildMessages(system, messages),
 	};
 	const res = await fetch(NAGA_URL, {
 		method: 'POST',
@@ -358,17 +329,24 @@ const _callLLM = async (messages, system = '', model = 'qwen/qwen3.6-27b') => {
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${NAGA_KEY}`
 		},
-		body: JSON.stringify(nagaPayload),
+		body: JSON.stringify(payload),
 	});
 	const data = await res.json();
 	if (data.choices?.[0]?.message?.content) return stripThinking(data.choices[0].message.content);
 	throw new Error(data.error?.message || 'Naga response kosong');
 };
 
+const _callLLM = async (messages, system = '') => {
+	try {
+		return await callGemini(messages, system);
+	} catch (e) {
+		logger.warn(`[Gemini] ${e.message}. Fallback ke Naga...`);
+		return await callNaga(messages, system);
+	}
+};
+
 const recognizeSongShazam = async (buffer) => {
-	if (!config.shazam.rapidApiKey) return {
-		skipped: true
-	};
+	if (!config.shazam.rapidApiKey) return { skipped: true };
 
 	const stdout = await curlMultipartFile(
 		`https://${config.shazam.rapidApiHost}/shazam/recognize/`, {
@@ -387,16 +365,9 @@ const recognizeSongShazam = async (buffer) => {
 		throw new Error('Response tidak valid (cek SHAZAM_RAPIDAPI_KEY / kuota RapidAPI)');
 	}
 
-	if (data.message || data.error) {
-		throw new Error(data.message || data.error);
-	}
+	if (data.message || data.error) throw new Error(data.message || data.error);
 
-	const track = data.track ||
-		data.result?.matches?.[0]?.track ||
-		data.matches?.[0]?.track ||
-		data.result?.track ||
-		data.result ||
-		data;
+	const track = data.track || data.result?.matches?.[0]?.track || data.matches?.[0]?.track || data.result?.track || data.result || data;
 	const title = track?.title || track?.name || '';
 	const artist = track?.subtitle || track?.artist || '';
 
@@ -415,15 +386,10 @@ const recognizeSongShazam = async (buffer) => {
 };
 
 const recognizeSongAudd = async (buffer) => {
-	if (!config.audd.apiKey) return {
-		skipped: true
-	};
+	if (!config.audd.apiKey) return { skipped: true };
 
 	const stdout = await curlMultipartFile(
-		'https://api.audd.io/', {}, {
-			api_token: config.audd.apiKey,
-			return: 'spotify'
-		},
+		'https://api.audd.io/', {}, { api_token: config.audd.apiKey, return: 'spotify' },
 		'file',
 		buffer,
 		'clip.mp3'
@@ -436,9 +402,7 @@ const recognizeSongAudd = async (buffer) => {
 		throw new Error('Response tidak valid');
 	}
 
-	if (data.status !== 'success') {
-		throw new Error(data.error?.error_message || 'AudD API error');
-	}
+	if (data.status !== 'success') throw new Error(data.error?.error_message || 'AudD API error');
 	if (!data.result) return null;
 
 	return {
@@ -451,9 +415,7 @@ const recognizeSongAudd = async (buffer) => {
 };
 
 export const api = {
-
-	groq: (messages, system = '', model = 'qwen/qwen3.6-27b') =>
-		_callLLM(messages, system, model),
+	chatAI: (messages, system = '') => _callLLM(messages, system),
 
 	naga: async (messages, system = '', model = null) => {
 		if (!NAGA_KEY) throw new Error('NAGA_API_KEY tidak diset di .env');
@@ -467,10 +429,7 @@ export const api = {
 				model: model || config.ai.naga.model || 'step-3.5-flash:free',
 				temperature: 0.7,
 				max_tokens: 600,
-				messages: [...(system ? [{
-					role: 'system',
-					content: system
-				}] : []), ...messages],
+				messages: [...(system ? [{ role: 'system', content: system }] : []), ...messages],
 			}),
 		});
 		const data = await res.json();
@@ -483,24 +442,14 @@ export const api = {
 			model,
 			stream: false,
 			markdown: false,
-			messages: [{
-				role: 'user',
-				content: query
-			}],
+			messages: [{ role: 'user', content: query }],
 		});
 		if (data.status && data.result) return data.result.response;
 		throw new Error('ONEPUNYA AI error atau response kosong.');
 	},
 
 	intent: async (text, pluginList = [], history = [], userCtx = {}) => {
-		const {
-			isOwner,
-			pushname,
-			memoryStr,
-			allUsersContext,
-			hasSongMedia
-		} = userCtx;
-
+		const { isOwner, pushname, memoryStr, allUsersContext, hasSongMedia } = userCtx;
 		const NL_EXCLUDE = new Set(['s', 'toimg', 'removebg', 'tourl', 'menu', 'ping', 'memory']);
 
 		const cmdList = pluginList
@@ -509,12 +458,8 @@ export const api = {
 			.join('\n');
 
 		const personality = isOwner ? PERSONALITY_OWNER : PERSONALITY_GENERAL;
-
 		const ownerBlock = isOwner ? `\n${OWNER_BLOCK}\n` : '';
-
-		const mediaBlock = hasSongMedia ?
-			`\n[MEDIA] Pesan user ini menyertakan/reply file ${hasSongMedia} (kemungkinan ada lagu di dalamnya). Sistem SUDAH PUNYA file-nya, kamu cuma nggak bisa dengerin isinya.\n` :
-			'';
+		const mediaBlock = hasSongMedia ? `\n[MEDIA] Pesan user ini menyertakan/reply file ${hasSongMedia} (kemungkinan ada lagu di dalamnya). Sistem SUDAH PUNYA file-nya, kamu cuma nggak bisa dengerin isinya.\n` : '';
 
 		const userInfo = [
 			`Nama: ${pushname || 'User'}`,
@@ -522,33 +467,13 @@ export const api = {
 			memoryStr ? `Memory: ${memoryStr}` : '',
 		].filter(Boolean).join(' | ');
 
-		const system = `${personality}
-${ownerBlock}${mediaBlock}
-USER: ${userInfo}
-${allUsersContext ? `${allUsersContext}\n` : ''}COMMAND TERSEDIA:
-${cmdList || '(tidak ada command terdaftar)'}
+		const system = `${personality}\n${ownerBlock}${mediaBlock}\nUSER: ${userInfo}\n${allUsersContext ? `${allUsersContext}\n` : ''}COMMAND TERSEDIA:\n${cmdList || '(tidak ada command terdaftar)'}\n\nATURAN:\n${RULES}\n${isOwner ? `${RULES_EXEC}\n` : ''}${hasSongMedia ? `${RULES_SONG_MEDIA}\n` : ''}${isOwner ? 'User ini OWNER terverifikasi sistem — layani loyalitas tertinggi.\n' : ''}\n${JSON_SCHEMA}`;
 
-ATURAN:
-${RULES}
-${isOwner ? `${RULES_EXEC}\n` : ''}${hasSongMedia ? `${RULES_SONG_MEDIA}\n` : ''}${isOwner ? 'User ini OWNER terverifikasi sistem — layani loyalitas tertinggi.\n' : ''}
-${JSON_SCHEMA}`;
-
-		const messages = [...history.slice(-10), {
-			role: 'user',
-			content: text
-		}];
-		const response = await _callLLM(messages, system, 'qwen/qwen3.6-27b');
+		const messages = [...history.slice(-10), { role: 'user', content: text }];
+		const response = await _callLLM(messages, system);
 
 		const jsonStr = extractJson(response);
-		if (!jsonStr) return {
-			command: 'chat',
-			args: '',
-			message: response.trim(),
-			remember: {},
-			mood: null,
-			voice: false,
-			preReply: ''
-		};
+		if (!jsonStr) return { command: 'chat', args: '', message: response.trim(), remember: {}, mood: null, voice: false, preReply: '' };
 		try {
 			const p = JSON.parse(jsonStr);
 			return {
@@ -561,15 +486,7 @@ ${JSON_SCHEMA}`;
 				preReply: typeof p.preReply === 'string' ? p.preReply : '',
 			};
 		} catch {
-			return {
-				command: 'chat',
-				args: '',
-				message: response.trim(),
-				remember: {},
-				mood: null,
-				voice: false,
-				preReply: ''
-			};
+			return { command: 'chat', args: '', message: response.trim(), remember: {}, mood: null, voice: false, preReply: '' };
 		}
 	},
 
@@ -592,10 +509,7 @@ ${JSON_SCHEMA}`;
 	},
 
 	tts: async (text, voice = 'id-ID-GadisNeural') => {
-		const data = await onepost('/ai-voice/tts-generation', {
-			text,
-			voice
-		});
+		const data = await onepost('/ai-voice/tts-generation', { text, voice });
 		if (data.status && data.result) {
 			const r = data.result;
 			return typeof r === 'string' ? r : (r.url || r.audio || r.output);
@@ -606,7 +520,7 @@ ${JSON_SCHEMA}`;
 	nagaTTS: async (text, voice = 'Shimmer', model = 'eleven-multilingual-v2:free') => {
 		if (!NAGA_KEY) throw new Error('NAGA_API_KEY tidak diset di .env');
 		if (!text || !text.trim()) throw new Error('Teks TTS kosong.');
-		const innya = getDynamicInstructions(text)
+		const innya = getDynamicInstructions(text);
 
 		let res;
 		try {
@@ -616,13 +530,7 @@ ${JSON_SCHEMA}`;
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${NAGA_KEY}`
 				},
-				body: JSON.stringify({
-					model,
-					voice,
-					input: text,
-					instructions: innya,
-					speed: 1.0
-				}),
+				body: JSON.stringify({ model, voice, input: text, instructions: innya, speed: 1.0 }),
 			});
 		} catch (e) {
 			throw new Error(`Naga TTS tidak bisa diakses: ${e.message}`);
@@ -630,16 +538,13 @@ ${JSON_SCHEMA}`;
 
 		const contentType = res.headers.get('content-type') || '';
 
-
 		if (!res.ok || contentType.includes('application/json') || contentType.includes('text/')) {
 			let msg = `Naga TTS error: HTTP ${res.status}`;
 			try {
 				const data = await res.json();
 				msg = data.error?.message || data.message || msg;
 			} catch {
-				try {
-					msg = (await res.text()).slice(0, 200) || msg;
-				} catch {}
+				try { msg = (await res.text()).slice(0, 200) || msg; } catch {}
 			}
 			throw new Error(msg);
 		}
@@ -648,7 +553,6 @@ ${JSON_SCHEMA}`;
 		if (buffer.length < 100) throw new Error('Naga TTS mengembalikan audio kosong/tidak valid.');
 		return buffer;
 	},
-
 
 	elevenlabs: async (text, voice = 'bella', pitch = 0, speed = 0.9) => {
 		if (!text || !text.trim()) throw new Error('Teks TTS kosong.');
@@ -660,7 +564,6 @@ ${JSON_SCHEMA}`;
 		return buffer;
 	},
 
-
 	generateVoiceNote: async (text, voice = 'Shimmer') => {
 		try {
 			return await api.nagaTTS(text, voice);
@@ -669,51 +572,36 @@ ${JSON_SCHEMA}`;
 			return await api.elevenlabs(text);
 		}
 	},
+	
 	ytdl: async (url, format = 'mp4', onProgress) => await ytHandler.download(url, format, onProgress),
-
 	youtube: async (query) => await ytHandler.search(query),
-
 	ytplay: async (query, onProgress) => await ytHandler.play(query, onProgress),
 
 	tiktok: async (url) => {
-		const data = await onepost('/download/tiktok', {
-			url,
-			format: 'mp4'
-		});
+		const data = await onepost('/download/tiktok', { url, format: 'mp4' });
 		if (data.status && data.result) return data.result;
 		throw new Error(data.message || 'Gagal download TikTok.');
 	},
 
 	douyin: async (url) => {
-		const data = await onepost('/download/douyin', {
-			url
-		});
+		const data = await onepost('/download/douyin', { url });
 		if (data.status && data.result) return data.result;
 		throw new Error(data.message || 'Gagal download Douyin.');
 	},
 
 	instagram: async (url) => {
-		const data = await onepost('/download/insta', {
-			url
-		});
+		const data = await onepost('/download/insta', { url });
 		if (data.status && data.result) return data.result;
 		throw new Error(data.message || 'Gagal download Instagram.');
 	},
 
 	facebook: async (url) => {
-		const {
-			default: axios
-		} = await import('axios');
-		const m = url.match(/https?:\/\/(www\.)?(facebook\.com\/(?:share\/[rv]\/|watch\/?\?v=|reel\/|.*\/videos\/)|fb\.watch\/)\S+/i) ||
-			url.match(/https?:\/\/(www\.)?(facebook\.com|fb\.watch)\/\S+/i);
+		const { default: axios } = await import('axios');
+		const m = url.match(/https?:\/\/(www\.)?(facebook\.com\/(?:share\/[rv]\/|watch\/?\?v=|reel\/|.*\/videos\/)|fb\.watch\/)\S+/i) || url.match(/https?:\/\/(www\.)?(facebook\.com|fb\.watch)\/\S+/i);
 		if (!m) throw new Error('URL Facebook tidak valid. Gunakan link video/reel.');
 		const cleanUrl = m[0].trim();
 
-		const {
-			data
-		} = await axios.post('https://getfvid.com/downloader', new URLSearchParams({
-			url: cleanUrl
-		}), {
+		const { data } = await axios.post('https://getfvid.com/downloader', new URLSearchParams({ url: cleanUrl }), {
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
 				'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
@@ -721,26 +609,18 @@ ${JSON_SCHEMA}`;
 			timeout: 25000,
 		});
 
-		const {
-			load
-		} = await import('cheerio');
+		const { load } = await import('cheerio');
 		const $ = load(data);
 		const title = $('span.content b').first().text().trim() || 'Facebook Video';
 		const hdLink = $('a:contains("Download HD")').attr('href') || $('a:contains("Download in HD")').attr('href');
 		const sdLink = $('a:contains("Download Normal")').attr('href') || $('a:contains("Download in SD")').attr('href');
 		const media = hdLink || sdLink;
 		if (!media) throw new Error('Gagal mengambil video Facebook. Pastikan link publik & berupa video/reel.');
-		return {
-			media,
-			title,
-			quality: hdLink ? 'HD' : 'SD'
-		};
+		return { media, title, quality: hdLink ? 'HD' : 'SD' };
 	},
 
 	threads: async (url) => {
-		const {
-			default: axios
-		} = await import('axios');
+		const { default: axios } = await import('axios');
 		if (!/threads\.(net|com)\//i.test(url)) throw new Error('URL Threads tidak valid.');
 
 		const page = await axios.get('https://threadsmate.com/', {
@@ -751,9 +631,7 @@ ${JSON_SCHEMA}`;
 			timeout: 20000,
 		});
 
-		const {
-			load
-		} = await import('cheerio');
+		const { load } = await import('cheerio');
 		const $page = load(page.data);
 		const targetInput = $page('form.form-inline input[type="hidden"]').not('[name="lang"]').first();
 		const tokenName = targetInput.attr('name');
@@ -766,9 +644,7 @@ ${JSON_SCHEMA}`;
 		params.append(tokenName, tokenValue);
 		params.append('lang', 'en');
 
-		const {
-			data
-		} = await axios.post('https://threadsmate.com/download', params, {
+		const { data } = await axios.post('https://threadsmate.com/download', params, {
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
 				'Cookie': cookies,
@@ -784,24 +660,16 @@ ${JSON_SCHEMA}`;
 			if (href && /^https?:\/\//i.test(href)) medias.push(href);
 		});
 		if (!medias.length) throw new Error('Gagal mengambil media Threads. Pastikan link publik.');
-		return {
-			media: medias
-		};
+		return { media: medias };
 	},
 
 	capcut: async (url) => {
-		const {
-			default: axios
-		} = await import('axios');
+		const { default: axios } = await import('axios');
 		const m = url.match(/https?:\/\/(www\.)?(capcut\.com)\/\S+/i);
 		if (!m) throw new Error('URL CapCut tidak valid.');
 		const cleanUrl = m[0].trim();
 
-		const {
-			data
-		} = await axios.post('https://3bic.com/api/download', {
-			url: cleanUrl
-		}, {
+		const { data } = await axios.post('https://3bic.com/api/download', { url: cleanUrl }, {
 			headers: {
 				'Content-Type': 'application/json',
 				'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
@@ -813,17 +681,11 @@ ${JSON_SCHEMA}`;
 		if (!data || data.code !== 200) throw new Error('Gagal mengambil data CapCut. Pastikan URL benar & publik.');
 		const media = data.originalVideoUrl ? `https://3bic.com${data.originalVideoUrl}` : data.video_url;
 		if (!media) throw new Error('Video CapCut tidak ditemukan.');
-		return {
-			media,
-			title: data.title || '-',
-			author: data.authorName || '-'
-		};
+		return { media, title: data.title || '-', author: data.authorName || '-' };
 	},
 
 	removebg: async (imageUrl) => {
-		const data = await onepost('/ai-image/removebg', {
-			image: imageUrl
-		});
+		const data = await onepost('/ai-image/removebg', { image: imageUrl });
 		if (data.status && data.result) {
 			const r = data.result;
 			return typeof r === 'string' ? r : (r.url || r.output || r.image || r.result);
@@ -832,9 +694,7 @@ ${JSON_SCHEMA}`;
 	},
 
 	tourl: async (buffer, mimetype = 'image/jpeg') => {
-		const {
-			uploadToUrl
-		} = await import('./utils.js');
+		const { uploadToUrl } = await import('./utils.js');
 		return uploadToUrl(buffer, mimetype);
 	},
 
@@ -880,25 +740,19 @@ ${JSON_SCHEMA}`;
 	},
 
 	lyrics: async (query) => {
-		const data = await oneget('/search/lyrics', {
-			q: query
-		});
+		const data = await oneget('/search/lyrics', { q: query });
 		if (data.status && data.result) return data.result;
 		throw new Error(data.message || 'Lirik tidak ditemukan.');
 	},
 
 	github: async (query) => {
-		const data = await oneget('/search/github', {
-			q: query
-		});
+		const data = await oneget('/search/github', { q: query });
 		if (data.status && data.result) return data.result;
 		throw new Error(data.message || 'GitHub search gagal.');
 	},
 
 	pixiv: async (query) => {
-		const data = await oneget('/search/pixiv', {
-			q: query
-		});
+		const data = await oneget('/search/pixiv', { q: query });
 		if (data.status && data.result) return data.result;
 		throw new Error(data.message || 'Pixiv search gagal.');
 	},

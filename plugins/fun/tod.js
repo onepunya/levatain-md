@@ -58,7 +58,7 @@ async function generateWithAI(type, pushname) {
         ? `Buatkan SATU pertanyaan TRUTH yang receh/lucu/dikit baper buat "${pushname || 'seseorang'}" di grup WhatsApp. Jangan terlalu personal/sensitif, jangan menyinggung.`
         : `Buatkan SATU tantangan DARE yang receh/lucu/dikit menantang tapi aman & gampang dilakuin di grup WhatsApp buat "${pushname || 'seseorang'}". Jangan berbahaya, jangan ilegal, jangan vulgar.`;
 
-    const result = await api.groq(
+    const result = await api.chatAI(
         [{ role: 'user', content: userPrompt }],
         SYSTEM_PROMPT,
     );
