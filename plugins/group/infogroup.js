@@ -1,18 +1,14 @@
 import { sendInlineWebUI } from '../../src/lib/rich-messages.js';
 import { renderInfoCard, htmlEscape } from '../../src/lib/webui-templates.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd: ['infogroup', 'ginfo'],
-        tag: 'group',
-        aliasOnly: true,
-        desc: 'Lihat info group',
-        isGroup: true,
-        ai: {
-            trigger: 'User minta info group',
-            examples: ['infogroup', 'ginfo', 'info group'],
-        },
-        async run(sock, { raw, from, groupMetadata, admins, participants }) {
+export default plugin('infogroup', 'ginfo')
+  .in('group')
+  .desc('Lihat info group')
+  .prefixOnly()
+  .groupOnly()
+  .signal('User minta info group', ['infogroup', 'ginfo', 'info group'])
+  .run(async (sock, { raw, from, groupMetadata, admins, participants }) => {
             if (!groupMetadata) return sock.sendMessage(from, { text: '❌ Gagal ambil data group.' }, { quoted: raw });
 
             const created = groupMetadata.creation
@@ -42,6 +38,5 @@ export const meta = {
             });
 
             await sendInlineWebUI(sock, from, html, 'Info Group');
-        },
-    },
-};
+        });
+

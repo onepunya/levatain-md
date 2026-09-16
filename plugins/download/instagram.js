@@ -1,17 +1,16 @@
 import { typing, getArgs, sendMediaBatch, base64ToString } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['instagram', 'ig'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Download video/foto Instagram (termasuk carousel multi-media)',
-        ai: {
+export default plugin('instagram', 'ig')
+  .in('download')
+  .desc('Download video/foto Instagram (termasuk carousel multi-media)')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta download dari Instagram dengan URL',
             examples: ['ig https://instagram.com/p/xxx', 'download instagram ini'],
             args: { url: 'URL Instagram' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
                 text: '❌ Masukkan URL Instagram!\nContoh: *.instagram https://www.instagram.com/p/xxx*'
@@ -32,9 +31,7 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 async function fetchDownloadgram(igUrl) {
     const response = await fetch("https://api.downloadgram.org/media", {

@@ -1,18 +1,14 @@
 import { pick } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['tembak', 'lamar', 'terima', 'tolak'],
-        tag:  'fun',
-        aliasOnly: false,
-        isGroup: true,
-        cooldown: 10,
-        desc: 'Nembak/lamar orang di group, dia bisa .terima atau .tolak',
-        ai: {
-            trigger: 'User mau nembak, nyatain perasaan, atau lamar orang lain di group',
-            examples: ['tembak @user', 'lamar @user aku suka kamu', 'terima', 'tolak'],
-        },
-        async run(sock, { raw, from, command, message, mentionedJid, primaryId, pushname, botNumber, gdb }) {
+export default plugin('tembak', 'lamar', 'terima', 'tolak')
+  .in('fun')
+  .desc('Nembak/lamar orang di group, dia bisa .terima atau .tolak')
+  .showAllAliases()
+  .groupOnly()
+  .cooldown(10)
+  .signal('User mau nembak, nyatain perasaan, atau lamar orang lain di group', ['tembak @user', 'lamar @user aku suka kamu', 'terima', 'tolak'])
+  .run(async (sock, { raw, from, command, message, mentionedJid, primaryId, pushname, botNumber, gdb }) => {
             const nameOf = (jid, fallbackName) => gdb?.users?.[jid]?.name || fallbackName || `+${jid.split('@')[0]}`;
 
             if (command === 'terima' || command === 'tolak') {
@@ -77,9 +73,7 @@ export const meta = {
                     `• *.tolak* — kalau enggak`,
                 mentions: [target, primaryId],
             }, { quoted: raw });
-        },
-    },
-};
+        });
 
 const pending = new Map();
 const TIMEOUT_MS = 5 * 60_000;
@@ -108,7 +102,6 @@ const TIDAK_DIJAWAB = [
     'Kadang diam itu sendiri sudah bicara. Gak apa-apa, gak semua perasaan harus berujung kepastian. 🕊️',
     'Waktu habis, jawaban gak datang — tapi keberanian buat jujur tadi tetap patut dihargai. 🕊️',
 ];
-
 
 function resolveTarget(message, mentionedJid) {
     if (message?.quoted) {

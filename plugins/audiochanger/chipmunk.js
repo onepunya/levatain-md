@@ -1,13 +1,12 @@
 import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['chipmunk'],
-        tag:  'audiochanger',
-        aliasOnly: true,
-        desc: 'Chipmunk — suara ngik-ngik kayak tupai',
-        ai: { trigger: 'chipmunk', examples: ['chipmunk audio ini'] },
-        async run(sock, { message, raw, from }) {
+export default plugin('chipmunk')
+  .in('audiochanger')
+  .desc('Chipmunk — suara ngik-ngik kayak tupai')
+  .prefixOnly()
+  .signal('chipmunk', ['chipmunk audio ini'])
+  .run(async (sock, { message, raw, from }) => {
             const result = await downloadMedia(raw, message.quoted, ['audio', 'video']);
             if (!result) return sock.sendMessage(from, { text: '❌ Kirim atau reply audio/video dulu.' }, { quoted: raw });
 
@@ -18,7 +17,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal proses audio: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

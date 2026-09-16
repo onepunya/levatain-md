@@ -1,16 +1,12 @@
 import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES } from '../../src/lib/rich-messages.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd: ['pesawat', 'plane', 'shooter'],
-        tag: 'fun',
-        aliasOnly: true,
-        desc: 'Pesawat tembak canvas',
-        ai: {
-            trigger: 'User mau main game pesawat tembak atau space shooter',
-            examples: ['pesawat', 'plane', 'shooter'],
-        },
-        async run(sock, { raw, from, pushname }) {
+export default plugin('pesawat', 'plane', 'shooter')
+  .in('fun')
+  .desc('Pesawat tembak canvas')
+  .prefixOnly()
+  .signal('User mau main game pesawat tembak atau space shooter', ['pesawat', 'plane', 'shooter'])
+  .run(async (sock, { raw, from, pushname }) => {
             const name = String(pushname || 'Player').replace(/[<>'\\']/g, '').slice(0, 20);
             await sock.sendMessage(from, { text: 'tekan unduh untuk membuka panel game' }, { quoted: raw });
             const html = build(name);
@@ -22,9 +18,7 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: '❌ Gagal: ' + e.message }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 function build(name) {
     return `<!DOCTYPE html>

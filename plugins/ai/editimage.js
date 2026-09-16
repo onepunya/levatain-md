@@ -1,5 +1,6 @@
 import { typing, getArgs, downloadMedia, getExtFromMime, sleep } from '../../src/lib/utils.js';
 import { config } from '../../src/config.js';
+import { plugin } from '../../src/core/plugin.js';
 const apiKeys = config.magicHour.keys;
 
 let keyIndex = 0;
@@ -33,18 +34,16 @@ async function uploadToMagicHour(currentKey, buffer, mimetype) {
     return file_path;
 }
 
-export const meta = {
-    interface: {
-        cmd:  ['editimage', 'aiedit'],
-        tag:  'ai',
-        aliasOnly: true,
-        desc: 'Edit gambar pakai prompt AI (Magic Hour)',
-        ai: {
+export default plugin('editimage', 'aiedit')
+  .in('ai')
+  .desc('Edit gambar pakai prompt AI (Magic Hour)')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta edit gambar menggunakan AI dengan prompt',
             examples: ['editimage berikan kacamata hitam', 'aiedit ganti background jadi pantai'],
             args: { input: 'Prompt Edit (reply/kirim gambar)' },
-        },
-        async run(sock, { body, message, raw, from }) {
+        })
+  .run(async (sock, { body, message, raw, from }) => {
             const prompt = getArgs(body);
 
             if (!prompt) {
@@ -145,7 +144,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

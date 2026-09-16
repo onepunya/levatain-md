@@ -1,18 +1,17 @@
 import { typing, getArgs } from '../../src/lib/utils.js';
 import axios from 'axios';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd: ['porn', 'bokep'],
-        tag: 'download',
-        aliasOnly: true,
-        desc: 'Dapatkan daftar link download video dewasa dari semua situs dewasa',
-        ai: {
+export default plugin('porn', 'bokep')
+  .in('download')
+  .desc('Dapatkan daftar link download video dewasa dari semua situs dewasa')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta daftar link download video dewasa',
             examples: ['porn url video dewasa', 'download video porno ini'],
             args: { url: 'URL dewasa pornhub' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
                 text: '❌ Masukkan URL video dewasa dari situs pornhub'
@@ -38,9 +37,7 @@ export const meta = {
                 console.error(e);
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 async function getVideoInfo(videoUrl) {
     const apiEndpoint = 'https://xxxdl.net/api/video-download/info/';

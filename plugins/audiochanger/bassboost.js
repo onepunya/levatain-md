@@ -1,13 +1,12 @@
 import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['bassboost', 'bass'],
-        tag:  'audiochanger',
-        aliasOnly: true,
-        desc: 'Bass Boost — bass audio dinaikin biar nendang',
-        ai: { trigger: 'bass boost', examples: ['bass boost audio ini'] },
-        async run(sock, { message, raw, from }) {
+export default plugin('bassboost', 'bass')
+  .in('audiochanger')
+  .desc('Bass Boost — bass audio dinaikin biar nendang')
+  .prefixOnly()
+  .signal('bass boost', ['bass boost audio ini'])
+  .run(async (sock, { message, raw, from }) => {
             const result = await downloadMedia(raw, message.quoted, ['audio', 'video']);
             if (!result) return sock.sendMessage(from, { text: '❌ Kirim atau reply audio/video dulu.' }, { quoted: raw });
 
@@ -18,7 +17,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal proses audio: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

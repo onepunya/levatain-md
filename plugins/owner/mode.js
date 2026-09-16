@@ -1,14 +1,13 @@
 import { saveDb } from '../../src/core/db.js';
 import { getArgs } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:     ['mode'],
-        tag:     'owner',
-        aliasOnly: true,
-        desc:    'Ganti mode bot: public (semua chat), group (khusus di dalam group), private (khusus owner)',
-        isOwner: true,
-        async run(sock, { body, raw, from, gdb }) {
+export default plugin('mode')
+  .in('owner')
+  .desc('Ganti mode bot: public (semua chat), group (khusus di dalam group), private (khusus owner)')
+  .prefixOnly()
+  .ownerOnly()
+  .run(async (sock, { body, raw, from, gdb }) => {
             const arg = getArgs(body).toLowerCase();
 
             if (!arg || !VALID.includes(arg)) {
@@ -25,9 +24,7 @@ export const meta = {
             gdb.settings.mode = arg;
             await saveDb();
             return sock.sendMessage(from, { text: `✅ Mode bot diganti ke:\n${LABELS[arg]}` }, { quoted: raw });
-        },
-    },
-};
+        });
 
 const VALID  = ['public', 'group', 'private'];
 const LABELS = {

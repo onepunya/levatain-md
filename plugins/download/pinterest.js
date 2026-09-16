@@ -3,16 +3,15 @@ import https from 'https';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { typing, getArgs, sendMediaBatch, sendAnyMedia } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
 const execFileAsync = promisify(execFile);
 
-export const meta = {
-    interface: {
-        cmd:  ['pinterest', 'pin'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Download Pinterest dari link, atau cari gambar Pinterest dari kata kunci',
-        ai: {
+export default plugin('pinterest', 'pin')
+  .in('download')
+  .desc('Download Pinterest dari link, atau cari gambar Pinterest dari kata kunci')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta download Pinterest dengan URL, atau cari/search gambar di Pinterest',
             examples: [
                 'pin https://pin.it/xxxxx',
@@ -21,8 +20,8 @@ export const meta = {
                 'cariin gambar aesthetic di pinterest',
             ],
             args: { input: 'URL pin Pinterest, atau kata kunci pencarian' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const input = getArgs(body);
             if (!input) return sock.sendMessage(from, {
                 text: '❌ Masukkan link Pinterest atau kata kunci pencarian!\n\n'
@@ -81,9 +80,7 @@ export const meta = {
                 console.error(e);
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
 const IS_LINK = (s) => /pin\.it\//i.test(s) || (/pinterest\.[a-z.]+/i.test(s) && /\/pin\//i.test(s));

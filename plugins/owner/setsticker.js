@@ -1,17 +1,13 @@
 import { plugins } from '../../src/core/loader.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:     ['setsticker', 'stikercmd'],
-        tag:     'owner',
-        aliasOnly: true,
-        desc:    'Daftarin stiker khusus jadi trigger command. Reply stiker + nama command, atau "hapus" buat cabut',
-        isOwner: true,
-        ai: {
-            trigger:  'daftarin stiker jadi command bot',
-            examples: ['.setsticker nightcore (reply stiker)', '.setsticker hapus (reply stiker)'],
-        },
-        async run(sock, { message, raw, from, gdb, saveDb, body }) {
+export default plugin('setsticker', 'stikercmd')
+  .in('owner')
+  .desc('Daftarin stiker khusus jadi trigger command. Reply stiker + nama command, atau "hapus" buat cabut')
+  .prefixOnly()
+  .ownerOnly()
+  .signal('daftarin stiker jadi command bot', ['.setsticker nightcore (reply stiker)', '.setsticker hapus (reply stiker)'])
+  .run(async (sock, { message, raw, from, gdb, saveDb, body }) => {
             const quoted     = message.quoted;
             const stickerMsg = quoted?.raw?.message?.stickerMessage;
 
@@ -40,7 +36,5 @@ export const meta = {
             gdb.settings.stickerCmds[hash] = arg;
             await saveDb();
             return sock.sendMessage(from, { text: `✅ Stiker ini sekarang jadi trigger buat *.${arg}*\nKirim stiker ini lagi kapan aja buat langsung jalanin command-nya.` }, { quoted: raw });
-        },
-    },
-};
+        });
 

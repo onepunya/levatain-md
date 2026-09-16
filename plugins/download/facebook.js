@@ -2,19 +2,18 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { typing, getArgs } from '../../src/lib/utils.js';
 import { fetchBufferLimited } from '../../src/lib/mediaLimit.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['facebook', 'fb'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Download video/foto facebook',
-        ai: {
+export default plugin('facebook', 'fb')
+  .in('download')
+  .desc('Download video/foto facebook')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta download dari facebook dengan URL',
             examples: ['fb https://www.facebook.com/share/r/xxx/', 'download facebook ini'],
             args: { url: 'URL facebook' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
                 text: '❌ Masukkan URL Facebook\nContoh: *.facebook https://www.facebook.com/share/r/xxx/*'
@@ -47,9 +46,7 @@ export const meta = {
                 console.error(e);
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 async function fbDownloader(url) {
     try {

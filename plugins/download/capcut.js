@@ -1,18 +1,17 @@
 import { typing, getArgs, sendAnyMedia } from '../../src/lib/utils.js';
 import { api } from '../../src/lib/api.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['capcut'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Download video template CapCut tanpa watermark',
-        ai: {
+export default plugin('capcut')
+  .in('download')
+  .desc('Download video template CapCut tanpa watermark')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta download template CapCut dengan URL',
             examples: ['capcut https://www.capcut.com/template/xxx', 'download capcut ini'],
             args: { url: 'URL template CapCut' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
                 text: '❌ Masukkan URL CapCut!\nContoh: *.capcut https://www.capcut.com/template/xxx*'
@@ -30,7 +29,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

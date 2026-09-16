@@ -1,12 +1,11 @@
 import { getHistory, getUserMemory, clearHistory } from '../../src/ai/memory.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['memory', 'aiclear'],
-        tag:  'ai',
-        aliasOnly: false,
-        desc: 'Lihat atau hapus memory AI',
-        async run(sock, { body, raw, from, primaryId, pushname }) {
+export default plugin('memory', 'aiclear')
+  .in('ai')
+  .desc('Lihat atau hapus memory AI')
+  .showAllAliases()
+  .run(async (sock, { body, raw, from, primaryId, pushname }) => {
             const args = body.split(' ').slice(1).join(' ').trim().toLowerCase();
 
             if (['clear', 'reset', 'hapus'].includes(args) || body.toLowerCase().startsWith('aiclear')) {
@@ -33,7 +32,5 @@ export const meta = {
             text += `\n_Ketik *.memory clear* untuk hapus semua._`;
 
             await sock.sendMessage(from, { text }, { quoted: raw });
-        },
-    },
-};
+        });
 

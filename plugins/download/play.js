@@ -3,14 +3,13 @@ import { api } from '../../src/lib/api.js';
 import { MAX_FILE_SIZE, cleanupTempFile } from '../../src/lib/youtube.js';
 import { ProgressMessage } from '../../src/lib/progress.js';
 import { extractAudioClip } from '../../src/lib/audioEffects.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['play'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Cari & download lagu jadi MP3, atau kenali lagu dari audio/video yang direply',
-        ai: {
+export default plugin('play')
+  .in('download')
+  .desc('Cari & download lagu jadi MP3, atau kenali lagu dari audio/video yang direply')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta putar lagu, download musik, dengerin lagu tertentu, atau reply/kirim audio/video sambil minta dicariin judul lagunya',
             examples: [
                 'play shape of you',
@@ -21,8 +20,8 @@ export const meta = {
                 'judul lagu di video ini apa',
             ],
             args: { query: 'Judul atau artis lagu (boleh kosong kalau reply audio/video)' },
-        },
-        async run(sock, { body, raw, from, message }) {
+        })
+  .run(async (sock, { body, raw, from, message }) => {
             const bar = new ProgressMessage(sock, from, raw);
             let filePath = null;
             let searchQuery = getArgs(body);
@@ -91,6 +90,5 @@ export const meta = {
             } finally {
                 cleanupTempFile(filePath);
             }
-        },
-    },
-};
+        });
+

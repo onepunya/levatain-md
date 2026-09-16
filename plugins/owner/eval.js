@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { getArgs, truncate } from '../../src/lib/utils.js';
 import { ProgressMessage } from '../../src/lib/progress.js';
+import { plugin } from '../../src/core/plugin.js';
 
 const execPromise = promisify(exec);
 
@@ -32,18 +33,13 @@ function resolveInWorkspace(base, target) {
     return resolved;
 }
 
-export const meta = {
-    interface: {
-        cmd:      ['exec', 'sh', 'term'],
-        tag:      'owner',
-        aliasOnly: true,
-        desc:     'Jalanin shell command (ls, cd, cat, curl, dll) di workspace bot. Owner only.',
-        isOwner:  true,
-        ai: {
-            trigger: 'Owner minta jalanin/tes/cek command shell, curl API, ls/cd/cat file, atau apapun yang butuh eksekusi command beneran di server/workspace bot',
-            examples: ['jalanin curl ini: curl https://api.example.com', 'coba ls workspace', 'cd folder-test terus ls', 'cat file.json di workspace'],
-        },
-        async run(sock, { body, raw, from }) {
+export default plugin('exec', 'sh', 'term')
+  .in('owner')
+  .desc('Jalanin shell command (ls, cd, cat, curl, dll) di workspace bot. Owner only.')
+  .prefixOnly()
+  .ownerOnly()
+  .signal('Owner minta jalanin/tes/cek command shell, curl API, ls/cd/cat file, atau apapun yang butuh eksekusi command beneran di server/workspace bot', ['jalanin curl ini: curl https://api.example.com', 'coba ls workspace', 'cd folder-test terus ls', 'cat file.json di workspace'])
+  .run(async (sock, { body, raw, from }) => {
             const rawCmd = getArgs(body).trim();
             if (!rawCmd) {
                 return sock.sendMessage(from, {
@@ -86,6 +82,5 @@ export const meta = {
             } finally {
                 clearInterval(spin);
             }
-        },
-    },
-};
+        });
+

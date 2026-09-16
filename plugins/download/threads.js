@@ -1,17 +1,16 @@
 import { typing, getArgs, sendAnyMedia } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['threads', 'thread'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Download foto/video dari Threads',
-        ai: {
+export default plugin('threads', 'thread')
+  .in('download')
+  .desc('Download foto/video dari Threads')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta download media dari Threads dengan URL',
             examples: ['threads https://www.threads.net/@user/post/xxx', 'download threads ini'],
             args: { url: 'URL Threads' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
                 text: '❌ Masukkan URL Threads!\nContoh: *.threads https://www.threads.net/@user/post/xxx*'
@@ -74,7 +73,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

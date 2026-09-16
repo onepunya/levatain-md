@@ -1,19 +1,15 @@
 import { api } from '../../src/lib/api.js';
 import { logger } from '../../src/lib/logger.js';
 import { pick } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['tod', 'truth', 'dare'],
-        tag:  'fun',
-        aliasOnly: false,
-        cooldown: 3,
-        desc: 'Truth or Dare, pertanyaan/tantangan digenerate AI biar selalu beda',
-        ai: {
-            trigger: 'User mau main truth or dare, atau minta tantangan/pertanyaan truth',
-            examples: ['tod', 'truth', 'dare'],
-        },
-        async run(sock, { raw, from, command, pushname }) {
+export default plugin('tod', 'truth', 'dare')
+  .in('fun')
+  .desc('Truth or Dare, pertanyaan/tantangan digenerate AI biar selalu beda')
+  .showAllAliases()
+  .cooldown(3)
+  .signal('User mau main truth or dare, atau minta tantangan/pertanyaan truth', ['tod', 'truth', 'dare'])
+  .run(async (sock, { raw, from, command, pushname }) => {
             let type = command;
             if (type === 'tod') type = Math.random() < 0.5 ? 'truth' : 'dare';
 
@@ -32,9 +28,7 @@ export const meta = {
             return sock.sendMessage(from, {
                 text: `${label}\n\n${who} kebagian:\n_${question}_`,
             }, { quoted: raw });
-        },
-    },
-};
+        });
 
 const FALLBACK_TRUTH = [
     'Siapa gebetan/crush kamu sekarang?',
@@ -46,7 +40,6 @@ const FALLBACK_DARE = [
     'Ganti nama WhatsApp jadi "Raja/Ratu Baper" selama 1 jam.',
     'Chat mantan "hai, apa kabar?" (screenshot boleh disensor).',
 ];
-
 
 const SYSTEM_PROMPT = `Kamu generator pertanyaan game Truth or Dare buat grup WhatsApp anak muda Indonesia.
 Gaya bahasa gaul, santai, receh, kadang gombal/baper dikit, TAPI tetap sopan — DILARANG keras: konten seksual/vulgar, ajakan hal ilegal/berbahaya, body shaming, SARA, atau hal yang bisa mempermalukan/menyakiti orang secara serius.

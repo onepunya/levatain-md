@@ -1,19 +1,18 @@
 import { getArgs } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:     ['add'],
-        tag:     'group',
-        aliasOnly: true,
-        desc:    'Tambah member ke group lewat nomor WhatsApp',
-        isGroup: true,
-        isAdmin: true,
-        ai: {
+export default plugin('add')
+  .in('group')
+  .desc('Tambah member ke group lewat nomor WhatsApp')
+  .prefixOnly()
+  .adminOnly()
+  .groupOnly()
+  .ai({
             trigger: 'User minta tambah/add member ke group pakai nomor telepon',
             examples: ['add 6281234567890'],
             args: { text: 'Nomor WhatsApp tujuan' },
-        },
-        async run(sock, { body, raw, from, isBotAdmin }) {
+        })
+  .run(async (sock, { body, raw, from, isBotAdmin }) => {
             if (!isBotAdmin) return sock.sendMessage(from, { text: '❌ Bot harus jadi admin group dulu!' }, { quoted: raw });
 
             const num = getArgs(body).replace(/\D/g, '');
@@ -32,7 +31,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal add: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

@@ -1,17 +1,13 @@
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 import { typing, downloadMedia } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['sticker', 's'],
-        tag:  'tools',
-        aliasOnly: true,
-        desc: 'Convert gambar/video jadi stiker WhatsApp',
-        ai: {
-            trigger: 'User minta buat stiker dari gambar atau video yang dikirim',
-            examples: ['jadiin stiker', 'bikin sticker dari gambar ini'],
-        },
-        async run(sock, { message, raw, from, pushname }) {
+export default plugin('sticker', 's')
+  .in('tools')
+  .desc('Convert gambar/video jadi stiker WhatsApp')
+  .prefixOnly()
+  .signal('User minta buat stiker dari gambar atau video yang dikirim', ['jadiin stiker', 'bikin sticker dari gambar ini'])
+  .run(async (sock, { message, raw, from, pushname }) => {
             const result = await downloadMedia(raw, message.quoted, ['image', 'video']);
             if (!result) return sock.sendMessage(from, { text: '❌ Kirim atau reply gambar/video dulu.' }, { quoted: raw });
 
@@ -27,7 +23,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

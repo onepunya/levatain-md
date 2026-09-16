@@ -1,16 +1,12 @@
-export const meta = {
-    interface: {
-        cmd:     ['warn', 'unwarn', 'warnlist'],
-        tag:     'group',
-        aliasOnly: false,
-        desc:    'Sistem warn/strike anggota group (auto-kick di warn ke-3)',
-        isGroup: true,
-        isAdmin: true,
-        ai: {
-            trigger: 'User minta warn, kasih peringatan, atau cek daftar warn anggota group',
-            examples: ['warn @user', 'unwarn @user', 'warnlist'],
-        },
-        async run(sock, { raw, from, command, mentionedJid, message, gdb, isBotAdmin, saveDb }) {
+import { plugin } from '../../src/core/plugin.js';
+export default plugin('warn', 'unwarn', 'warnlist')
+  .in('group')
+  .desc('Sistem warn/strike anggota group (auto-kick di warn ke-3)')
+  .showAllAliases()
+  .adminOnly()
+  .groupOnly()
+  .signal('User minta warn, kasih peringatan, atau cek daftar warn anggota group', ['warn @user', 'unwarn @user', 'warnlist'])
+  .run(async (sock, { raw, from, command, mentionedJid, message, gdb, isBotAdmin, saveDb }) => {
             const grp = gdb.groups[from];
             if (!grp.warns) grp.warns = {};
 
@@ -52,9 +48,7 @@ export const meta = {
             }
 
             await sock.sendMessage(from, { text: `⚠️ ${tag} kena warn. Total: ${grp.warns[target]}/${MAX_WARN}`, mentions: [target] }, { quoted: raw });
-        },
-    },
-};
+        });
 
 const MAX_WARN = 3;
 

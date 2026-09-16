@@ -1,19 +1,18 @@
 import { getArgs } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:     ['setgname', 'setgdesc', 'linkgroup', 'revoklink'],
-        tag:     'group',
-        aliasOnly: false,
-        desc:    'Ubah nama/deskripsi group, ambil atau revoke link invite',
-        isGroup: true,
-        isAdmin: true,
-        ai: {
+export default plugin('setgname', 'setgdesc', 'linkgroup', 'revoklink')
+  .in('group')
+  .desc('Ubah nama/deskripsi group, ambil atau revoke link invite')
+  .showAllAliases()
+  .adminOnly()
+  .groupOnly()
+  .ai({
             trigger: 'User minta ubah nama group, ubah deskripsi group, minta link invite group, atau reset link group',
             examples: ['setgname Nama Baru', 'setgdesc Deskripsi baru', 'linkgroup', 'revoklink'],
             args: { text: 'Teks nama/deskripsi baru (untuk setgname/setgdesc)' },
-        },
-        async run(sock, { body, raw, from, command, isBotAdmin }) {
+        })
+  .run(async (sock, { body, raw, from, command, isBotAdmin }) => {
             if (!isBotAdmin) return sock.sendMessage(from, { text: '❌ Bot harus jadi admin group dulu!' }, { quoted: raw });
 
             if (command === 'setgname') {
@@ -39,7 +38,5 @@ export const meta = {
                 const code = await sock.groupRevokeInvite(from);
                 return sock.sendMessage(from, { text: `♻️ Link lama direset.\n🔗 https://chat.whatsapp.com/${code}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

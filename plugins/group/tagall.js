@@ -1,18 +1,17 @@
-export const meta = {
-    interface: {
-        cmd:      ['tagall', 'hidetag'],
-        tag:      'group',
-        aliasOnly: false,
-        desc:     'Tag semua anggota group',
-        isGroup:  true,
-        isAdmin:  true,
-        cooldown: 10,
-        ai: {
+import { plugin } from '../../src/core/plugin.js';
+export default plugin('tagall', 'hidetag')
+  .in('group')
+  .desc('Tag semua anggota group')
+  .showAllAliases()
+  .adminOnly()
+  .groupOnly()
+  .cooldown(10)
+  .ai({
             trigger: 'User minta tag semua member group atau hidetag',
             examples: ['tagall perhatian', 'tag semua anggota'],
             args: { text: 'Pesan yang ingin dikirim' },
-        },
-        async run(sock, { body, raw, from, command, participants }) {
+        })
+  .run(async (sock, { body, raw, from, command, participants }) => {
             const text     = body.split(' ').slice(1).join(' ') || '📢 Perhatian!';
             const mentions = participants.map(p => p.id);
 
@@ -22,7 +21,5 @@ export const meta = {
             } else {
                 await sock.sendMessage(from, { text, mentions }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

@@ -1,5 +1,6 @@
 import { loadDb, saveDb } from '../../src/core/db.js';
 import { fetchJson } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
 const AUTOGEMPA_URL = 'https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json';
 const WATCH_INTERVAL = 3 * 60 * 1000;
@@ -64,17 +65,12 @@ if (!global.__gempaWatcherStarted) {
     watchGempa();
 }
 
-export const meta = {
-    interface: {
-        cmd:     ['gempa', 'cekgempa', 'gempaon', 'gempaoff'],
-        tag:     'tools',
-        aliasOnly: false,
-        desc:    'Cek info gempa terkini (BMKG) & atur peringatan gempa otomatis di chat ini',
-        ai: {
-            trigger: 'User nanya/cek info gempa terkini pakai command="gempa". User minta aktifkan notifikasi gempa otomatis di chat ini pakai command="gempaon". User minta matikan notifikasi gempa otomatis pakai command="gempaoff"',
-            examples: ['ada gempa gak', 'cek gempa terkini', 'info gempa hari ini', 'aktifin peringatan gempa disini', 'matiin notif gempa', 'langganan info gempa otomatis'],
-        },
-        async run(sock, { raw, from, command, isGroup, isAdmin, isOwner, gdb }) {
+export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
+  .in('tools')
+  .desc('Cek info gempa terkini (BMKG) & atur peringatan gempa otomatis di chat ini')
+  .showAllAliases()
+  .signal('User nanya/cek info gempa terkini pakai command="gempa". User minta aktifkan notifikasi gempa otomatis di chat ini pakai command="gempaon". User minta matikan notifikasi gempa otomatis pakai command="gempaoff"', ['ada gempa gak', 'cek gempa terkini', 'info gempa hari ini', 'aktifin peringatan gempa disini', 'matiin notif gempa', 'langganan info gempa otomatis'])
+  .run(async (sock, { raw, from, command, isGroup, isAdmin, isOwner, gdb }) => {
             if (command === 'gempa' || command === 'cekgempa') {
                 try {
                     const g = await fetchGempa();
@@ -108,6 +104,5 @@ export const meta = {
             if (idx !== -1) subs.splice(idx, 1);
             await saveDb();
             return sock.sendMessage(from, { text: '❌ Peringatan gempa otomatis dimatikan di chat ini.' }, { quoted: raw });
-        },
-    },
-};
+        });
+

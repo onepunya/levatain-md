@@ -1,18 +1,17 @@
 import { typing, getArgs, sendAnyMedia } from '../../src/lib/utils.js';
 import { api } from '../../src/lib/api.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['tiktok', 'tt'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Download video TikTok tanpa watermark',
-        ai: {
+export default plugin('tiktok', 'tt')
+  .in('download')
+  .desc('Download video TikTok tanpa watermark')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta download video TikTok dengan URL',
             examples: ['tiktok https://tiktok.com/xxx', 'download tiktok ini'],
             args: { url: 'URL TikTok' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
                 text: '❌ Masukkan URL TikTok!\nContoh: *.tiktok https://vt.tiktok.com/xxx*'
@@ -30,7 +29,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

@@ -1,17 +1,16 @@
 import { typing, getArgs, sendAnyMedia } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['snackvideo'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Download video dari SnackVideo tanpa watermark',
-        ai: {
+export default plugin('snackvideo')
+  .in('download')
+  .desc('Download video dari SnackVideo tanpa watermark')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta download video dari SnackVideo dengan URL',
             examples: ['snackvideo https://sck.io/p/xxx', 'download snack ini'],
             args: { url: 'URL SnackVideo' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
                 text: '❌ Masukkan URL SnackVideo!\nContoh: *.snackvideo https://sck.io/p/xxx*'
@@ -62,7 +61,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

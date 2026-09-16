@@ -1,20 +1,19 @@
 import { getArgs } from '../../src/lib/utils.js';
 import { saveDb } from '../../src/core/db.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:     ['setleft'],
-        tag:     'group',
-        aliasOnly: true,
-        desc:    'Atur pesan custom saat member keluar group (pakai @user & @group)',
-        isGroup: true,
-        isAdmin: true,
-        ai: {
+export default plugin('setleft')
+  .in('group')
+  .desc('Atur pesan custom saat member keluar group (pakai @user & @group)')
+  .prefixOnly()
+  .adminOnly()
+  .groupOnly()
+  .ai({
             trigger: 'User minta atur pesan perpisahan/pesan left saat member keluar group',
             examples: ['setleft selamat tinggal @user dari @group', 'setleft off'],
             args: { teks: 'Teks pesan, boleh pakai @user dan @group' },
-        },
-        async run(sock, { body, raw, from, gdb }) {
+        })
+  .run(async (sock, { body, raw, from, gdb }) => {
             const text = getArgs(body);
             const grp  = gdb.groups[from];
 
@@ -33,7 +32,5 @@ export const meta = {
             grp.leftText = text;
             await saveDb();
             await sock.sendMessage(from, { text: `✅ Pesan left berhasil diatur:\n\n${text}` }, { quoted: raw });
-        },
-    },
-};
+        });
 

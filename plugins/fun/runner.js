@@ -1,16 +1,12 @@
 import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES } from '../../src/lib/rich-messages.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd: ['runner', 'lari'],
-        tag: 'fun',
-        aliasOnly: true,
-        desc: 'Endless runner solo canvas',
-        ai: {
-            trigger: 'User mau main endless runner atau game lari loncat',
-            examples: ['runner', 'lari'],
-        },
-        async run(sock, { raw, from, pushname }) {
+export default plugin('runner', 'lari')
+  .in('fun')
+  .desc('Endless runner solo canvas')
+  .prefixOnly()
+  .signal('User mau main endless runner atau game lari loncat', ['runner', 'lari'])
+  .run(async (sock, { raw, from, pushname }) => {
             const name = String(pushname || 'Player').replace(/[<>'\\']/g, '').slice(0, 20);
             await sock.sendMessage(from, { text: 'tekan unduh untuk membuka panel game' }, { quoted: raw });
             const html = build(name);
@@ -22,9 +18,7 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: '❌ Gagal: ' + e.message }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 function build(name) {
     return `<!DOCTYPE html>

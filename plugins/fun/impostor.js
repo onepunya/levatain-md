@@ -1,12 +1,11 @@
 import { pick, shuffle } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['impostor', 'wordwolf'],
-        tag:  'fun',
-        aliasOnly: true,
-        desc: 'Game tebak impostor kata (Word Wolf) — semua dapet kata sama kecuali 1 impostor',
-        ai: {
+export default plugin('impostor', 'wordwolf')
+  .in('fun')
+  .desc('Game tebak impostor kata (Word Wolf) — semua dapet kata sama kecuali 1 impostor')
+  .prefixOnly()
+  .ai({
             trigger: 'User mau main game impostor kata / word wolf / tebak siapa yang beda katanya di grup, atau mau cek kata rahasianya sendiri',
             examples: [
                 'impostor buat',
@@ -17,8 +16,8 @@ export const meta = {
                 'impostor kata',
             ],
             args: { text: 'Subcommand: buat, gabung, mulai, vote, status, batal, kata' },
-        },
-        async run(sock, { body, raw, from, primaryId, pushname, gdb, mentionedJid, isOwner, isGroup }) {
+        })
+  .run(async (sock, { body, raw, from, primaryId, pushname, gdb, mentionedJid, isOwner, isGroup }) => {
             const args = body.trim().split(/\s+/);
             const sub  = (args[1] || '').toLowerCase();
 
@@ -173,9 +172,7 @@ export const meta = {
             }
 
             return sock.sendMessage(from, { text: '❓ Subcommand gak dikenal. Ketik *.impostor* buat liat menu.' }, { quoted: raw });
-        },
-    },
-};
+        });
 
 const GROUP_ONLY_SUBS = new Set(['buat', 'create', 'gabung', 'join', 'mulai', 'start', 'vote', 'batal', 'stop', 'cancel', 'status']);
 

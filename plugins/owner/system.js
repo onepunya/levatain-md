@@ -1,14 +1,13 @@
 import { reloadPlugins } from '../../src/core/loader.js';
 import { saveDb, loadDb } from '../../src/core/db.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:     ['reload', 'maintenance', 'ban', 'unban'],
-        tag:     'owner',
-        aliasOnly: false,
-        desc:    'Perintah sistem untuk owner',
-        isOwner: true,
-        async run(sock, { body, raw, from, command, mentionedJid, gdb }) {
+export default plugin('reload', 'maintenance', 'ban', 'unban')
+  .in('owner')
+  .desc('Perintah sistem untuk owner')
+  .showAllAliases()
+  .ownerOnly()
+  .run(async (sock, { body, raw, from, command, mentionedJid, gdb }) => {
             if (command === 'reload') {
                 const result = await reloadPlugins();
                 return sock.sendMessage(from, {
@@ -43,7 +42,5 @@ export const meta = {
                     mentions: [targetJid],
                 }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

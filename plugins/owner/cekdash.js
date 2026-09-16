@@ -1,18 +1,14 @@
 import { getLocalIps, getHostname, lookupPublicIp } from '../../src/lib/iplookup.js';
 import { config } from '../../src/config.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:      ['dashboard', 'cekdash', 'dashbot'],
-        tag:      'owner',
-        aliasOnly: true,
-        desc:     'Cek link dashboard bot (IP publik & lokal)',
-        isOwner:  true,
-        ai: {
-            trigger: 'User (owner) minta link dashboard, cek dashboard, atau alamat panel bot',
-            examples: ['cekdash', 'link dashboard', 'dashbot'],
-        },
-        async run(sock, { raw, from }) {
+export default plugin('dashboard', 'cekdash', 'dashbot')
+  .in('owner')
+  .desc('Cek link dashboard bot (IP publik & lokal)')
+  .prefixOnly()
+  .ownerOnly()
+  .signal('User (owner) minta link dashboard, cek dashboard, atau alamat panel bot', ['cekdash', 'link dashboard', 'dashbot'])
+  .run(async (sock, { raw, from }) => {
             const port = config.dashboardPort;
 
             await sock.sendMessage(from, { text: '🔍 Ngecek alamat dashboard...' }, { quoted: raw });
@@ -39,7 +35,5 @@ export const meta = {
                 `_Kalau diakses dari luar, pastikan port ${port} udah di-forward/dibuka di firewall._`;
 
             await sock.sendMessage(from, { text }, { quoted: raw });
-        },
-    },
-};
+        });
 

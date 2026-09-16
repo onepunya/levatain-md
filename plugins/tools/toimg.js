@@ -1,16 +1,12 @@
 import { typing, downloadMedia } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['toimg'],
-        tag:  'tools',
-        aliasOnly: true,
-        desc: 'Convert stiker WhatsApp jadi gambar',
-        ai: {
-            trigger: 'User minta convert stiker jadi gambar atau foto',
-            examples: ['stiker ini jadiin gambar', 'toimg'],
-        },
-        async run(sock, { message, raw, from }) {
+export default plugin('toimg')
+  .in('tools')
+  .desc('Convert stiker WhatsApp jadi gambar')
+  .prefixOnly()
+  .signal('User minta convert stiker jadi gambar atau foto', ['stiker ini jadiin gambar', 'toimg'])
+  .run(async (sock, { message, raw, from }) => {
             const result = await downloadMedia(raw, message.quoted, ['sticker']);
             if (!result) return sock.sendMessage(from, { text: '❌ Kirim atau reply stiker dulu.' }, { quoted: raw });
 
@@ -20,7 +16,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

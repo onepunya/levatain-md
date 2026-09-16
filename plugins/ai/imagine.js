@@ -1,18 +1,17 @@
 import { typing, getArgs } from '../../src/lib/utils.js';
 import { api } from '../../src/lib/api.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['imagine', 'genimg'],
-        tag:  'ai',
-        aliasOnly: true,
-        desc: 'Generate gambar dari deskripsi teks',
-        ai: {
+export default plugin('imagine', 'genimg')
+  .in('ai')
+  .desc('Generate gambar dari deskripsi teks')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta buat/generate/gambar gambar dari teks, atau minta ilustrasi',
             examples: ['imagine cat astronaut', 'buatkan gambar naga biru'],
             args: { prompt: 'Deskripsi gambar yang ingin dibuat' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const prompt = getArgs(body);
             if (!prompt) return sock.sendMessage(from, {
                 text: '❌ Masukkan prompt!\nContoh: *.imagine naga biru di langit malam*'
@@ -27,7 +26,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

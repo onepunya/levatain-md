@@ -1,18 +1,14 @@
 import { getHistory, clearHistory } from '../../src/ai/memory.js';
 import { typing, getArgs } from '../../src/lib/utils.js';
 import { api } from '../../src/lib/api.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['ai', 'tanya'],
-        tag:  'ai',
-        aliasOnly: true,
-        desc: 'Chat langsung dengan AI (dengan memory)',
-        ai: {
-            trigger: 'User eksplisit minta tanya ke AI, atau minta jawaban dari AI',
-            examples: ['tanya AI siapa Einstein', 'ai jelasin fotosintesis'],
-        },
-        async run(sock, { body, message, raw, from, primaryId }) {
+export default plugin('ai', 'tanya')
+  .in('ai')
+  .desc('Chat langsung dengan AI (dengan memory)')
+  .prefixOnly()
+  .signal('User eksplisit minta tanya ke AI, atau minta jawaban dari AI', ['tanya AI siapa Einstein', 'ai jelasin fotosintesis'])
+  .run(async (sock, { body, message, raw, from, primaryId }) => {
             const { quoted } = message;
             const args = getArgs(body) || quoted?.text;
 
@@ -37,7 +33,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

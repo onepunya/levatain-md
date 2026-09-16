@@ -1,16 +1,12 @@
 import { typing, downloadMedia } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['tourl', 'geturl', 'uploadfile'],
-        tag:  'tools',
-        aliasOnly: true,
-        desc: 'Upload media dan dapatkan URL-nya',
-        ai: {
-            trigger: 'User minta upload file, convert media ke link/url, atau dapatkan url dari gambar/video/audio/stiker',
-            examples: ['tourl', 'jadiin link dong', 'upload gambar ini', 'buatin url dari video ini'],
-        },
-        async run(sock, { message, raw, from }) {
+export default plugin('tourl', 'geturl', 'uploadfile')
+  .in('tools')
+  .desc('Upload media dan dapatkan URL-nya')
+  .prefixOnly()
+  .signal('User minta upload file, convert media ke link/url, atau dapatkan url dari gambar/video/audio/stiker', ['tourl', 'jadiin link dong', 'upload gambar ini', 'buatin url dari video ini'])
+  .run(async (sock, { message, raw, from }) => {
             const types  = ['image', 'video', 'audio', 'sticker', 'document'];
             const result = await downloadMedia(raw, message.quoted, types);
 
@@ -33,9 +29,7 @@ export const meta = {
                     text: `❌ Gagal upload: ${e.message}`
                 }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 const LABELS = {
     image:    '🖼️ Gambar',

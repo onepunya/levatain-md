@@ -1,13 +1,12 @@
 import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['nightcore'],
-        tag:  'audiochanger',
-        aliasOnly: true,
-        desc: 'Nightcore — audio dipercepat + nada dinaikin',
-        ai: { trigger: 'nightcore', examples: ['nightcore audio ini'] },
-        async run(sock, { message, raw, from }) {
+export default plugin('nightcore')
+  .in('audiochanger')
+  .desc('Nightcore — audio dipercepat + nada dinaikin')
+  .prefixOnly()
+  .signal('nightcore', ['nightcore audio ini'])
+  .run(async (sock, { message, raw, from }) => {
             const result = await downloadMedia(raw, message.quoted, ['audio', 'video']);
             if (!result) return sock.sendMessage(from, { text: '❌ Kirim atau reply audio/video dulu.' }, { quoted: raw });
 
@@ -18,7 +17,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal proses audio: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

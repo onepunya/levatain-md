@@ -2,19 +2,18 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { typing, getArgs } from '../../src/lib/utils.js';
 import { fetchBufferLimited } from '../../src/lib/mediaLimit.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['twitter', 'twi', 'x'],
-        tag:  'download',
-        aliasOnly: true,
-        desc: 'Download foto/video dari Twitter (X)',
-        ai: {
+export default plugin('twitter', 'twi', 'x')
+  .in('download')
+  .desc('Download foto/video dari Twitter (X)')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta download foto atau video dari Twitter/X dengan URL',
             examples: ['tw https://x.com/user/status/xxx', 'download twitter ini'],
             args: { url: 'URL Twitter/X' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
                 text: '❌ Masukkan URL Twitter/X!\nContoh: *.twitter https://x.com/user/status/xxx*'
@@ -45,9 +44,7 @@ export const meta = {
                 console.error(e);
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
 

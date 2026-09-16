@@ -1,13 +1,12 @@
 import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['reverb'],
-        tag:  'audiochanger',
-        aliasOnly: true,
-        desc: 'Reverb — efek gema ruangan besar',
-        ai: { trigger: 'reverb', examples: ['reverb audio ini'] },
-        async run(sock, { message, raw, from }) {
+export default plugin('reverb')
+  .in('audiochanger')
+  .desc('Reverb — efek gema ruangan besar')
+  .prefixOnly()
+  .signal('reverb', ['reverb audio ini'])
+  .run(async (sock, { message, raw, from }) => {
             const result = await downloadMedia(raw, message.quoted, ['audio', 'video']);
             if (!result) return sock.sendMessage(from, { text: '❌ Kirim atau reply audio/video dulu.' }, { quoted: raw });
 
@@ -18,7 +17,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal proses audio: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

@@ -11,18 +11,14 @@ import {
     resolveMenuArg,
     labelize,
 } from '../../src/lib/menuCatalog.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['menu', 'allmenu'],
-        tag:  'main',
-        aliasOnly: false,
-        desc: 'Menu kategori (list Android / teks iPhone) dan allmenu',
-        ai: {
-            trigger: 'User minta daftar command, menu, bantuan, atau allmenu',
-            examples: ['menu', 'allmenu', 'command apa aja', 'help'],
-        },
-        async run(sock, { raw, from, pushname, isOwner, command, body, device: deviceHint }) {
+export default plugin('menu', 'allmenu')
+  .in('main')
+  .desc('Menu kategori (list Android / teks iPhone) dan allmenu')
+  .showAllAliases()
+  .signal('User minta daftar command, menu, bantuan, atau allmenu', ['menu', 'allmenu', 'command apa aja', 'help'])
+  .run(async (sock, { raw, from, pushname, isOwner, command, body, device: deviceHint }) => {
             const device = deviceHint || detectDevice(raw);
             const arg = command === 'allmenu' ? 'all' : getArgs(body);
             const target = resolveMenuArg(arg, isOwner);
@@ -60,7 +56,5 @@ export const meta = {
                 device,
                 thumbUrl: global.thumb,
             });
-        },
-    },
-};
+        });
 

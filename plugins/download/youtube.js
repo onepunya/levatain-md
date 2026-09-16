@@ -2,19 +2,18 @@ import { typing, getArgs } from '../../src/lib/utils.js';
 import { api } from '../../src/lib/api.js';
 import { MAX_FILE_SIZE, cleanupTempFile } from '../../src/lib/youtube.js';
 import { ProgressMessage } from '../../src/lib/progress.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['ytmp3', 'ytmp4'],
-        tag:  'download',
-        aliasOnly: false,
-        desc: 'Download audio/video dari URL YouTube',
-        ai: {
+export default plugin('ytmp3', 'ytmp4')
+  .in('download')
+  .desc('Download audio/video dari URL YouTube')
+  .showAllAliases()
+  .ai({
             trigger: 'User minta download dari YouTube dengan URL, ytmp3 atau ytmp4',
             examples: ['ytmp3 https://youtu.be/xxx', 'download youtube ini jadi mp4'],
             args: { url: 'URL YouTube yang valid' },
-        },
-        async run(sock, { body, raw, from, command }) {
+        })
+  .run(async (sock, { body, raw, from, command }) => {
             const url = getArgs(body);
             const format = command === 'ytmp3' ? 'mp3' : 'mp4';
 
@@ -60,7 +59,5 @@ export const meta = {
             } finally {
                 cleanupTempFile(filePath);
             }
-        },
-    },
-};
+        });
 

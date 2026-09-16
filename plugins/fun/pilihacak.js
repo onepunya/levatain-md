@@ -1,12 +1,11 @@
 import { pick, sleep } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['pilihnama', 'spinnama'],
-        tag:  'fun',
-        aliasOnly: true,
-        desc: 'Acak satu nama/orang dari daftar yang dikasih (ketik nama atau tag @orangnya)',
-        ai: {
+export default plugin('pilihnama', 'spinnama')
+  .in('fun')
+  .desc('Acak satu nama/orang dari daftar yang dikasih (ketik nama atau tag @orangnya)')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta bot mengacak/memilih satu nama atau satu orang dari beberapa nama/mention yang dikasih',
             examples: [
                 'pilihacak Andi, Budi, Citra, Dewi',
@@ -14,8 +13,8 @@ export const meta = {
                 'pilihnama @Mr one, @Jaki Ganteng, @Rizik',
             ],
             args: { text: 'Daftar nama dipisah koma, atau tag @orangnya (bisa campur)' },
-        },
-        async run(sock, { body, raw, from, mentionedJid, gdb }) {
+        })
+  .run(async (sock, { body, raw, from, mentionedJid, gdb }) => {
             const rawText = body.split(' ').slice(1).join(' ').trim();
 
             if (!rawText) {
@@ -74,8 +73,5 @@ export const meta = {
                 text: `🎉 Yang kena: *${winner.label}*!`,
                 mentions: winner.jid ? [winner.jid] : [],
             }, { quoted: raw });
-        },
-    },
-};
-
+        });
 

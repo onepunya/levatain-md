@@ -1,19 +1,18 @@
 import * as cheerio from 'cheerio';
 import { typing, getArgs } from '../../src/lib/utils.js';
 import { logger } from '../../src/lib/logger.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['tiktokprofile', 'ttprofile', 'ttstalk'],
-        tag:  'tools',
-        aliasOnly: true,
-        desc: 'Cek/cari profil TikTok (followers, following, likes, bio, dll)',
-        ai: {
+export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')
+  .in('tools')
+  .desc('Cek/cari profil TikTok (followers, following, likes, bio, dll)')
+  .prefixOnly()
+  .ai({
             trigger: 'User minta cek/stalk profil TikTok berdasarkan username',
             examples: ['ttprofile jokowi', 'cek profil tiktok @jokowi', 'stalk tiktok jokowi'],
             args: { username: 'Username TikTok tanpa @' },
-        },
-        async run(sock, { body, raw, from }) {
+        })
+  .run(async (sock, { body, raw, from }) => {
             const username = getArgs(body).replace('@', '').trim();
             if (!username) return sock.sendMessage(from, {
                 text: '❌ Masukkan username TikTok!\nContoh: *.ttprofile jokowi*'
@@ -54,9 +53,7 @@ export const meta = {
                 logger.error(`[ttprofile] ${e.message}`);
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 
 async function fetchTikmatrixProfile(username) {
     const url = `https://user.tikmatrix.com/?username=${encodeURIComponent(username)}`;

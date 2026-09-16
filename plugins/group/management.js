@@ -1,16 +1,12 @@
-export const meta = {
-    interface: {
-        cmd:     ['kick', 'promote', 'demote'],
-        tag:     'group',
-        aliasOnly: false,
-        desc:    'Manajemen anggota group (kick/promote/demote)',
-        isGroup: true,
-        isAdmin: true,
-        ai: {
-            trigger: 'User minta kick, promote, atau demote anggota group',
-            examples: ['kick @user', 'promote @admin', 'keluarkan user ini'],
-        },
-        async run(sock, { message, raw, from, command, mentionedJid, participants, isBotAdmin }) {
+import { plugin } from '../../src/core/plugin.js';
+export default plugin('kick', 'promote', 'demote')
+  .in('group')
+  .desc('Manajemen anggota group (kick/promote/demote)')
+  .showAllAliases()
+  .adminOnly()
+  .groupOnly()
+  .signal('User minta kick, promote, atau demote anggota group', ['kick @user', 'promote @admin', 'keluarkan user ini'])
+  .run(async (sock, { message, raw, from, command, mentionedJid, participants, isBotAdmin }) => {
             if (!isBotAdmin) return sock.sendMessage(from, { text: '❌ Bot harus jadi admin group dulu!' }, { quoted: raw });
 
             let target;
@@ -45,7 +41,5 @@ export const meta = {
 
             await sock.groupParticipantsUpdate(from, [targetId], action);
             await sock.sendMessage(from, { text: msg, mentions: [targetId] }, { quoted: raw });
-        },
-    },
-};
+        });
 

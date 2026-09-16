@@ -1,19 +1,18 @@
 import { saveDb } from '../../src/core/db.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:     ['setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'setautodl'],
-        tag:     'group',
-        aliasOnly: false,
-        desc:    'Pengaturan fitur group',
-        isGroup: true,
-        isAdmin: true,
-        ai: {
+export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'setautodl')
+  .in('group')
+  .desc('Pengaturan fitur group')
+  .showAllAliases()
+  .adminOnly()
+  .groupOnly()
+  .ai({
             trigger: 'User minta aktifkan/nonaktifkan fitur group seperti welcome, antilink, mute',
             examples: ['aktifkan welcome', 'matiin antilink', 'nyalain captcha'],
             args: { toggle: 'on/off atau aktif/nonaktif' },
-        },
-        async run(sock, { body, raw, from, command, gdb }) {
+        })
+  .run(async (sock, { body, raw, from, command, gdb }) => {
             const feature = featureMap[command];
             if (!feature) return;
 
@@ -33,9 +32,7 @@ export const meta = {
             await saveDb();
             const status = grp[feature.key] ? '✅ Aktif' : '❌ Nonaktif';
             await sock.sendMessage(from, { text: `${feature.label}: *${status}*` }, { quoted: raw });
-        },
-    },
-};
+        });
 
 const featureMap = {
     setwelcome:  { key: 'welcome',  label: 'Welcome message' },

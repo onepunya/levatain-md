@@ -1,13 +1,12 @@
 import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/utils.js';
+import { plugin } from '../../src/core/plugin.js';
 
-export const meta = {
-    interface: {
-        cmd:  ['8d'],
-        tag:  'audiochanger',
-        aliasOnly: true,
-        desc: '8D Audio — suara muter kiri-kanan',
-        ai: { trigger: '8d', examples: ['8d audio ini'] },
-        async run(sock, { message, raw, from }) {
+export default plugin('8d')
+  .in('audiochanger')
+  .desc('8D Audio — suara muter kiri-kanan')
+  .prefixOnly()
+  .signal('8d', ['8d audio ini'])
+  .run(async (sock, { message, raw, from }) => {
             const result = await downloadMedia(raw, message.quoted, ['audio', 'video']);
             if (!result) return sock.sendMessage(from, { text: '❌ Kirim atau reply audio/video dulu.' }, { quoted: raw });
 
@@ -18,7 +17,5 @@ export const meta = {
             } catch (e) {
                 await sock.sendMessage(from, { text: `❌ Gagal proses audio: ${e.message}` }, { quoted: raw });
             }
-        },
-    },
-};
+        });
 

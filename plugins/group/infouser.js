@@ -1,5 +1,6 @@
 import { sendInlineWebUI } from '../../src/lib/rich-messages.js';
 import { renderInfoCard, htmlEscape } from '../../src/lib/webui-templates.js';
+import { plugin } from '../../src/core/plugin.js';
 
 function normalizeTarget(raw) {
     const s = raw.split(':')[0];
@@ -7,17 +8,12 @@ function normalizeTarget(raw) {
     return `${s.replace(/\D/g, '')}@s.whatsapp.net`;
 }
 
-export const meta = {
-    interface: {
-        cmd: ['infouser', 'whois', 'userinfo'],
-        tag: 'group',
-        aliasOnly: true,
-        desc: 'Lihat info user/member',
-        ai: {
-            trigger: 'User minta info member/user',
-            examples: ['infouser @user', 'whois', 'cek profil ini'],
-        },
-        async run(sock, { raw, from, message, mentionedJid, participants, isGroup, primaryId, gdb, pushname }) {
+export default plugin('infouser', 'whois', 'userinfo')
+  .in('group')
+  .desc('Lihat info user/member')
+  .prefixOnly()
+  .signal('User minta info member/user', ['infouser @user', 'whois', 'cek profil ini'])
+  .run(async (sock, { raw, from, message, mentionedJid, participants, isGroup, primaryId, gdb, pushname }) => {
             let targetId;
             if (message.quoted?.sender) {
                 targetId = normalizeTarget(message.quoted.sender);
@@ -73,6 +69,5 @@ export const meta = {
             });
 
             await sendInlineWebUI(sock, from, html, 'Info User');
-        },
-    },
-};
+        });
+
