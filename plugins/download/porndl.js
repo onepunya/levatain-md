@@ -10,12 +10,12 @@ export const meta = {
         ai: {
             trigger: 'User minta daftar link download video dewasa',
             examples: ['porn url video dewasa', 'download video porno ini'],
-            args: { url: 'URL dewasa pornhub, xnxx dll' },
+            args: { url: 'URL dewasa pornhub' },
         },
         async run(sock, { body, raw, from }) {
             const url = getArgs(body);
             if (!url) return sock.sendMessage(from, {
-                text: '❌ Masukkan URL video dewasa dari situs apa pun, pornhub, xnxx, xvideos dll'
+                text: '❌ Masukkan URL video dewasa dari situs pornhub'
             }, { quoted: raw });
 
             await typing(sock, from);
