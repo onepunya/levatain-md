@@ -1,5 +1,4 @@
-import { typing, downloadMedia } from '../../src/lib/utils.js';
-import { upscaleImage } from '../../src/lib/photiu.js';
+import { typing, downloadMedia, upscaleImage } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('upscale', 'hd', 'enhance')

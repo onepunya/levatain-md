@@ -6,9 +6,9 @@ import http from 'http';
 import https from 'https';
 import { pipeline } from 'stream/promises';
 import ffmpeg from 'fluent-ffmpeg';
-import { logger } from './logger.js';
-import { MAX_MEDIA_BYTES } from './mediaLimit.js';
-import { sleep, uniqueId } from './utils.js';
+import { logger } from '../logger.js';
+import { MAX_MEDIA_BYTES } from '../media/mediaLimit.js';
+import { sleep, uniqueId } from '../utils.js';
 
 export const MAX_FILE_SIZE = MAX_MEDIA_BYTES;
 

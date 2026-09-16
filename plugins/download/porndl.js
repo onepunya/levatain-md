@@ -1,4 +1,4 @@
-import { typing, getArgs } from '../../src/lib/utils.js';
+import { typing, getArgs } from '../../src/lib/index.js';
 import axios from 'axios';
 import { plugin } from '../../src/core/plugin.js';
 

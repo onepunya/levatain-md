@@ -1,7 +1,10 @@
-import { getArgs } from '../../src/lib/utils.js';
-import { detectDevice, deviceLabel, supportsInteractive } from '../../src/lib/device.js';
-import { sendCategoryMenu, sendThumbFromUrl } from '../../src/lib/interactive.js';
 import {
+    getArgs,
+    detectDevice,
+    deviceLabel,
+    supportsInteractive,
+    sendCategoryMenu,
+    sendThumbFromUrl,
     TAG_META,
     collectGrouped,
     buildAllMenuText,
@@ -9,8 +12,8 @@ import {
     buildCategoryText,
     buildListSections,
     resolveMenuArg,
-    labelize,
-} from '../../src/lib/menuCatalog.js';
+    labelize
+} from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('menu', 'allmenu')

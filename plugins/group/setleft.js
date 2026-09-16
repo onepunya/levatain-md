@@ -1,4 +1,4 @@
-import { getArgs } from '../../src/lib/utils.js';
+import { getArgs } from '../../src/lib/index.js';
 import { saveDb } from '../../src/core/db.js';
 import { plugin } from '../../src/core/plugin.js';
 

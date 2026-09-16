@@ -1,5 +1,5 @@
-import { logger } from './logger.js';
-import { base64ToBuffer } from './utils.js';
+import { logger } from '../logger.js';
+import { base64ToBuffer } from '../utils.js';
 
 const PHOTIU_BASE = 'https://www.photiu.ai';
 const UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';

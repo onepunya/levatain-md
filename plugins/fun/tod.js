@@ -1,6 +1,4 @@
-import { api } from '../../src/lib/api.js';
-import { logger } from '../../src/lib/logger.js';
-import { pick } from '../../src/lib/utils.js';
+import { api, logger, pick } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tod', 'truth', 'dare')

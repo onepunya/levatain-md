@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import { logger } from '../lib/logger.js';
+import { logger } from '../lib/index.js';
 
 const DB_PATH = './database/db.json';
 

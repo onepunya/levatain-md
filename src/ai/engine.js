@@ -1,5 +1,4 @@
-import { api } from '../lib/api.js';
-import { logger } from '../lib/logger.js';
+import { api, logger } from '../lib/index.js';
 import { plugins } from '../core/loader.js';
 
 const getPluginList = () => {

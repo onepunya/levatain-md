@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { logger } from './logger.js';
-import { config } from '../config.js';
-import { pick } from './utils.js';
+import { logger } from '../logger.js';
+import { config } from '../../config.js';
+import { pick } from '../utils.js';
 const GIPHY_API_KEY = config.giphy.apiKey;
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36';
 

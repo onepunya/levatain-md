@@ -1,6 +1,5 @@
 import * as cheerio from 'cheerio';
-import { typing, getArgs } from '../../src/lib/utils.js';
-import { logger } from '../../src/lib/logger.js';
+import { typing, getArgs, logger } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')

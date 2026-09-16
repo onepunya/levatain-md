@@ -1,11 +1,8 @@
 import { intentEngine } from './engine.js';
 import { getHistory, addHistory, clearHistory, getUserMemory, setUserMemory, getAllUsersContext } from './memory.js';
 import { shouldHandleAI, cleanTrigger, isOnCooldown } from './gate.js';
-import { api } from '../lib/api.js';
-import { logger } from '../lib/logger.js';
-import { toVoiceNoteOpus } from '../lib/utils.js';
+import { api, logger, toVoiceNoteOpus, getRandomMoodSticker } from '../lib/index.js';
 import { plugins } from '../core/loader.js';
-import { getRandomMoodSticker } from '../lib/giphy.js';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
 async function sendMoodSticker(sock, from, mood, raw) {

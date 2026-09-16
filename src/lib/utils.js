@@ -6,7 +6,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import { PassThrough } from 'stream';
 import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import { logger } from './logger.js';
-import { MAX_MEDIA_BYTES, MediaTooLargeError, assertBufferUnderLimit, sendRemoteMedia } from './mediaLimit.js';
+import { MAX_MEDIA_BYTES, MediaTooLargeError, assertBufferUnderLimit, sendRemoteMedia } from './media/mediaLimit.js';
 
 export const toVoiceNoteOpus = buffer => new Promise((resolve, reject) => {
     const tempDir = os.tmpdir();

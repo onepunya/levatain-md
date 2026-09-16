@@ -1,6 +1,5 @@
 import { getHistory, clearHistory } from '../../src/ai/memory.js';
-import { typing, getArgs } from '../../src/lib/utils.js';
-import { api } from '../../src/lib/api.js';
+import { typing, getArgs, api } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('ai', 'tanya')

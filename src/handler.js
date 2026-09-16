@@ -1,14 +1,19 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { inspect } from 'util';
-import { logger } from './lib/logger.js';
-import { sendMess, formatDurationWords, randomInt } from './lib/utils.js';
+import {
+    logger,
+    sendMess,
+    formatDurationWords,
+    randomInt,
+    routeSessionInput,
+    getGroupMeta,
+    bustGroupMetaCache,
+    detectDevice
+} from './lib/index.js';
 import { loadDb, saveDb, ensureUser, ensureGroup } from './core/db.js';
 import { handleAI } from './ai/index.js';
 import { plugins } from './core/loader.js';
-import { routeSessionInput } from './lib/session.js';
-import { getGroupMeta, bustGroupMetaCache } from './lib/groupCache.js';
-import { detectDevice } from './lib/device.js';
 
 const execPromise = promisify(exec);
 

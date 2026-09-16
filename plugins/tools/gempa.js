@@ -1,5 +1,5 @@
 import { loadDb, saveDb } from '../../src/core/db.js';
-import { fetchJson } from '../../src/lib/utils.js';
+import { fetchJson } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const AUTOGEMPA_URL = 'https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json';

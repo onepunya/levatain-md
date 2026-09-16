@@ -1,7 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { typing, getArgs } from '../../src/lib/utils.js';
-import { fetchBufferLimited } from '../../src/lib/mediaLimit.js';
+import { typing, getArgs, fetchBufferLimited } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('twitter', 'twi', 'x')

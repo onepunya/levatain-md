@@ -1,4 +1,4 @@
-import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES } from '../../src/lib/rich-messages.js';
+import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('runner', 'lari')

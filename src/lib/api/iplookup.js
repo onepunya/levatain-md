@@ -1,6 +1,6 @@
 import os from 'os';
 import axios from 'axios';
-import { logger } from './logger.js';
+import { logger } from '../logger.js';
 
 let cache = {
     publicIp:  null,

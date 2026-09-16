@@ -3,7 +3,7 @@ import {
     generateWAMessageFromContent,
     prepareWAMessageMedia,
 } from '@whiskeysockets/baileys';
-import { logger } from './logger.js';
+import { logger } from '../logger.js';
 import { detectDevice, supportsInteractive } from './device.js';
 
 export function unwrapMessage(message) {

@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
-import { uniqueId } from './utils.js';
+import { uniqueId } from '../utils.js';
 
 export function extractAudioClip(buffer, seconds = 20) {
     return new Promise((resolve, reject) => {

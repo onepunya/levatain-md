@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { logger } from './logger.js';
+import { logger } from '../logger.js';
 
 export const MAX_MEDIA_BYTES = 15 * 1024 * 1024;
 export const MAX_MEDIA_MB = 15;

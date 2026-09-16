@@ -1,4 +1,4 @@
-import { pick, sleep } from '../../src/lib/utils.js';
+import { pick, sleep } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('pilihnama', 'spinnama')

@@ -1,5 +1,4 @@
-import { sendInlineWebUI } from '../../src/lib/rich-messages.js';
-import { renderInfoCard, htmlEscape } from '../../src/lib/webui-templates.js';
+import { sendInlineWebUI, renderInfoCard, htmlEscape } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 function normalizeTarget(raw) {

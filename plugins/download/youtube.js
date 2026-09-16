@@ -1,7 +1,4 @@
-import { typing, getArgs } from '../../src/lib/utils.js';
-import { api } from '../../src/lib/api.js';
-import { MAX_FILE_SIZE, cleanupTempFile } from '../../src/lib/youtube.js';
-import { ProgressMessage } from '../../src/lib/progress.js';
+import { typing, getArgs, api, MAX_FILE_SIZE, cleanupTempFile, ProgressMessage } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('ytmp3', 'ytmp4')

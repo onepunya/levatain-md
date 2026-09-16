@@ -2,7 +2,7 @@ import axios from 'axios';
 import https from 'https';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { typing, getArgs, sendMediaBatch, sendAnyMedia } from '../../src/lib/utils.js';
+import { typing, getArgs, sendMediaBatch, sendAnyMedia } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const execFileAsync = promisify(execFile);

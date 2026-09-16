@@ -1,4 +1,4 @@
-import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/utils.js';
+import { applyAudioFilter, downloadMedia, typing } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('chipmunk')

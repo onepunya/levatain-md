@@ -1,4 +1,4 @@
-import { logger } from './logger.js';
+import { logger } from '../logger.js';
 
 const sessions = new Map();
 const DEFAULT_TIMEOUT = 3 * 60_000;

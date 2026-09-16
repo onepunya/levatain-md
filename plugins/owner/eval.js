@@ -2,8 +2,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
-import { getArgs, truncate } from '../../src/lib/utils.js';
-import { ProgressMessage } from '../../src/lib/progress.js';
+import { getArgs, truncate, ProgressMessage } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const execPromise = promisify(exec);

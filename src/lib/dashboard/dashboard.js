@@ -3,9 +3,9 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { logger, recentCommands, recentLogs } from './logger.js';
-import { getLocalIps, getHostname, getCachedIpInfo, lookupPublicIp } from './iplookup.js';
-import { formatUptimeFull } from './utils.js';
+import { logger, recentCommands, recentLogs } from '../logger.js';
+import { getLocalIps, getHostname, getCachedIpInfo, lookupPublicIp } from '../api/iplookup.js';
+import { formatUptimeFull } from '../utils.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIR = path.join(__dirname, 'dashboard-client');

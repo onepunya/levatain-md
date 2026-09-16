@@ -15,10 +15,17 @@ Bot WhatsApp AI-first berbasis [Baileys](https://github.com/WhiskeySockets/Baile
 ├── .env.example          Template environment variable (copy jadi .env)
 ├── src/
 │   ├── config.js         Semua environment variable dibaca dari sini (satu sumber kebenaran)
+│   ├── globals.js        Semua `global.*` state (owner, plugins, api, dll) di-init sekali dari sini
 │   ├── handler.js        Router pesan masuk → deteksi prefix/command → plugin, atau lempar ke AI
 │   ├── ai/               Intent engine (engine.js), gate trigger word grup (gate.js), memori percakapan
 │   ├── core/             Loader plugin auto-scan (loader.js) & database lokal (db.js)
-│   └── lib/              Helper: API eksternal, audio effects, session interaktif, dashboard web, dll
+│   └── lib/              Helper, di-barrel lewat lib/index.js — tinggal `import { x, y } from '.../lib/index.js'`
+│       ├── index.js      Barrel — re-export semua helper di bawah ini
+│       ├── utils.js, logger.js, menuCatalog.js   Helper generik dipakai lintas modul
+│       ├── api/          Wrapper API eksternal: LLM (llm.js), TTS (voice.js), downloader/gambar (media.js), http.js (curl helper bersama), youtube/giphy/boppy/photiu/iplookup
+│       ├── wa/            Lapisan WhatsApp: pesan interaktif, rich message card, progress bar, cache grup, session, deteksi device
+│       ├── media/         Pemrosesan file media: efek audio, limit ukuran media
+│       └── dashboard/     Web dashboard admin (server + client statis)
 └── plugins/              Semua command bot, dikelompokkan per kategori, auto ke-load oleh loader
     ├── main/             menu, ping, sc (script/source)
     ├── ai/                chat, imagine (text-to-image), editimage, musicgen, memory

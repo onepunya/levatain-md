@@ -8,26 +8,23 @@ import {
     Browsers
 } from '@whiskeysockets/baileys';
 import pino from 'pino';
-import { logger } from './src/lib/logger.js';
+import {
+    logger,
+    startDashboard,
+    extractBody,
+    detectDevice,
+    startIpWatcher,
+    readGroupMetaCache,
+    setGroupMetaCache,
+    cleanTempFiles
+} from './src/lib/index.js';
 import { initDb, flushDb, scheduleAutoReset } from './src/core/db.js';
 import { loadPlugins, plugins } from './src/core/loader.js';
 import { handler, participantsUpdate, getCaptchaPending } from './src/handler.js';
-import { api } from './src/lib/api.js';
-import { startDashboard } from './src/lib/dashboard.js';
-import { extractBody } from './src/lib/interactive.js';
-import { detectDevice } from './src/lib/device.js';
-import { startIpWatcher } from './src/lib/iplookup.js';
-import { readGroupMetaCache, setGroupMetaCache } from './src/lib/groupCache.js';
-import { cleanTempFiles } from './src/lib/utils.js';
 import { config } from './src/config.js';
-global.botName = config.bot.name;
-global.owner   = config.owner.number;
-global.ownerLid = config.owner.lid;
-global.link    = config.bot.link;
-global.thumb   = config.bot.thumb;
-global.plugins = plugins;
-global.api     = api;
-global.botConnected = false;
+import { initGlobals } from './src/globals.js';
+
+initGlobals();
 setInterval(() => {}, 1 << 30);
 
 const msgCache = new Map();

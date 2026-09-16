@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import { logger } from '../lib/logger.js';
+import { logger } from '../lib/index.js';
 
 const AI_DB_PATH  = './database/ai_db.json';
 const MAX_HISTORY = 30;
