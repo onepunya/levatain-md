@@ -3,41 +3,41 @@ import axios from 'axios';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('porn', 'bokep')
-  .in('download')
-  .desc('Dapatkan daftar link download video dewasa dari semua situs dewasa')
-  .prefixOnly()
-  .ai({
-            trigger: 'User minta daftar link download video dewasa',
-            examples: ['porn url video dewasa', 'download video porno ini'],
-            args: { url: 'URL dewasa pornhub' },
-        })
-  .run(async (sock, { body, raw, from }) => {
-            const url = getArgs(body);
-            if (!url) return sock.sendMessage(from, {
-                text: '❌ Masukkan URL video dewasa dari situs pornhub'
-            }, { quoted: raw });
+    .in('download')
+    .desc('Dapatkan daftar link download video dewasa dari semua situs dewasa')
+    .prefixOnly()
+    .ai({
+        trigger: 'User minta daftar link download video dewasa',
+        examples: ['porn url video dewasa', 'download video porno ini'],
+        args: { url: 'URL dewasa pornhub' },
+    })
+    .run(async (sock, { body, raw, from }) => {
+        const url = getArgs(body);
+        if (!url) return sock.sendMessage(from, {
+            text: '❌ Masukkan URL video dewasa dari situs pornhub'
+        }, { quoted: raw });
 
-            await typing(sock, from);
-            await sock.sendMessage(from, { text: '⏳ Mendapatkan info video...' }, { quoted: raw });
+        await typing(sock, from);
+        await sock.sendMessage(from, { text: '⏳ Mendapatkan info video...' }, { quoted: raw });
 
-            try {
-                const data = await getVideoInfo(url);
+        try {
+            const data = await getVideoInfo(url);
 
-                if (!data || !data.download_urls) {
-                    return await sock.sendMessage(from, { text: '❌ Gagal mendapatkan link download video.' }, { quoted: raw });
-                }
-
-                let listLinks = '📋 *Daftar Link Download Video:*\n\n';
-                for (const item of data.download_urls) {
-                    listLinks += `*Kualitas:* ${item.name}\n*Link:* ${item.url}\n\n`;
-                }
-
-                await sock.sendMessage(from, { text: listLinks }, { quoted: raw });
-            } catch (e) {
-                console.error(e);
-                await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            if (!data || !data.download_urls) {
+                return await sock.sendMessage(from, { text: '❌ Gagal mendapatkan link download video.' }, { quoted: raw });
             }
-        });
+
+            let listLinks = '📋 *Daftar Link Download Video:*\n\n';
+            for (const item of data.download_urls) {
+                listLinks += `*Kualitas:* ${item.name}\n*Link:* ${item.url}\n\n`;
+            }
+
+            await sock.sendMessage(from, { text: listLinks }, { quoted: raw });
+        } catch (e) {
+            console.error(e);
+            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+        }
+    });
 
 async function getVideoInfo(videoUrl) {
     const apiEndpoint = 'https://xxxdl.net/api/video-download/info/';

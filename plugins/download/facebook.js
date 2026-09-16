@@ -5,48 +5,48 @@ import { fetchBufferLimited } from '../../src/lib/mediaLimit.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('facebook', 'fb')
-  .in('download')
-  .desc('Download video/foto facebook')
-  .prefixOnly()
-  .ai({
-            trigger: 'User minta download dari facebook dengan URL',
-            examples: ['fb https://www.facebook.com/share/r/xxx/', 'download facebook ini'],
-            args: { url: 'URL facebook' },
-        })
-  .run(async (sock, { body, raw, from }) => {
-            const url = getArgs(body);
-            if (!url) return sock.sendMessage(from, {
-                text: '❌ Masukkan URL Facebook\nContoh: *.facebook https://www.facebook.com/share/r/xxx/*'
+    .in('download')
+    .desc('Download video/foto facebook')
+    .prefixOnly()
+    .ai({
+        trigger: 'User minta download dari facebook dengan URL',
+        examples: ['fb https://www.facebook.com/share/r/xxx/', 'download facebook ini'],
+        args: { url: 'URL facebook' },
+    })
+    .run(async (sock, { body, raw, from }) => {
+        const url = getArgs(body);
+        if (!url) return sock.sendMessage(from, {
+            text: '❌ Masukkan URL Facebook\nContoh: *.facebook https://www.facebook.com/share/r/xxx/*'
+        }, { quoted: raw });
+
+        await typing(sock, from);
+        await sock.sendMessage(from, { text: '⏳ Mendownload Facebook...' }, { quoted: raw });
+
+        try {
+            const data = await fbDownloader(url);
+
+            if (!data || !data.video) {
+                return await sock.sendMessage(from, { text: '❌ Gagal mendapatkan link video dari Facebook.' }, { quoted: raw });
+            }
+
+            const videoBuffer = await fetchBufferLimited(data.video, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
+                    'Referer': 'https://fget.io/'
+                },
+                timeout: 60000,
+            });
+
+            await sock.sendMessage(from, {
+                video: videoBuffer,
+                caption: '📸 *facebook*',
             }, { quoted: raw });
 
-            await typing(sock, from);
-            await sock.sendMessage(from, { text: '⏳ Mendownload Facebook...' }, { quoted: raw });
-
-            try {
-                const data = await fbDownloader(url);
-
-                if (!data || !data.video) {
-                    return await sock.sendMessage(from, { text: '❌ Gagal mendapatkan link video dari Facebook.' }, { quoted: raw });
-                }
-
-                const videoBuffer = await fetchBufferLimited(data.video, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
-                        'Referer': 'https://fget.io/'
-                    },
-                    timeout: 60000,
-                });
-
-                await sock.sendMessage(from, {
-                    video: videoBuffer,
-                    caption: '📸 *facebook*',
-                }, { quoted: raw });
-
-            } catch (e) {
-                console.error(e);
-                await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
-            }
-        });
+        } catch (e) {
+            console.error(e);
+            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+        }
+    });
 
 async function fbDownloader(url) {
     try {

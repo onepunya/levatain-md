@@ -35,114 +35,114 @@ async function uploadToMagicHour(currentKey, buffer, mimetype) {
 }
 
 export default plugin('editimage', 'aiedit')
-  .in('ai')
-  .desc('Edit gambar pakai prompt AI (Magic Hour)')
-  .prefixOnly()
-  .ai({
-            trigger: 'User minta edit gambar menggunakan AI dengan prompt',
-            examples: ['editimage berikan kacamata hitam', 'aiedit ganti background jadi pantai'],
-            args: { input: 'Prompt Edit (reply/kirim gambar)' },
-        })
-  .run(async (sock, { body, message, raw, from }) => {
-            const prompt = getArgs(body);
+    .in('ai')
+    .desc('Edit gambar pakai prompt AI (Magic Hour)')
+    .prefixOnly()
+    .ai({
+        trigger: 'User minta edit gambar menggunakan AI dengan prompt',
+        examples: ['editimage berikan kacamata hitam', 'aiedit ganti background jadi pantai'],
+        args: { input: 'Prompt Edit (reply/kirim gambar)' },
+    })
+    .run(async (sock, { body, message, raw, from }) => {
+        const prompt = getArgs(body);
 
-            if (!prompt) {
-                return sock.sendMessage(from, {
-                    text: '❌ Format salah!\nContoh: *.editimage berikan kacamata hitam di wajahnya*\n\nJangan lupa reply/kirim gambarnya ya.'
-                }, { quoted: raw });
+        if (!prompt) {
+            return sock.sendMessage(from, {
+                text: '❌ Format salah!\nContoh: *.editimage berikan kacamata hitam di wajahnya*\n\nJangan lupa reply/kirim gambarnya ya.'
+            }, { quoted: raw });
+        }
+
+        const result = await downloadMedia(raw, message.quoted, ['image']);
+        if (!result) {
+            return sock.sendMessage(from, { text: '❌ Kirim atau reply gambar dulu.' }, { quoted: raw });
+        }
+
+        if (apiKeys.length === 0) {
+            return sock.sendMessage(from, { text: '❌ Fitur ini belum dikonfigurasi (MAGICHOUR_KEY_* kosong di .env).' }, { quoted: raw });
+        }
+
+        await typing(sock, from);
+        await sock.sendMessage(from, { text: '⏳ Mengupload gambar & mengirim instruksi ke AI...' }, { quoted: raw });
+
+        try {
+            const currentKey = apiKeys[keyIndex];
+            keyIndex = (keyIndex + 1) % apiKeys.length;
+
+            const filePath = await uploadToMagicHour(currentKey, result.buffer, result.mimetype);
+
+            const initResponse = await fetch('https://api.magichour.ai/v1/ai-image-editor', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'authorization': `Bearer ${currentKey}`,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: `Bot Edit - ${Date.now()}`,
+                    image_count: 1,
+                    model: "flux-2-klein",
+                    aspect_ratio: "auto",
+                    resolution: "640px",
+                    style: { prompt: prompt },
+                    assets: { image_file_paths: [filePath] }
+                })
+            });
+
+            if (!initResponse.ok) {
+                const err = await initResponse.json();
+                throw new Error(err.message || `Init Error: ${initResponse.status}`);
             }
 
-            const result = await downloadMedia(raw, message.quoted, ['image']);
-            if (!result) {
-                return sock.sendMessage(from, { text: '❌ Kirim atau reply gambar dulu.' }, { quoted: raw });
-            }
+            const initData = await initResponse.json();
+            const projectId = initData.id;
 
-            if (apiKeys.length === 0) {
-                return sock.sendMessage(from, { text: '❌ Fitur ini belum dikonfigurasi (MAGICHOUR_KEY_* kosong di .env).' }, { quoted: raw });
-            }
+            let isCompleted = false;
+            let imageUrl = null;
+            let attempts = 0;
+            const maxAttempts = 15;
 
-            await typing(sock, from);
-            await sock.sendMessage(from, { text: '⏳ Mengupload gambar & mengirim instruksi ke AI...' }, { quoted: raw });
+            await sock.sendMessage(from, { text: `🔄 AI sedang menggambar... (ID: ${projectId})` }, { quoted: raw });
 
-            try {
-                const currentKey = apiKeys[keyIndex];
-                keyIndex = (keyIndex + 1) % apiKeys.length;
+            while (!isCompleted && attempts < maxAttempts) {
+                await sleep(5000);
 
-                const filePath = await uploadToMagicHour(currentKey, result.buffer, result.mimetype);
-
-                const initResponse = await fetch('https://api.magichour.ai/v1/ai-image-editor', {
-                    method: 'POST',
+                const checkResponse = await fetch(`https://api.magichour.ai/v1/image-projects/${projectId}`, {
+                    method: 'GET',
                     headers: {
                         'accept': 'application/json',
-                        'authorization': `Bearer ${currentKey}`,
-                        'content-type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: `Bot Edit - ${Date.now()}`,
-                        image_count: 1,
-                        model: "flux-2-klein",
-                        aspect_ratio: "auto",
-                        resolution: "640px",
-                        style: { prompt: prompt },
-                        assets: { image_file_paths: [filePath] }
-                    })
+                        'authorization': `Bearer ${currentKey}`
+                    }
                 });
 
-                if (!initResponse.ok) {
-                    const err = await initResponse.json();
-                    throw new Error(err.message || `Init Error: ${initResponse.status}`);
-                }
+                if (checkResponse.ok) {
+                    const checkData = await checkResponse.json();
+                    const status = checkData.status?.toLowerCase();
 
-                const initData = await initResponse.json();
-                const projectId = initData.id;
-
-                let isCompleted = false;
-                let imageUrl = null;
-                let attempts = 0;
-                const maxAttempts = 15;
-
-                await sock.sendMessage(from, { text: `🔄 AI sedang menggambar... (ID: ${projectId})` }, { quoted: raw });
-
-                while (!isCompleted && attempts < maxAttempts) {
-                    await sleep(5000);
-
-                    const checkResponse = await fetch(`https://api.magichour.ai/v1/image-projects/${projectId}`, {
-                        method: 'GET',
-                        headers: {
-                            'accept': 'application/json',
-                            'authorization': `Bearer ${currentKey}`
-                        }
-                    });
-
-                    if (checkResponse.ok) {
-                        const checkData = await checkResponse.json();
-                        const status = checkData.status?.toLowerCase();
-
-                        if (status === 'complete') {
-                            isCompleted = true;
-                            imageUrl = checkData.downloads?.[0]?.url || null;
-                        } else if (status === 'error') {
-                            const msg = checkData.error?.message || checkData.error?.code || 'Alasan tidak diketahui';
-                            throw new Error(`AI gagal merender gambar: ${msg} (kredit sudah di-refund otomatis).`);
-                        } else if (status === 'canceled') {
-                            throw new Error('Proses dibatalkan.');
-                        }
+                    if (status === 'complete') {
+                        isCompleted = true;
+                        imageUrl = checkData.downloads?.[0]?.url || null;
+                    } else if (status === 'error') {
+                        const msg = checkData.error?.message || checkData.error?.code || 'Alasan tidak diketahui';
+                        throw new Error(`AI gagal merender gambar: ${msg} (kredit sudah di-refund otomatis).`);
+                    } else if (status === 'canceled') {
+                        throw new Error('Proses dibatalkan.');
                     }
-
-                    attempts++;
                 }
 
-                if (isCompleted && imageUrl) {
-                    await sock.sendMessage(from, {
-                        image: { url: imageUrl },
-                        caption: `🎨 *AI Image Editor*\n\n*Prompt:* ${prompt}`
-                    }, { quoted: raw });
-                } else {
-                    throw new Error('Waktu tunggu habis (Timeout). Server AI terlalu sibuk.');
-                }
-
-            } catch (e) {
-                await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+                attempts++;
             }
-        });
+
+            if (isCompleted && imageUrl) {
+                await sock.sendMessage(from, {
+                    image: { url: imageUrl },
+                    caption: `🎨 *AI Image Editor*\n\n*Prompt:* ${prompt}`
+                }, { quoted: raw });
+            } else {
+                throw new Error('Waktu tunggu habis (Timeout). Server AI terlalu sibuk.');
+            }
+
+        } catch (e) {
+            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+        }
+    });
 

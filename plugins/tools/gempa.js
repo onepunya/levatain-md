@@ -66,43 +66,43 @@ if (!global.__gempaWatcherStarted) {
 }
 
 export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
-  .in('tools')
-  .desc('Cek info gempa terkini (BMKG) & atur peringatan gempa otomatis di chat ini')
-  .showAllAliases()
-  .signal('User nanya/cek info gempa terkini pakai command="gempa". User minta aktifkan notifikasi gempa otomatis di chat ini pakai command="gempaon". User minta matikan notifikasi gempa otomatis pakai command="gempaoff"', ['ada gempa gak', 'cek gempa terkini', 'info gempa hari ini', 'aktifin peringatan gempa disini', 'matiin notif gempa', 'langganan info gempa otomatis'])
-  .run(async (sock, { raw, from, command, isGroup, isAdmin, isOwner, gdb }) => {
-            if (command === 'gempa' || command === 'cekgempa') {
-                try {
-                    const g = await fetchGempa();
-                    const shakemapUrl = g.Shakemap ? `https://data.bmkg.go.id/DataMKG/TEWS/${g.Shakemap}` : null;
-                    const caption = formatGempa(g);
-                    if (shakemapUrl) {
-                        await sock.sendMessage(from, { image: { url: shakemapUrl }, caption }, { quoted: raw });
-                    } else {
-                        await sock.sendMessage(from, { text: caption }, { quoted: raw });
-                    }
-                } catch (e) {
-                    await sock.sendMessage(from, { text: `❌ Gagal ambil data BMKG: ${e.message}` }, { quoted: raw });
+    .in('tools')
+    .desc('Cek info gempa terkini (BMKG) & atur peringatan gempa otomatis di chat ini')
+    .showAllAliases()
+    .signal('User nanya/cek info gempa terkini pakai command="gempa". User minta aktifkan notifikasi gempa otomatis di chat ini pakai command="gempaon". User minta matikan notifikasi gempa otomatis pakai command="gempaoff"', ['ada gempa gak', 'cek gempa terkini', 'info gempa hari ini', 'aktifin peringatan gempa disini', 'matiin notif gempa', 'langganan info gempa otomatis'])
+    .run(async (sock, { raw, from, command, isGroup, isAdmin, isOwner, gdb }) => {
+        if (command === 'gempa' || command === 'cekgempa') {
+            try {
+                const g = await fetchGempa();
+                const shakemapUrl = g.Shakemap ? `https://data.bmkg.go.id/DataMKG/TEWS/${g.Shakemap}` : null;
+                const caption = formatGempa(g);
+                if (shakemapUrl) {
+                    await sock.sendMessage(from, { image: { url: shakemapUrl }, caption }, { quoted: raw });
+                } else {
+                    await sock.sendMessage(from, { text: caption }, { quoted: raw });
                 }
-                return;
+            } catch (e) {
+                await sock.sendMessage(from, { text: `❌ Gagal ambil data BMKG: ${e.message}` }, { quoted: raw });
             }
+            return;
+        }
 
-            if (isGroup && !isAdmin && !isOwner) {
-                return sock.sendMessage(from, { text: '👤 Cuma admin grup yang boleh atur ini.' }, { quoted: raw });
-            }
+        if (isGroup && !isAdmin && !isOwner) {
+            return sock.sendMessage(from, { text: '👤 Cuma admin grup yang boleh atur ini.' }, { quoted: raw });
+        }
 
-            gdb.settings.gempaSubscribers ??= [];
-            const subs = gdb.settings.gempaSubscribers;
+        gdb.settings.gempaSubscribers ??= [];
+        const subs = gdb.settings.gempaSubscribers;
 
-            if (command === 'gempaon') {
-                if (!subs.includes(from)) subs.push(from);
-                await saveDb();
-                return sock.sendMessage(from, { text: '✅ Peringatan gempa otomatis diaktifkan di chat ini.' }, { quoted: raw });
-            }
-
-            const idx = subs.indexOf(from);
-            if (idx !== -1) subs.splice(idx, 1);
+        if (command === 'gempaon') {
+            if (!subs.includes(from)) subs.push(from);
             await saveDb();
-            return sock.sendMessage(from, { text: '❌ Peringatan gempa otomatis dimatikan di chat ini.' }, { quoted: raw });
-        });
+            return sock.sendMessage(from, { text: '✅ Peringatan gempa otomatis diaktifkan di chat ini.' }, { quoted: raw });
+        }
+
+        const idx = subs.indexOf(from);
+        if (idx !== -1) subs.splice(idx, 1);
+        await saveDb();
+        return sock.sendMessage(from, { text: '❌ Peringatan gempa otomatis dimatikan di chat ini.' }, { quoted: raw });
+    });
 

@@ -3,37 +3,37 @@ import { config } from '../../src/config.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('dashboard', 'cekdash', 'dashbot')
-  .in('owner')
-  .desc('Cek link dashboard bot (IP publik & lokal)')
-  .prefixOnly()
-  .ownerOnly()
-  .signal('User (owner) minta link dashboard, cek dashboard, atau alamat panel bot', ['cekdash', 'link dashboard', 'dashbot'])
-  .run(async (sock, { raw, from }) => {
-            const port = config.dashboardPort;
+    .in('owner')
+    .desc('Cek link dashboard bot (IP publik & lokal)')
+    .prefixOnly()
+    .ownerOnly()
+    .signal('User (owner) minta link dashboard, cek dashboard, atau alamat panel bot', ['cekdash', 'link dashboard', 'dashbot'])
+    .run(async (sock, { raw, from }) => {
+        const port = config.dashboardPort;
 
-            await sock.sendMessage(from, { text: '🔍 Ngecek alamat dashboard...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: '🔍 Ngecek alamat dashboard...' }, { quoted: raw });
 
-            const info  = await lookupPublicIp();
-            const local = getLocalIps();
-            const host  = getHostname();
+        const info  = await lookupPublicIp();
+        const local = getLocalIps();
+        const host  = getHostname();
 
-            const localLines = local.length
-                ? local.map(l => `   • http://${l.address}:${port}  _(${l.name})_`).join('\n')
-                : `   • http://127.0.0.1:${port}`;
+        const localLines = local.length
+            ? local.map(l => `   • http://${l.address}:${port}  _(${l.name})_`).join('\n')
+            : `   • http://127.0.0.1:${port}`;
 
-            const publicLine = info.publicIp
-                ? `http://${info.publicIp}:${port}${(info.city || info.country) ? `\n   📍 ${[info.city, info.country].filter(Boolean).join(', ')}` : ''}${info.isp ? `\n   🏢 ${info.isp}` : ''}`
-                : '⚠️ IP publik belum terdeteksi (server mungkin di belakang NAT/tanpa port forwarding).';
+        const publicLine = info.publicIp
+            ? `http://${info.publicIp}:${port}${(info.city || info.country) ? `\n   📍 ${[info.city, info.country].filter(Boolean).join(', ')}` : ''}${info.isp ? `\n   🏢 ${info.isp}` : ''}`
+            : '⚠️ IP publik belum terdeteksi (server mungkin di belakang NAT/tanpa port forwarding).';
 
-            const status = global.botConnected ? '🟢 Connected' : '🔴 Disconnected';
+        const status = global.botConnected ? '🟢 Connected' : '🔴 Disconnected';
 
-            const text = `📊 *${global.botName || 'Bot'} Dashboard*\n\n` +
-                `Status: ${status}\n` +
-                `Host: ${host}\n\n` +
-                `🌐 *Publik:*\n   ${publicLine}\n\n` +
-                `🖥️ *Lokal:*\n${localLines}\n\n` +
-                `_Kalau diakses dari luar, pastikan port ${port} udah di-forward/dibuka di firewall._`;
+        const text = `📊 *${global.botName || 'Bot'} Dashboard*\n\n` +
+            `Status: ${status}\n` +
+            `Host: ${host}\n\n` +
+            `🌐 *Publik:*\n   ${publicLine}\n\n` +
+            `🖥️ *Lokal:*\n${localLines}\n\n` +
+            `_Kalau diakses dari luar, pastikan port ${port} udah di-forward/dibuka di firewall._`;
 
-            await sock.sendMessage(from, { text }, { quoted: raw });
-        });
+        await sock.sendMessage(from, { text }, { quoted: raw });
+    });
 

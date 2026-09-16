@@ -3,31 +3,31 @@ import { api } from '../../src/lib/api.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tiktok', 'tt')
-  .in('download')
-  .desc('Download video TikTok tanpa watermark')
-  .prefixOnly()
-  .ai({
-            trigger: 'User minta download video TikTok dengan URL',
-            examples: ['tiktok https://tiktok.com/xxx', 'download tiktok ini'],
-            args: { url: 'URL TikTok' },
-        })
-  .run(async (sock, { body, raw, from }) => {
-            const url = getArgs(body);
-            if (!url) return sock.sendMessage(from, {
-                text: '❌ Masukkan URL TikTok!\nContoh: *.tiktok https://vt.tiktok.com/xxx*'
-            }, { quoted: raw });
+    .in('download')
+    .desc('Download video TikTok tanpa watermark')
+    .prefixOnly()
+    .ai({
+        trigger: 'User minta download video TikTok dengan URL',
+        examples: ['tiktok https://tiktok.com/xxx', 'download tiktok ini'],
+        args: { url: 'URL TikTok' },
+    })
+    .run(async (sock, { body, raw, from }) => {
+        const url = getArgs(body);
+        if (!url) return sock.sendMessage(from, {
+            text: '❌ Masukkan URL TikTok!\nContoh: *.tiktok https://vt.tiktok.com/xxx*'
+        }, { quoted: raw });
 
-            await typing(sock, from);
-            await sock.sendMessage(from, { text: '⏳ Mendownload TikTok...' }, { quoted: raw });
+        await typing(sock, from);
+        await sock.sendMessage(from, { text: '⏳ Mendownload TikTok...' }, { quoted: raw });
 
-            try {
-                const data = await api.tiktok(url);
-                await sendAnyMedia(sock, from, { url: data.media, type: 'video' }, {
-                    caption: `🎵 *${data.title || 'TikTok Video'}*\n👤 ${data.author || ''}`,
-                    quoted: raw,
-                });
-            } catch (e) {
-                await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
-            }
-        });
+        try {
+            const data = await api.tiktok(url);
+            await sendAnyMedia(sock, from, { url: data.media, type: 'video' }, {
+                caption: `🎵 *${data.title || 'TikTok Video'}*\n👤 ${data.author || ''}`,
+                quoted: raw,
+            });
+        } catch (e) {
+            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+        }
+    });
 

@@ -4,31 +4,31 @@ import { pick } from '../../src/lib/utils.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tod', 'truth', 'dare')
-  .in('fun')
-  .desc('Truth or Dare, pertanyaan/tantangan digenerate AI biar selalu beda')
-  .showAllAliases()
-  .cooldown(3)
-  .signal('User mau main truth or dare, atau minta tantangan/pertanyaan truth', ['tod', 'truth', 'dare'])
-  .run(async (sock, { raw, from, command, pushname }) => {
-            let type = command;
-            if (type === 'tod') type = Math.random() < 0.5 ? 'truth' : 'dare';
+    .in('fun')
+    .desc('Truth or Dare, pertanyaan/tantangan digenerate AI biar selalu beda')
+    .showAllAliases()
+    .cooldown(3)
+    .signal('User mau main truth or dare, atau minta tantangan/pertanyaan truth', ['tod', 'truth', 'dare'])
+    .run(async (sock, { raw, from, command, pushname }) => {
+        let type = command;
+        if (type === 'tod') type = Math.random() < 0.5 ? 'truth' : 'dare';
 
-            const isTruth = type === 'truth';
-            const label = isTruth ? '🤔 TRUTH' : '🔥 DARE';
-            const who = pushname ? `*${pushname}*` : 'Kamu';
+        const isTruth = type === 'truth';
+        const label = isTruth ? '🤔 TRUTH' : '🔥 DARE';
+        const who = pushname ? `*${pushname}*` : 'Kamu';
 
-            let question;
-            try {
-                question = await generateWithAI(type, pushname);
-            } catch (e) {
-                logger.warn(`[tod] AI gagal, pakai fallback: ${e.message}`);
-                question = pick(isTruth ? FALLBACK_TRUTH : FALLBACK_DARE);
-            }
+        let question;
+        try {
+            question = await generateWithAI(type, pushname);
+        } catch (e) {
+            logger.warn(`[tod] AI gagal, pakai fallback: ${e.message}`);
+            question = pick(isTruth ? FALLBACK_TRUTH : FALLBACK_DARE);
+        }
 
-            return sock.sendMessage(from, {
-                text: `${label}\n\n${who} kebagian:\n_${question}_`,
-            }, { quoted: raw });
-        });
+        return sock.sendMessage(from, {
+            text: `${label}\n\n${who} kebagian:\n_${question}_`,
+        }, { quoted: raw });
+    });
 
 const FALLBACK_TRUTH = [
     'Siapa gebetan/crush kamu sekarang?',

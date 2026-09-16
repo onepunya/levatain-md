@@ -2,23 +2,23 @@ import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES } from '../../src/lib/rich-mes
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('pesawat', 'plane', 'shooter')
-  .in('fun')
-  .desc('Pesawat tembak canvas')
-  .prefixOnly()
-  .signal('User mau main game pesawat tembak atau space shooter', ['pesawat', 'plane', 'shooter'])
-  .run(async (sock, { raw, from, pushname }) => {
-            const name = String(pushname || 'Player').replace(/[<>'\\']/g, '').slice(0, 20);
-            await sock.sendMessage(from, { text: 'tekan unduh untuk membuka panel game' }, { quoted: raw });
-            const html = build(name);
-            if (Buffer.byteLength(html, 'utf-8') > WEBUI_MAX_PAYLOAD_BYTES) {
-                return sock.sendMessage(from, { text: '❌ Panel terlalu besar.' }, { quoted: raw });
-            }
-            try {
-                await sendInlineWebUI(sock, from, html, '🚀 Pesawat');
-            } catch (e) {
-                await sock.sendMessage(from, { text: '❌ Gagal: ' + e.message }, { quoted: raw });
-            }
-        });
+    .in('fun')
+    .desc('Pesawat tembak canvas')
+    .prefixOnly()
+    .signal('User mau main game pesawat tembak atau space shooter', ['pesawat', 'plane', 'shooter'])
+    .run(async (sock, { raw, from, pushname }) => {
+        const name = String(pushname || 'Player').replace(/[<>'\\']/g, '').slice(0, 20);
+        await sock.sendMessage(from, { text: 'tekan unduh untuk membuka panel game' }, { quoted: raw });
+        const html = build(name);
+        if (Buffer.byteLength(html, 'utf-8') > WEBUI_MAX_PAYLOAD_BYTES) {
+            return sock.sendMessage(from, { text: '❌ Panel terlalu besar.' }, { quoted: raw });
+        }
+        try {
+            await sendInlineWebUI(sock, from, html, '🚀 Pesawat');
+        } catch (e) {
+            await sock.sendMessage(from, { text: '❌ Gagal: ' + e.message }, { quoted: raw });
+        }
+    });
 
 function build(name) {
     return `<!DOCTYPE html>

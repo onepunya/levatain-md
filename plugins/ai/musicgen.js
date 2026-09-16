@@ -6,24 +6,24 @@ import { plugin } from '../../src/core/plugin.js';
 const SESSION_TIMEOUT = 3 * 60_000;
 
 export default plugin('musicgen', 'songgen', 'buatlagu')
-  .in('ai')
-  .desc('Generate lagu AI: masukin lirik lalu prompt/gaya musik secara bertahap')
-  .prefixOnly()
-  .cooldown(5)
-  .signal('User minta buat lagu, generate musik AI, bikin musik dari lirik', ['musicgen', 'buatlagu'])
-  .run(async (sock, { raw, from, primaryId }) => {
-            startSession(primaryId, { from, step: 'lyrics', lyrics: '', prompt: '' }, {
-                timeout: SESSION_TIMEOUT,
-                onInput: handleInput,
-                onTimeout: session => sock.sendMessage(session.from, {
-                    text: '⏰ Sesi musicgen berakhir karena kelamaan gak ada input. Ketik `musicgen` lagi buat mulai ulang.',
-                }),
-            });
-
-            await sock.sendMessage(from, {
-                text: '🎵 Kirim *lirik* lagunya sekarang.\n\nKetik `batal` kapan aja buat keluar dari sesi ini.',
-            }, { quoted: raw });
+    .in('ai')
+    .desc('Generate lagu AI: masukin lirik lalu prompt/gaya musik secara bertahap')
+    .prefixOnly()
+    .cooldown(5)
+    .signal('User minta buat lagu, generate musik AI, bikin musik dari lirik', ['musicgen', 'buatlagu'])
+    .run(async (sock, { raw, from, primaryId }) => {
+        startSession(primaryId, { from, step: 'lyrics', lyrics: '', prompt: '' }, {
+            timeout: SESSION_TIMEOUT,
+            onInput: handleInput,
+            onTimeout: session => sock.sendMessage(session.from, {
+                text: '⏰ Sesi musicgen berakhir karena kelamaan gak ada input. Ketik `musicgen` lagi buat mulai ulang.',
+            }),
         });
+
+        await sock.sendMessage(from, {
+            text: '🎵 Kirim *lirik* lagunya sekarang.\n\nKetik `batal` kapan aja buat keluar dari sesi ini.',
+        }, { quoted: raw });
+    });
 
 async function handleInput(sock, body, ctx, session) {
     const { from, raw, primaryId } = ctx;

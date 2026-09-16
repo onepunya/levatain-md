@@ -8,79 +8,79 @@ import { plugin } from '../../src/core/plugin.js';
 const execFileAsync = promisify(execFile);
 
 export default plugin('pinterest', 'pin')
-  .in('download')
-  .desc('Download Pinterest dari link, atau cari gambar Pinterest dari kata kunci')
-  .prefixOnly()
-  .ai({
-            trigger: 'User minta download Pinterest dengan URL, atau cari/search gambar di Pinterest',
-            examples: [
-                'pin https://pin.it/xxxxx',
-                'pin https://www.pinterest.com/pin/123456789/',
-                'pin kucing lucu',
-                'cariin gambar aesthetic di pinterest',
-            ],
-            args: { input: 'URL pin Pinterest, atau kata kunci pencarian' },
-        })
-  .run(async (sock, { body, raw, from }) => {
-            const input = getArgs(body);
-            if (!input) return sock.sendMessage(from, {
-                text: '❌ Masukkan link Pinterest atau kata kunci pencarian!\n\n'
-                    + 'Contoh:\n'
-                    + '• *.pinterest https://pin.it/xxxxx* _(download pin)_\n'
-                    + '• *.pinterest kucing lucu* _(cari gambar)_',
-            }, { quoted: raw });
+    .in('download')
+    .desc('Download Pinterest dari link, atau cari gambar Pinterest dari kata kunci')
+    .prefixOnly()
+    .ai({
+        trigger: 'User minta download Pinterest dengan URL, atau cari/search gambar di Pinterest',
+        examples: [
+            'pin https://pin.it/xxxxx',
+            'pin https://www.pinterest.com/pin/123456789/',
+            'pin kucing lucu',
+            'cariin gambar aesthetic di pinterest',
+        ],
+        args: { input: 'URL pin Pinterest, atau kata kunci pencarian' },
+    })
+    .run(async (sock, { body, raw, from }) => {
+        const input = getArgs(body);
+        if (!input) return sock.sendMessage(from, {
+            text: '❌ Masukkan link Pinterest atau kata kunci pencarian!\n\n'
+                + 'Contoh:\n'
+                + '• *.pinterest https://pin.it/xxxxx* _(download pin)_\n'
+                + '• *.pinterest kucing lucu* _(cari gambar)_',
+        }, { quoted: raw });
 
-            await typing(sock, from);
+        await typing(sock, from);
 
-            if (IS_LINK(input)) {
-                await sock.sendMessage(from, { text: '⏳ Mendownload Pinterest...' }, { quoted: raw });
-                try {
-                    const res = await pinterestDownloader(input);
-                    const data = res?.data;
-                    if (!res?.success || !data?.url) {
-                        throw new Error(res?.message || 'Media tidak ditemukan. Pastikan link pin valid.');
-                    }
-
-                    const captionParts = [`📌 *${data.title || 'Pinterest'}*`];
-                    if (data.author) captionParts.push(`by ${data.author}`);
-
-                    await sendMediaBatch(sock, from, [{ url: data.url, type: data.type === 'video' ? 'video' : 'image' }], {
-                        caption: captionParts.join('\n'),
-                        quoted: raw,
-                    });
-                } catch (e) {
-                    console.error(e);
-                    await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
-                }
-                return;
-            }
-
-            await sock.sendMessage(from, { text: `⏳ Mencari "${input}" di Pinterest...` }, { quoted: raw });
+        if (IS_LINK(input)) {
+            await sock.sendMessage(from, { text: '⏳ Mendownload Pinterest...' }, { quoted: raw });
             try {
-                const res = await pinterestSearch(input);
-                const results = res?.resource_response?.data?.results || [];
-
-                const items = results
-                    .map(r => ({ id: r.id, title: r.title, url: bestImageUrl(r.images) }))
-                    .filter(r => r.url)
-                    .slice(0, 6);
-
-                if (!items.length) {
-                    throw new Error('Gambar tidak ditemukan. Coba kata kunci lain.');
+                const res = await pinterestDownloader(input);
+                const data = res?.data;
+                if (!res?.success || !data?.url) {
+                    throw new Error(res?.message || 'Media tidak ditemukan. Pastikan link pin valid.');
                 }
 
-                for (let i = 0; i < items.length; i++) {
-                    const it = items[i];
-                    const caption = i === 0
-                        ? `📌 *Hasil pencarian: "${input}"*\n_Balas .pin <link> pakai link di bawah untuk download versi original_\n${pinUrl(it.id)}`
-                        : pinUrl(it.id);
-                    await sendAnyMedia(sock, from, { url: it.url, type: 'image' }, { caption, quoted: raw });
-                }
+                const captionParts = [`📌 *${data.title || 'Pinterest'}*`];
+                if (data.author) captionParts.push(`by ${data.author}`);
+
+                await sendMediaBatch(sock, from, [{ url: data.url, type: data.type === 'video' ? 'video' : 'image' }], {
+                    caption: captionParts.join('\n'),
+                    quoted: raw,
+                });
             } catch (e) {
                 console.error(e);
                 await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
             }
-        });
+            return;
+        }
+
+        await sock.sendMessage(from, { text: `⏳ Mencari "${input}" di Pinterest...` }, { quoted: raw });
+        try {
+            const res = await pinterestSearch(input);
+            const results = res?.resource_response?.data?.results || [];
+
+            const items = results
+                .map(r => ({ id: r.id, title: r.title, url: bestImageUrl(r.images) }))
+                .filter(r => r.url)
+                .slice(0, 6);
+
+            if (!items.length) {
+                throw new Error('Gambar tidak ditemukan. Coba kata kunci lain.');
+            }
+
+            for (let i = 0; i < items.length; i++) {
+                const it = items[i];
+                const caption = i === 0
+                    ? `📌 *Hasil pencarian: "${input}"*\n_Balas .pin <link> pakai link di bawah untuk download versi original_\n${pinUrl(it.id)}`
+                    : pinUrl(it.id);
+                await sendAnyMedia(sock, from, { url: it.url, type: 'image' }, { caption, quoted: raw });
+            }
+        } catch (e) {
+            console.error(e);
+            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+        }
+    });
 
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
 const IS_LINK = (s) => /pin\.it\//i.test(s) || (/pinterest\.[a-z.]+/i.test(s) && /\/pin\//i.test(s));
