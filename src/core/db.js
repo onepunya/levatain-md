@@ -1,12 +1,14 @@
 import fs from 'fs/promises';
 import { logger } from '../lib/index.js';
+import { fetchRemoteDb, pushRemoteDb } from './remoteDb.js';
 
 const DB_PATH = './database/db.json';
 
 let _db    = null;
 let _dirty = false;
 let _timer = null;
-
+let _remoteSha = null;       
+let _remoteTimer = null;     
 const userSchema = (m) => ({
     jid:         '',
     lid:         '',
@@ -59,10 +61,10 @@ export async function saveDb() {
 
 export async function flushDb() {
     if (!_db) return;
-    await _write();
+    await _write(true); 
 }
 
-async function _write() {
+async function _write(forceRemote = false) {
     try {
         await fs.mkdir('./database', { recursive: true });
         const tmp = DB_PATH + '.tmp';
@@ -71,25 +73,54 @@ async function _write() {
     } catch (e) {
         logger.error(`[DB] Save failed: ${e.message}`);
     }
+
+    
+    scheduleRemotePush(forceRemote);
+}
+
+function scheduleRemotePush(immediate = false) {
+    if (_remoteTimer) {
+        clearTimeout(_remoteTimer);
+        _remoteTimer = null;
+    }
+
+    const delay = immediate ? 0 : 8000;
+
+    _remoteTimer = setTimeout(async () => {
+        _remoteTimer = null;
+        if (!_db) return;
+        const ok = await pushRemoteDb(_db, _remoteSha);
+        if (ok) {            
+            const remote = await fetchRemoteDb();
+            if (remote?.sha) _remoteSha = remote.sha;
+        }
+    }, delay);
 }
 
 export async function initDb() {
-    const db = await loadDb();
-    if (!db.users)    db.users    = {};
-    if (!db.groups)   db.groups   = {};
-    if (!db.settings) db.settings = settingsSchema();
+    const remote = await fetchRemoteDb();
+    if (remote?.data) {
+        _db = remote.data;
+        _remoteSha = remote.sha;
+        logger.info('[DB] Using database recovered from GitHub.');
+    } else {        
+        await loadDb();
+    }    
+    if (!_db.users)    _db.users    = {};
+    if (!_db.groups)   _db.groups   = {};
+    if (!_db.settings) _db.settings = settingsSchema();
     for (const [k, v] of Object.entries(settingsSchema())) {
-        if (!(k in db.settings)) db.settings[k] = v;
+        if (!(k in _db.settings)) _db.settings[k] = v;
     }
-    if (typeof db.settings.self === 'boolean') {
-        if (db.settings.self) db.settings.mode = 'private';
-        delete db.settings.self;
+    if (typeof _db.settings.self === 'boolean') {
+        if (_db.settings.self) _db.settings.mode = 'private';
+        delete _db.settings.self;
     }
-    global.db = db;
-    _db       = db;
-    _dirty    = true;
-    await _write();
-    return db;
+
+    global.db = _db;
+    _dirty = true;
+    await _write(true);
+    return _db;
 }
 
 export function ensureUser(db, primaryId, m) {

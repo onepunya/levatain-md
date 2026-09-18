@@ -62,7 +62,14 @@ export const config = {
     translateEmail: process.env.TRANSLATE_EMAIL || '',
     dashboardPort: Number(process.env.DASHBOARD_PORT) || 3000,
     debug: process.env.DEBUG === 'true',
+
+    github: {
+        token: process.env.GITHUB_TOKEN || '',
+        repo:  process.env.GITHUB_REPO  || '',    
+        path:  process.env.GITHUB_DB_PATH || 'database/db.json',
+    },
 };
+
 
 if (!config.ai.gemini.cookie && !config.ai.naga.apiKey) {
     console.warn('[config] Warning: GEMINI_COOKIE and NAGA_API_KEY are both empty, the AI chat feature will not work.');
