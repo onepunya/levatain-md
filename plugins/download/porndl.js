@@ -1,41 +1,41 @@
-import { typing, getArgs } from '../../src/lib/index.js';
+import { typing, getArgs, msg } from '../../src/lib/index.js';
 import axios from 'axios';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('porn', 'bokep')
     .in('download')
-    .desc('Dapatkan daftar link download video dewasa dari semua situs dewasa')
+    .desc('Get adult video download links from supported sites')
     .prefixOnly()
     .ai({
-        trigger: 'User minta daftar link download video dewasa',
+        trigger: 'User asks for adult video download links',
         examples: ['porn url video dewasa', 'download video porno ini'],
-        args: { url: 'URL dewasa pornhub' },
+        args: { url: 'Adult video URL' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
-            text: '❌ Masukkan URL video dewasa dari situs pornhub'
+            text: msg('need.url.porn')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mendapatkan info video...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.video_info') }, { quoted: raw });
 
         try {
             const data = await getVideoInfo(url);
 
             if (!data || !data.download_urls) {
-                return await sock.sendMessage(from, { text: '❌ Gagal mendapatkan link download video.' }, { quoted: raw });
+                return await sock.sendMessage(from, { text: msg('fail.link') }, { quoted: raw });
             }
 
-            let listLinks = '📋 *Daftar Link Download Video:*\n\n';
+            let listLinks = '📋 *Video Download Links:*\n\n';
             for (const item of data.download_urls) {
-                listLinks += `*Kualitas:* ${item.name}\n*Link:* ${item.url}\n\n`;
+                listLinks += `*Quality:* ${item.name}\n*Link:* ${item.url}\n\n`;
             }
 
             await sock.sendMessage(from, { text: listLinks }, { quoted: raw });
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 

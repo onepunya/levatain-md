@@ -1,21 +1,21 @@
-import { pick } from '../../src/lib/index.js';
+import { pick, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tembak', 'lamar', 'terima', 'tolak')
     .in('fun')
-    .desc('Nembak/lamar orang di group, dia bisa .terima atau .tolak')
+    .desc('Confess/propose to someone in a group; they can .accept or .reject')
     .showAllAliases()
     .groupOnly()
     .cooldown(10)
-    .signal('User mau nembak, nyatain perasaan, atau lamar orang lain di group', ['tembak @user', 'lamar @user aku suka kamu', 'terima', 'tolak'])
-    .run(async (sock, { raw, from, command, message, mentionedJid, primaryId, pushname, botNumber, gdb }) => {
+    .signal('User wants to confess feelings or propose to someone in a group', ['tembak @user', 'lamar @user aku suka kamu', 'terima', 'tolak'])
+    .run(async (sock, { raw, from, command, message, mentionedJid, primaryId, pushname, botNumber, gdb  }) => {
         const nameOf = (jid, fallbackName) => gdb?.users?.[jid]?.name || fallbackName || `+${jid.split('@')[0]}`;
 
         if (command === 'terima' || command === 'tolak') {
             const key = `${from}:${primaryId}`;
             const entry = pending.get(key);
             if (!entry) {
-                return sock.sendMessage(from, { text: '❓ Gak ada yang lagi nembak kamu di sini.' }, { quoted: raw });
+                return sock.sendMessage(from, { text: '❓ Nobody is proposing to you here.' }, { quoted: raw });
             }
 
             clearTimeout(entry.timer);
@@ -27,36 +27,36 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
             const fromName   = nameOf(entry.fromId);
 
             return sock.sendMessage(from, {
-                text: `${accepted ? '💌' : '💔'} *${targetName}* ${accepted ? 'menerima' : 'menolak'} tembakan dari *${fromName}*!\n\n_${quote}_`,
+                text: `${accepted ? '💌' : '💔'} *${targetName}* ${accepted ? 'accepted' : 'rejected'} proposal from *${fromName}*!\n\n_${quote}_`,
                 mentions: [primaryId, entry.fromId],
             }, { quoted: raw });
         }
 
         const target = resolveTarget(message, mentionedJid);
         if (!target) {
-            return sock.sendMessage(from, { text: `❌ Tag atau reply orang yang mau kamu ${command} dulu.\nContoh: *.${command} @orangnya*` }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('need.tag') }, { quoted: raw });
         }
         if (target.split('@')[0] === primaryId.split('@')[0]) {
-            return sock.sendMessage(from, { text: '❌ Gak bisa nembak diri sendiri, wak. 😅' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('tembak.self') }, { quoted: raw });
         }
         if (botNumber && target.split('@')[0] === botNumber.split('@')[0]) {
-            return sock.sendMessage(from, { text: '🤖 Aku bot, gak bisa dilamar... tapi makasih ya. 😄' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('tembak.bot') }, { quoted: raw });
         }
 
         const key = `${from}:${target}`;
         if (pending.has(key)) {
-            return sock.sendMessage(from, { text: '⏳ Masih ada yang nembak dia duluan, tunggu proposal itu selesai dulu.' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('tembak.busy') }, { quoted: raw });
         }
 
         const targetName = nameOf(target);
-        const fromName   = pushname || 'Seseorang';
+        const fromName   = pushname || 'Someone';
 
         const timer = setTimeout(async () => {
             if (!pending.has(key)) return;
             pending.delete(key);
             try {
                 await sock.sendMessage(from, {
-                    text: `⌛ *${targetName}* gak jawab tembakan dari *${fromName}*...\n\n_${pick(TIDAK_DIJAWAB)}_`,
+                    text: msg('tembak.timeout', { target: targetName, from: fromName }),
                     mentions: [target, primaryId],
                 });
             } catch {}
@@ -66,11 +66,11 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
 
         await sock.sendMessage(from, {
             text:
-                `💘 *${fromName}* mau ${command} *${targetName}*!\n\n` +
+                `💘 *${fromName}* wants to confess to *${targetName}*!\n\n` +
                 `_${pick(PEMBUKA)}_\n\n` +
-                `*${targetName}*, balas dalam 5 menit:\n` +
-                `• *.terima* — kalau kamu juga suka\n` +
-                `• *.tolak* — kalau enggak`,
+                `*${targetName}*, reply within 5 minutes:\n` +
+                `• *.terima* — if you feel the same\n` +
+                `• *.tolak* — if you don't`,
             mentions: [target, primaryId],
         }, { quoted: raw });
     });
@@ -79,28 +79,28 @@ const pending = new Map();
 const TIMEOUT_MS = 5 * 60_000;
 
 const PEMBUKA = [
-    'Katanya, keberanian terbesar bukan waktu gak takut jatuh cinta, tapi waktu berani bilang meski takut ditolak.',
-    'Cinta itu kayak angin — gak keliatan, tapi kerasa. Dan sekarang dia mau kasih tau kalau dia ngerasain itu ke kamu.',
-    'Ada yang bilang, penyesalan terbesar bukan karena mencoba, tapi karena gak pernah mencoba sama sekali. Jadi dia coba sekarang.',
-    'Hati yang jujur gak butuh kata-kata indah, cuma butuh keberanian buat diungkapin. Dan ini dia, keberanian itu.',
+    'They say the greatest courage is not being unafraid of love, but speaking up even when you fear rejection.',
+    'They say the greatest courage is speaking up even when you fear rejection.',
+    'Love is like the wind — invisible, but you feel it. And now they want you to know.',
+    'An honest heart does not need fancy words, only the courage to speak. And here it is.',
 ];
 
 const DITERIMA = [
-    'Dua hati yang jujur akhirnya ketemu di jalan yang sama. Selamat menempuh babak baru. 💞',
-    'Katanya, cinta yang tumbuh dari kejujuran akan selalu punya tempat untuk bertahan. Semoga langgeng. 💞',
-    'Kadang yang dibutuhkan cuma satu keberanian dan satu jawaban "iya" untuk mengubah cerita. Selamat! 💞',
+    'Two honest hearts finally met on the same path. Congratulations on this new chapter. 💞',
+    'Some say the biggest regret is not trying at all.',
+    'An honest heart does not need fancy words, only the courage to speak.',
 ];
 
 const DITOLAK = [
-    'Tidak semua yang dirasa harus berbalas, dan itu bukan akhir dari apa pun — cuma jalan yang beda. Tetap semangat. 🤍',
-    'Ditolak bukan berarti gak berharga, cuma berarti belum waktunya, atau bukan orangnya. Terima kasih sudah berani jujur. 🤍',
-    'Keberanian buat ngungkapin perasaan itu udah menang duluan, apa pun jawabannya. Semangat terus. 🤍',
+    'Two honest hearts finally met on the same path. Congratulations. 💞',
+    'Love that grows from honesty always finds a way to last.',
+    'Sometimes all it takes is one brave moment and one yes.',
 ];
 
 const TIDAK_DIJAWAB = [
-    'Ada pertanyaan yang gak selalu butuh jawaban untuk dimengerti. Sunyinya udah cukup jadi jawaban. 🕊️',
-    'Kadang diam itu sendiri sudah bicara. Gak apa-apa, gak semua perasaan harus berujung kepastian. 🕊️',
-    'Waktu habis, jawaban gak datang — tapi keberanian buat jujur tadi tetap patut dihargai. 🕊️',
+    'Not every feeling must be returned — that is just a different path.',
+    'Rejection does not mean you are worthless. Stay strong.',
+    'Having the courage to speak is already a win. Keep going.',
 ];
 
 function resolveTarget(message, mentionedJid) {

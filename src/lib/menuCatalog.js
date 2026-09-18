@@ -2,7 +2,7 @@ import { plugins } from '../core/loader.js';
 import { formatUptime, pick } from './utils.js';
 
 export const TAG_META = {
-    ai:           { emoji: '🤖', label: 'AI & Asisten' },
+    ai:           { emoji: '🤖', label: 'AI & Assistant' },
     tools:        { emoji: '🛠️', label: 'Tools' },
     fun:          { emoji: '💌', label: 'Fun & Games' },
     audiochanger: { emoji: '🎚️', label: 'Audio Changer' },
@@ -10,7 +10,7 @@ export const TAG_META = {
     group:        { emoji: '👥', label: 'Group' },
     owner:        { emoji: '👑', label: 'Owner' },
     main:         { emoji: '⚙️', label: 'Main' },
-    general:      { emoji: '📋', label: 'Lainnya' },
+    general:      { emoji: '📋', label: 'Other' },
 };
 
 const KNOWN_TAG_ORDER = ['ai', 'download', 'tools', 'audiochanger', 'fun', 'group', 'owner', 'main', 'general'];
@@ -131,7 +131,7 @@ export function buildAllMenuText(pushname, isOwner) {
     let teaser  = `✦ *${global.botName}* ✦\n\n`;
     teaser     += `${greeting()}, *${pushname || 'kamu'}* 👋\n`;
     teaser     += `_${greetingPhrase()}_\n`;
-    teaser     += `Ketik perintah, atau ngobrol natural aja.`;
+    teaser     += `Type a command, or just chat naturally.`;
 
     let body = '';
     for (const tag of orderedTags) {
@@ -139,11 +139,11 @@ export function buildAllMenuText(pushname, isOwner) {
     }
 
     body += `┏───•❲ 📊 *Info* ❳\n`;
-    body += `│ • ${totalShown} command tersedia\n`;
+    body += `│ • ${totalShown} commands available\n`;
     body += `│ • Uptime ${formatUptime(process.uptime())}\n`;
-    body += `│ • Limit media *15MB* (upload & download)\n`;
+    body += `│ • Media limit *15MB* (upload & download)\n`;
     body += `┗────────────────··\n\n`;
-    body += `_Ketik *.menu* untuk pilih kategori._`;
+    body += `_Type *.menu* to pick a category._`;
 
     const READMORE = '\u200E'.repeat(4001);
     return `${teaser}\n\n${READMORE}\n${body}`;
@@ -160,16 +160,16 @@ export function buildHomeCaption(pushname, device, isOwner) {
     text += `${totalShown} command\nlimit media 15MB\n`;
 
     if (isIos) {
-        text += `\n*Pilih kategori* (iPhone — ketik nomor atau perintah):\n\n`;
+        text += `\n*Pick a category* (iPhone — type a number or command):\n\n`;
         orderedTags.forEach((tag, i) => {
             const { emoji, label } = TAG_META[tag] || { emoji: '📋', label: labelize(tag) };
             const n = grouped[tag].reduce((a, m) => a + shownCmds(m).length, 0);
             text += `${i + 1}. ${emoji} *${label}* (${n})\n`;
-            text += `   ketik *.menu ${tag}*\n`;
+            text += `   type *.menu ${tag}*\n`;
         });
-        text += `\n0. 📋 *All Menu* — ketik *.allmenu*`;
+        text += `\n0. 📋 *All Menu* — type *.allmenu*`;
     } else {
-        text += `\nBuka list *Pilih kategori* di bawah, atau ketik *.allmenu*.`;
+        text += `\nOpen the *Pick a category* list below, or type *.allmenu*.`;
     }
 
     return text;
@@ -190,10 +190,10 @@ export function buildListSections(isOwner) {
     rows.push({
         header: '',
         title: 'All Menu',
-        description: 'Tampilkan semua command',
+        description: 'Show all commands',
         id: '.allmenu',
     });
-    return [{ title: 'Kategori', rows }];
+    return [{ title: 'Category', rows }];
 }
 
 export function resolveMenuArg(arg, isOwner) {

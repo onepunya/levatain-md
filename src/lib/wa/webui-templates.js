@@ -40,16 +40,6 @@ const BASE_STYLE = `
     .footer { margin-top: 12px; font-size: 11px; color: #6e7681; text-align: center; }
 `;
 
-/**
- * Render a dark-terminal-style info card for sendInlineWebUI.
- *
- * IMPORTANT: `title` and `subtitle` are escaped internally — pass raw text.
- * `rows[i][0]` (label/key) is escaped internally.
- * `rows[i][1]` (value) is NOT escaped internally, since values are often small
- * safe HTML fragments (e.g. `<span class="ok">🟢 Online</span>`). If a value
- * comes from untrusted user data (pushname, group desc, bio, etc.), the
- * caller must htmlEscape() it before passing it in.
- */
 export function renderInfoCard({ title, subtitle = '', rows = [], footer = '' }) {
     const rowsHtml = rows
         .map(([k, v]) => `<div class="row"><span class="k">${htmlEscape(k)}</span><span class="v">${v}</span></div>`)
@@ -62,9 +52,13 @@ export function renderInfoCard({ title, subtitle = '', rows = [], footer = '' })
     <div class="container">
         <h3>${htmlEscape(title)}</h3>
         ${subtitle ? `<div class="sub">${htmlEscape(subtitle)}</div>` : ''}
+
         ${rowsHtml}
         ${footer ? `<div class="footer">${htmlEscape(footer)}</div>` : ''}
     </div>
+
 </body>
+
 </html>`;
+
 }

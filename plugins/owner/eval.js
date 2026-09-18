@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
-import { getArgs, truncate, ProgressMessage } from '../../src/lib/index.js';
+import {  getArgs, truncate, ProgressMessage, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const execPromise = promisify(exec);
@@ -34,20 +34,20 @@ function resolveInWorkspace(base, target) {
 
 export default plugin('exec', 'sh', 'term')
     .in('owner')
-    .desc('Jalanin shell command (ls, cd, cat, curl, dll) di workspace bot. Owner only.')
+    .desc('Run shell commands (ls, cd, cat, curl, etc.) in the bot workspace. Owner only.')
     .prefixOnly()
     .ownerOnly()
-    .signal('Owner minta jalanin/tes/cek command shell, curl API, ls/cd/cat file, atau apapun yang butuh eksekusi command beneran di server/workspace bot', ['jalanin curl ini: curl https://api.example.com', 'coba ls workspace', 'cd folder-test terus ls', 'cat file.json di workspace'])
+    .signal('Owner asks to run/test shell commands, curl APIs, ls/cd/cat files, or anything that needs shell access', ['run this curl: curl https://api.example.com', 'try ls workspace', 'cd folder-test then ls', 'cat file.json in workspace'])
     .run(async (sock, { body, raw, from }) => {
         const rawCmd = getArgs(body).trim();
         if (!rawCmd) {
             return sock.sendMessage(from, {
-                text: `💻 *Workspace Terminal*\nCwd: \`${getCwd(from).replace(WORKSPACE_ROOT, '~') || '~'}\`\n\nContoh: \`.exec ls\`, \`.exec cd folder\`, \`.exec curl https://...\``,
+                text: `💻 *Workspace Terminal*\nCwd: \`${getCwd(from).replace(WORKSPACE_ROOT, '~') || '~'}\`\n\nExample: \`.exec ls\`, \`.exec cd folder\`, \`.exec curl https://...\``,
             }, { quoted: raw });
         }
 
         if (BLOCKLIST.some(rx => rx.test(rawCmd))) {
-            return sock.sendMessage(from, { text: `🛑 Command ini keliatan destruktif, aku tolak jalanin: \`${rawCmd}\`` }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('fail.destructive', { cmd: rawCmd }) }, { quoted: raw });
         }
 
         const cwd = getCwd(from);
@@ -55,9 +55,9 @@ export default plugin('exec', 'sh', 'term')
         if (/^cd(\s|$)/.test(rawCmd)) {
             const target = rawCmd.replace(/^cd\s*/, '').trim() || WORKSPACE_ROOT;
             const next = resolveInWorkspace(cwd, target);
-            if (!next) return sock.sendMessage(from, { text: `🛑 Gak boleh keluar dari folder workspace.` }, { quoted: raw });
+            if (!next) return sock.sendMessage(from, { text: msg('fail.workspace_escape') }, { quoted: raw });
             if (!fs.existsSync(next) || !fs.statSync(next).isDirectory()) {
-                return sock.sendMessage(from, { text: `❌ Folder gak ketemu: \`${target}\`` }, { quoted: raw });
+                return sock.sendMessage(from, { text: msg('fail.folder_missing', { path: target }) }, { quoted: raw });
             }
             sessionCwd.set(from, next);
             return sock.sendMessage(from, { text: `📁 Cwd: \`${next.replace(WORKSPACE_ROOT, '~') || '~'}\`` }, { quoted: raw });

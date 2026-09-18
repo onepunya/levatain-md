@@ -1,28 +1,28 @@
-import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES } from '../../src/lib/index.js';
+import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('pesawat', 'plane', 'shooter')
     .in('fun')
-    .desc('Pesawat tembak canvas')
+    .desc('Canvas plane shooter game')
     .prefixOnly()
-    .signal('User mau main game pesawat tembak atau space shooter', ['pesawat', 'plane', 'shooter'])
-    .run(async (sock, { raw, from, pushname }) => {
+    .signal('User wants to play plane shooter or space shooter', ['pesawat', 'plane', 'shooter'])
+    .run(async (sock, { raw, from, pushname, db, primaryId }) => {
         const name = String(pushname || 'Player').replace(/[<>'\\']/g, '').slice(0, 20);
-        await sock.sendMessage(from, { text: 'tekan unduh untuk membuka panel game' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('game.open_panel') }, { quoted: raw });
         const html = build(name);
         if (Buffer.byteLength(html, 'utf-8') > WEBUI_MAX_PAYLOAD_BYTES) {
-            return sock.sendMessage(from, { text: '❌ Panel terlalu besar.' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('fail.panel_big') }, { quoted: raw });
         }
         try {
-            await sendInlineWebUI(sock, from, html, '🚀 Pesawat');
+            await sendInlineWebUI(sock, from, html, '🚀 Plane');
         } catch (e) {
-            await sock.sendMessage(from, { text: '❌ Gagal: ' + e.message }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 
 function build(name) {
     return `<!DOCTYPE html>
-<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0d1117;color:#c9d1d9;font-family:system-ui,sans-serif;padding:8px;text-align:center;-webkit-user-select:none;user-select:none}
@@ -37,16 +37,16 @@ h1{font-size:15px;color:#58a6ff;margin-bottom:2px}
 #msg{margin-top:6px;font-size:11px;color:#8b949e;min-height:16px}
 #msg.dead{color:#f85149;font-weight:700}
 </style></head><body>
-<h1>🚀 Pesawat</h1>
-<div class="meta"><b id="nm"></b> · Skor <b id="sc">0</b></div>
+<h1>🚀 Plane Shooter</h1>
+<div class="meta"><b id="nm"></b> · Score <b id="sc">0</b></div>
 <canvas id="cv" width="280" height="260"></canvas>
 <div class="ctrl">
 <button type="button" id="left">⬅️</button>
-<button type="button" id="fire">🔫 Tembak</button>
+<button type="button" id="fire">🔫 Shoot</button>
 <button type="button" id="right">➡️</button>
 </div>
 <button type="button" id="go">▶ Restart</button>
-<div id="msg">Tembak & hindar!</div>
+<div id="msg">Shoot & dodge!</div>
 <script>
 (function(){
 document.getElementById('nm').textContent='` + name + `';
@@ -58,7 +58,7 @@ function init(){
 ship={x:W/2,y:H-30};
 bullets=[];enemies=[];score=0;alive=true;cd=0;
 stars=[];for(var i=0;i<25;i++)stars.push({x:Math.random()*W,y:Math.random()*H,s:1+Math.random()*1.5});
-scEl.textContent='0';msg.className='';msg.textContent='Tembak & hindar!';
+scEl.textContent='0';msg.className='';msg.textContent='Shoot & dodge!';
 cancelAnimationFrame(raf);clearTimeout(spawnT);
 draw();loop();schedule();
 }
@@ -89,7 +89,7 @@ enemies.splice(i,1);bullets.splice(j,1);score+=10;scEl.textContent=score;break;
 }
 draw();
 }
-function die(){alive=false;msg.className='dead';msg.textContent='💥 Hancur · Skor '+score;draw()}
+function die(){alive=false;msg.className='dead';msg.textContent='💥 Destroyed · Score '+score;draw()}
 function fire(){if(!alive||cd>0)return;bullets.push({x:ship.x,y:ship.y-14});cd=9}
 function move(dx){if(!alive)return;ship.x=Math.max(16,Math.min(W-16,ship.x+dx))}
 function drawShip(x,y){

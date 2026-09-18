@@ -1,17 +1,17 @@
-import { getLocalIps, getHostname, lookupPublicIp } from '../../src/lib/index.js';
+import {  getLocalIps, getHostname, lookupPublicIp, msg } from '../../src/lib/index.js';
 import { config } from '../../src/config.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('dashboard', 'cekdash', 'dashbot')
     .in('owner')
-    .desc('Cek link dashboard bot (IP publik & lokal)')
+    .desc('Check bot dashboard link (public & local IP)')
     .prefixOnly()
     .ownerOnly()
-    .signal('User (owner) minta link dashboard, cek dashboard, atau alamat panel bot', ['cekdash', 'link dashboard', 'dashbot'])
+    .signal('User (owner) asks for dashboard link, check dashboard, or panel address', ['cekdash', 'link dashboard', 'dashbot'])
     .run(async (sock, { raw, from }) => {
         const port = config.dashboardPort;
 
-        await sock.sendMessage(from, { text: '🔍 Ngecek alamat dashboard...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.dashboard') }, { quoted: raw });
 
         const info  = await lookupPublicIp();
         const local = getLocalIps();
@@ -23,16 +23,16 @@ export default plugin('dashboard', 'cekdash', 'dashbot')
 
         const publicLine = info.publicIp
             ? `http://${info.publicIp}:${port}${(info.city || info.country) ? `\n   📍 ${[info.city, info.country].filter(Boolean).join(', ')}` : ''}${info.isp ? `\n   🏢 ${info.isp}` : ''}`
-            : '⚠️ IP publik belum terdeteksi (server mungkin di belakang NAT/tanpa port forwarding).';
+            : '⚠️ Public IP not detected yet (server may be behind NAT/without port forwarding).';
 
         const status = global.botConnected ? '🟢 Connected' : '🔴 Disconnected';
 
         const text = `📊 *${global.botName || 'Bot'} Dashboard*\n\n` +
             `Status: ${status}\n` +
             `Host: ${host}\n\n` +
-            `🌐 *Publik:*\n   ${publicLine}\n\n` +
-            `🖥️ *Lokal:*\n${localLines}\n\n` +
-            `_Kalau diakses dari luar, pastikan port ${port} udah di-forward/dibuka di firewall._`;
+            `🌐 *Public:*\n   ${publicLine}\n\n` +
+            `🖥️ *Local:*\n${localLines}\n\n` +
+            `_If accessed from outside, make sure port ${port} is forwarded/open on the firewall._`;
 
         await sock.sendMessage(from, { text }, { quoted: raw });
     });

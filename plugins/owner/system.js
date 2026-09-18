@@ -1,17 +1,18 @@
 import { reloadPlugins } from '../../src/core/loader.js';
 import { saveDb, loadDb } from '../../src/core/db.js';
 import { plugin } from '../../src/core/plugin.js';
+import { msg } from '../../src/lib/messages.js';
 
 export default plugin('reload', 'maintenance', 'ban', 'unban')
     .in('owner')
-    .desc('Perintah sistem untuk owner')
+    .desc('System commands for owner')
     .showAllAliases()
     .ownerOnly()
-    .run(async (sock, { body, raw, from, command, mentionedJid, gdb }) => {
+    .run(async (sock, { body, raw, from, command, mentionedJid, gdb, primaryId }) => {
         if (command === 'reload') {
             const result = await reloadPlugins();
             return sock.sendMessage(from, {
-                text: `♻️ Reload selesai!\n✅ ${result.ok} plugins | ❌ ${result.fail} failed`
+                text: msg('done.reload', { ok: result.ok, fail: result.fail })
             }, { quoted: raw });
         }
 
@@ -19,7 +20,7 @@ export default plugin('reload', 'maintenance', 'ban', 'unban')
             gdb.settings.maintenance = !gdb.settings.maintenance;
             await saveDb();
             const status = gdb.settings.maintenance ? '🔧 ON' : '✅ OFF';
-            return sock.sendMessage(from, { text: `Maintenance mode: *${status}*` }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('done.maintenance', { status }) }, { quoted: raw });
         }
 
         if (command === 'ban' || command === 'unban') {
@@ -27,18 +28,18 @@ export default plugin('reload', 'maintenance', 'ban', 'unban')
             const targetJid = rawTarget
                 ? rawTarget.split(':')[0].replace(/@.+/, '') + (rawTarget.includes('@lid') ? '@lid' : '@s.whatsapp.net')
                 : null;
-            if (!targetJid) return sock.sendMessage(from, { text: '❌ Tag user yang ingin di-ban.' }, { quoted: raw });
+            if (!targetJid) return sock.sendMessage(from, { text: msg('need.tag_ban') }, { quoted: raw });
             const db = await loadDb();
 
             const num = targetJid.split('@')[0];
             const altForm = targetJid.includes('@lid') ? `${num}@s.whatsapp.net` : `${num}@lid`;
             const foundId = db.users[targetJid] ? targetJid : (db.users[altForm] ? altForm : null);
 
-            if (!foundId) return sock.sendMessage(from, { text: '❌ User tidak ditemukan.' }, { quoted: raw });
+            if (!foundId) return sock.sendMessage(from, { text: msg('fail.user_not_found') }, { quoted: raw });
             db.users[foundId].banned = command === 'ban';
             await saveDb();
             await sock.sendMessage(from, {
-                text: `${command === 'ban' ? '🚫 Di-ban' : '✅ Un-ban'}: @${num}`,
+                text: command === 'ban' ? msg('done.ban', { num }) : msg('done.unban', { num }),
                 mentions: [targetJid],
             }, { quoted: raw });
         }

@@ -1,41 +1,41 @@
-import { typing, downloadMedia } from '../../src/lib/index.js';
+import { typing, downloadMedia, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tourl', 'geturl', 'uploadfile')
     .in('tools')
-    .desc('Upload media dan dapatkan URL-nya')
+    .desc('Upload media and get its URL')
     .prefixOnly()
-    .signal('User minta upload file, convert media ke link/url, atau dapatkan url dari gambar/video/audio/stiker', ['tourl', 'jadiin link dong', 'upload gambar ini', 'buatin url dari video ini'])
-    .run(async (sock, { message, raw, from }) => {
+    .signal('User asks to upload a file, convert media to a link/url, or get a url from an image', ['tourl', 'make this a link', 'upload this image', 'make url from this video'])
+    .run(async (sock, { message, raw, from, db, primaryId }) => {
         const types  = ['image', 'video', 'audio', 'sticker', 'document'];
         const result = await downloadMedia(raw, message.quoted, types);
 
         if (!result) return sock.sendMessage(from, {
-            text: '❌ Kirim atau reply media dulu.\nSupport: gambar, video, audio, stiker, dokumen.'
+            text: msg('need.media_full')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mengupload...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.upload') }, { quoted: raw });
 
         try {
             const url   = await global.api.tourl(result.buffer);
             const label = LABELS[result.type] || '📁 File';
 
             await sock.sendMessage(from, {
-                text: `✅ *${label} berhasil diupload!*\n\n🔗 *URL:*\n${url}\n\n_Link tersedia selama file masih ada di server._`
+                text: `✅ *${label} uploaded successfully!*\n\n🔗 *URL:*\n${url}\n\n_Link is available as long as the file remains on the server._`
             }, { quoted: raw });
         } catch (e) {
             await sock.sendMessage(from, {
-                text: `❌ Gagal upload: ${e.message}`
+                text: msg('fail.upload', { msg: e.message })
             }, { quoted: raw });
         }
     });
 
 const LABELS = {
-    image:    '🖼️ Gambar',
+    image:    '🖼️ Image',
     video:    '🎬 Video',
     audio:    '🎵 Audio',
-    sticker:  '🪄 Stiker',
-    document: '📄 Dokumen',
+    sticker:  '🪄 Sticker',
+    document: '📄 Document',
 };
 

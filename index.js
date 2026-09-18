@@ -45,9 +45,9 @@ function handleCaptchaAnswer(sock, m, body) {
     if (body.trim() === pending.answer) {
         clearTimeout(pending.timer);
         getCaptchaPending().delete(jid);
-        sock.sendMessage(pending.groupId, { text: `✅ @${jid.split('@')[0]} berhasil!`, mentions: [jid] });
+        sock.sendMessage(pending.groupId, { text: `✅ @${jid.split('@')[0]} passed!`, mentions: [jid] });
     } else {
-        sock.sendMessage(pending.groupId, { text: `❌ @${jid.split('@')[0]} salah, coba lagi!`, mentions: [jid] });
+        sock.sendMessage(pending.groupId, { text: `❌ @${jid.split('@')[0]} wrong, try again!`, mentions: [jid] });
     }
     return true;
 }
@@ -93,9 +93,9 @@ async function start() {
                 const code = await sock.requestPairingCode(phone);
                 const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
                 logger.success(`🔑 PAIRING CODE: ${formattedCode}`);
-                logger.info('Buka WA → ⋮ → Perangkat Tertaut → Tautkan dengan nomor telepon → masukkan kode');
+                logger.info('Open WA → ⋮ → Linked Devices → Link with phone number → enter the code');
             } catch (e) {
-                logger.error(`Pairing gagal: ${e.message}`);
+                logger.error(`Pairing failed: ${e.message}`);
             }
         }, 3000);
     }
@@ -127,7 +127,7 @@ async function start() {
 
             retryCount++;
             if (retryCount > MAX_RETRY_BEFORE_REFRESH) {
-                logger.warn(`Gagal konek ${retryCount}x beruntun (code: ${code}), tetap reconnect biasa tanpa hapus sesi...`);
+                logger.warn(`Failed to connect ${retryCount}x in a row (code: ${code}), continuing with plain reconnect without deleting the session...`);
                 setTimeout(start, 5000);
                 return;
             }
@@ -145,23 +145,23 @@ async function start() {
             scheduleAutoReset();
 
             if (global.ownerLid) {
-                logger.info(`Owner LID (manual dari .env): ${global.ownerLid}`);
+                logger.info(`Owner LID (manually set via .env): ${global.ownerLid}`);
             } else {
                 try {
                     const ownerJid = global.owner.includes('@') ? global.owner : `${global.owner}@s.whatsapp.net`;
                     const resolvedLid = await sock.signalRepository?.lidMapping?.getLIDForPN?.(ownerJid);
                     if (resolvedLid) {
                         global.ownerLid = resolvedLid.split(':')[0].replace(/@.+/, '') + '@lid';
-                        logger.info(`Owner LID auto-resolved: ${global.ownerLid} (kalau ternyata salah, isi manual pakai OWNER_LID di .env)`);
+                        logger.info(`Owner LID auto-resolved: ${global.ownerLid} (if this turns out to be wrong, set it manually with OWNER_LID in .env)`);
                     } else {
-                        logger.warn('Owner LID belum ke-mapping (WhatsApp belum kirim data mapping-nya). Bakal ke-resolve otomatis begitu owner chat bot — atau isi manual: kirim pesan ke bot, cek logs/bot.log baris [owner-check] → ambil digit dari "lid=", masukkan ke .env sebagai OWNER_LID.');
+                        logger.warn('Owner LID not mapped yet (WhatsApp hasn\'t sent the mapping data). It will auto-resolve as soon as the owner messages the bot — or set it manually: message the bot, check logs/bot.log for the [owner-check] line → grab the digits from "lid=", put it in .env as OWNER_LID.');
                     }
                 } catch (e) {
-                    logger.warn(`Gagal auto-resolve owner LID: ${e.message}`);
+                    logger.warn(`Failed to auto-resolve owner LID: ${e.message}`);
                 }
             }
 
-            logger.info(`${plugins.size} commands | Owner: ${global.owner || '(belum diset)'}`);
+            logger.info(`${plugins.size} commands | Owner: ${global.owner || '(not set)'}`);
         }
     });
 
@@ -202,7 +202,7 @@ async function start() {
                 const meta = await sock.groupMetadata(update.id);
                 setGroupMetaCache(update.id, meta);
             } catch (e) {
-                logger.debug(`[groups.update] gagal refresh cache ${update.id}: ${e.message}`);
+                logger.debug(`[groups.update] failed to refresh cache ${update.id}: ${e.message}`);
             }
         }
     });

@@ -1,27 +1,27 @@
-import { pick, sleep } from '../../src/lib/index.js';
+import { pick, sleep, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('pilihnama', 'spinnama')
     .in('fun')
-    .desc('Acak satu nama/orang dari daftar yang dikasih (ketik nama atau tag @orangnya)')
+    .desc('Randomly pick one name/person from a list (type names or tag people)')
     .prefixOnly()
     .ai({
-        trigger: 'User minta bot mengacak/memilih satu nama atau satu orang dari beberapa nama/mention yang dikasih',
+        trigger: 'User asks the bot to randomly pick one name or person from a list/mentions',
         examples: [
             'pilihacak Andi, Budi, Citra, Dewi',
             'spin Ali,Budi,Caca',
             'pilihnama @Mr one, @Jaki Ganteng, @Rizik',
         ],
-        args: { text: 'Daftar nama dipisah koma, atau tag @orangnya (bisa campur)' },
+        args: { text: 'Comma-separated names, or tag people (can mix)' },
     })
-    .run(async (sock, { body, raw, from, mentionedJid, gdb }) => {
+    .run(async (sock, { body, raw, from, mentionedJid, gdb, primaryId }) => {
         const rawText = body.split(' ').slice(1).join(' ').trim();
 
         if (!rawText) {
             return sock.sendMessage(from, {
                 text:
-                    `❌ Kasih dulu daftar namanya, dipisah koma, atau tag orangnya.\n\n` +
-                    `Contoh:\n*.pilihnama Andi, Budi, Citra*\n*.pilihnama @orang1, @orang2, @orang3*`,
+                    `❌ Provide names separated by commas, or tag people.\n\n` +
+                    `Example:\n*.pilihnama Andi, Budi, Citra*\n*.pilihnama @orang1, @orang2, @orang3*`,
             }, { quoted: raw });
         }
 
@@ -55,14 +55,14 @@ export default plugin('pilihnama', 'spinnama')
 
         if (entries.length < 2) {
             return sock.sendMessage(from, {
-                text: '❌ Minimal kasih 2 nama/orang beda yang mau diacak ya.',
+                text: msg('need.names_min2'),
             }, { quoted: raw });
         }
 
         const mentionsAll = entries.filter(e => e.jid).map(e => e.jid);
 
         await sock.sendMessage(from, {
-            text: `🎯 Mengacak dari ${entries.length} nama...\n_${entries.map(e => e.label).join(' • ')}_`,
+            text: `🎯 Randomizing from ${entries.length} names...\n_${entries.map(e => e.label).join(' • ')}_`,
             mentions: mentionsAll,
         }, { quoted: raw });
 
@@ -70,7 +70,7 @@ export default plugin('pilihnama', 'spinnama')
 
         const winner = pick(entries);
         return sock.sendMessage(from, {
-            text: `🎉 Yang kena: *${winner.label}*!`,
+            text: `🎉 Picked: *${winner.label}*!`,
             mentions: winner.jid ? [winner.jid] : [],
         }, { quoted: raw });
     });

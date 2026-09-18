@@ -65,7 +65,7 @@ export const config = {
 };
 
 if (!config.ai.gemini.cookie && !config.ai.naga.apiKey) {
-    console.warn('[config] Peringatan: GEMINI_COOKIE dan NAGA_API_KEY kosong semua, fitur AI chat tidak akan berfungsi.');
+    console.warn('[config] Warning: GEMINI_COOKIE and NAGA_API_KEY are both empty, the AI chat feature will not work.');
 } else if (!config.ai.gemini.cookie) {
-    console.warn('[config] Peringatan: GEMINI_COOKIE kosong, AI chat langsung fallback ke Naga.');
+    console.warn('[config] Warning: GEMINI_COOKIE is empty, AI chat will go straight to the Naga fallback.');
 }

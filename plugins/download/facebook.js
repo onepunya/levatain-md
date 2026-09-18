@@ -1,31 +1,31 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { typing, getArgs, fetchBufferLimited } from '../../src/lib/index.js';
+import { typing, getArgs, fetchBufferLimited, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('facebook', 'fb')
     .in('download')
-    .desc('Download video/foto facebook')
+    .desc('Download Facebook video/photo')
     .prefixOnly()
     .ai({
-        trigger: 'User minta download dari facebook dengan URL',
+        trigger: 'User asks to download from Facebook with a URL',
         examples: ['fb https://www.facebook.com/share/r/xxx/', 'download facebook ini'],
-        args: { url: 'URL facebook' },
+        args: { url: 'Facebook URL' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
-            text: '❌ Masukkan URL Facebook\nContoh: *.facebook https://www.facebook.com/share/r/xxx/*'
+            text: msg('need.url.fb')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mendownload Facebook...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.download_fb') }, { quoted: raw });
 
         try {
             const data = await fbDownloader(url);
 
             if (!data || !data.video) {
-                return await sock.sendMessage(from, { text: '❌ Gagal mendapatkan link video dari Facebook.' }, { quoted: raw });
+                return await sock.sendMessage(from, { text: msg('fail.link_fb') }, { quoted: raw });
             }
 
             const videoBuffer = await fetchBufferLimited(data.video, {
@@ -43,7 +43,7 @@ export default plugin('facebook', 'fb')
 
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 
@@ -76,7 +76,7 @@ async function fbDownloader(url) {
         const audio = $('a.download-result.mp3, a.mp3').attr('href') || '';
 
         if (!hd && !sd) {
-            throw new Error('Link video tidak ditemukan atau private.');
+            throw new Error('Video link not found or private.');
         }
 
         return {
@@ -88,6 +88,6 @@ async function fbDownloader(url) {
             audio
         };
     } catch (err) {
-        throw new Error(err.response ? `Server menolak request (${err.response.status})` : err.message);
+        throw new Error(err.response ? `Server rejected request (${err.response.status})` : err.message);
     }
 }

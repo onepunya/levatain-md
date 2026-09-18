@@ -31,7 +31,7 @@ export async function upscaleImage(buffer, mime = 'image/jpeg') {
         const jar = await getPhotiuCookies();
         cookieHeader = Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ');
     } catch (e) {
-        logger.warn(`[photiu] gagal ambil cookie sesi: ${e.message}, lanjut tanpa cookie...`);
+        logger.warn(`[photiu] failed to get session cookie: ${e.message}, continuing without cookie...`);
     }
 
     const form = new FormData();
@@ -65,7 +65,7 @@ export async function upscaleImage(buffer, mime = 'image/jpeg') {
         const b64 = data?.data?.base64 || data?.base64;
         if (b64) return base64ToBuffer(b64);
 
-        throw new Error(`Respons tidak dikenali dari photiu.ai: ${JSON.stringify(data).slice(0, 150)}`);
+        throw new Error(`Unrecognized response from photiu.ai: ${JSON.stringify(data).slice(0, 150)}`);
     }
 
     if (contentType.startsWith('image/')) {
@@ -73,5 +73,5 @@ export async function upscaleImage(buffer, mime = 'image/jpeg') {
     }
 
     const text = await res.text();
-    throw new Error(`Upscale gagal (${res.status}): ${text.slice(0, 150) || 'respons tidak dikenal, endpoint kemungkinan berubah'}`);
+    throw new Error(`Upscale failed (${res.status}): ${text.slice(0, 150) || 'unknown response, the endpoint may have changed'}`);
 }

@@ -1,23 +1,23 @@
-import { typing, getArgs, sendAnyMedia, api } from '../../src/lib/index.js';
+import { typing, getArgs, sendAnyMedia, api, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('capcut')
     .in('download')
-    .desc('Download video template CapCut tanpa watermark')
+    .desc('Download CapCut video template without watermark')
     .prefixOnly()
     .ai({
-        trigger: 'User minta download template CapCut dengan URL',
+        trigger: 'User asks to download a CapCut template with a URL',
         examples: ['capcut https://www.capcut.com/template/xxx', 'download capcut ini'],
-        args: { url: 'URL template CapCut' },
+        args: { url: 'CapCut template URL' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
-            text: '❌ Masukkan URL CapCut!\nContoh: *.capcut https://www.capcut.com/template/xxx*'
+            text: msg('need.url.capcut')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mendownload template CapCut...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.download_capcut') }, { quoted: raw });
 
         try {
             const data = await api.capcut(url);
@@ -26,7 +26,7 @@ export default plugin('capcut')
                 quoted: raw,
             });
         } catch (e) {
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 

@@ -19,7 +19,7 @@ export async function generateSong({ caption, lyrics, model = 'AceStep_1_5_XL_Tu
         body: JSON.stringify({ caption, lyrics, model, duration, bpm, format }),
     });
     const genData = await genRes.json();
-    if (!genRes.ok || !genData?.jobId) throw new Error(genData?.message || genData?.error || `Gagal mulai generate (HTTP ${genRes.status})`);
+    if (!genRes.ok || !genData?.jobId) throw new Error(genData?.message || genData?.error || `Failed to mulai generate (HTTP ${genRes.status})`);
 
     const jobId = genData.jobId;
     const startedAt = Date.now();
@@ -32,7 +32,7 @@ export async function generateSong({ caption, lyrics, model = 'AceStep_1_5_XL_Tu
         const job = await jobRes.json();
 
         if (job.status === 'failed' || job.status === 'error') {
-            throw new Error(job.message || job.error || 'Generate lagu gagal di server.');
+            throw new Error(job.message || job.error || 'Song generation failed on the server.');
         }
 
         if (job.status === 'done') {

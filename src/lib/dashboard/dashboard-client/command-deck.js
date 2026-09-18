@@ -148,21 +148,21 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
       ),
     ),
 
-    e(SectionLabel, null, "Ringkasan"),
+    e(SectionLabel, null, "Summary"),
     e(
       "div",
       { className: "grid-metrics" },
-      e(MetricCard, { label: "Status", value: status.connected ? "Terhubung" : "Terputus", hint: "tautan utama" }),
-      e(MetricCard, { label: "Uptime", value: status.uptime, hint: "sejak boot" }),
-      e(MetricCard, { label: "Plugin", value: String(status.plugins), hint: "modul aktif" }),
-      e(MetricCard, { label: "Pengguna", value: fmt(status.totalUsers), hint: "tercatat" }),
-      e(MetricCard, { label: "Grup", value: String(status.totalGroups), hint: "ruang aktif" }),
-      e(MetricCard, { label: "Perintah", value: fmt(status.totalCommands), hint: "total dijalankan" }),
-      e(MetricCard, { label: "Memori proses", value: `${status.memory} MB`, hint: "RSS" }),
-      e(MetricCard, { label: "Pemilik", value: status.owner, hint: "nomor owner", small: true }),
+      e(MetricCard, { label: "Status", value: status.connected ? "Connected" : "Disconnected", hint: "main link" }),
+      e(MetricCard, { label: "Uptime", value: status.uptime, hint: "since boot" }),
+      e(MetricCard, { label: "Plugin", value: String(status.plugins), hint: "active modules" }),
+      e(MetricCard, { label: "Users", value: fmt(status.totalUsers), hint: "recorded" }),
+      e(MetricCard, { label: "Groups", value: String(status.totalGroups), hint: "active spaces" }),
+      e(MetricCard, { label: "Commands", value: fmt(status.totalCommands), hint: "total run" }),
+      e(MetricCard, { label: "Process memory", value: `${status.memory} MB`, hint: "RSS" }),
+      e(MetricCard, { label: "Owner", value: status.owner, hint: "owner number", small: true }),
     ),
 
-    e(SectionLabel, null, "Sumber daya"),
+    e(SectionLabel, null, "Resources"),
     e(
       "div",
       { className: "res-grid" },
@@ -170,14 +170,14 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
         "div",
         { className: "panel" },
         e(BarRow, {
-          label: "RAM sistem",
+          label: "System RAM",
           value: `${status.memPct}% (${status.memTotalMB - status.memFreeMB} / ${status.memTotalMB} MB)`,
           pct: Number(status.memPct),
         }),
         e(
           "div",
           { className: "cpurow" },
-          e("span", null, "Beban CPU"),
+          e("span", null, "CPU load"),
           e("span", null, (s.loadavg || []).join(" / "), " · ", s.cpuCores, " core"),
         ),
         e("p", { className: "cpumodel" }, s.cpuModel),
@@ -185,12 +185,12 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
       e(
         "div",
         { className: "panel" },
-        e("div", { className: "barlbl" }, e("span", null, "Aktivitas")),
+        e("div", { className: "barlbl" }, e("span", null, "Activity")),
         e(Sparkline, { values: status.activity }),
         e(
           "p",
           { className: "barlbl", style: { marginTop: 8 } },
-          e("span", null, "volume perintah · 24 tick"),
+          e("span", null, "command volume · 24 tick"),
           e("b", null, status.activity[status.activity.length - 1]),
         ),
       ),
@@ -202,7 +202,7 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
       e(
         "section",
         null,
-        e(SectionLabel, null, "Plugin per kategori"),
+        e(SectionLabel, null, "Plugins by category"),
         e(
           "div",
           { className: "panel taglist" },
@@ -215,13 +215,13 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
                   e("div", { className: "track" }, e("div", { className: "fill", style: { width: (count / pluginMax) * 100 + "%" } })),
                 ),
               )
-            : e("p", { className: "empty" }, "Belum ada data"),
+            : e("p", { className: "empty" }, "No data yet"),
         ),
       ),
       e(
         "section",
         null,
-        e(SectionLabel, null, "Pengguna teratas"),
+        e(SectionLabel, null, "Top Users"),
         e(
           "div",
           { className: "panel" },
@@ -236,7 +236,7 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
                 null,
                 e("th", null, "#"),
                 e("th", null, "User"),
-                e("th", { style: { textAlign: "right" } }, "Perintah"),
+                e("th", { style: { textAlign: "right" } }, "Commands"),
               ),
             ),
             e(
@@ -252,7 +252,7 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
                       e("td", { className: "hit" }, fmt(u.hit)),
                     ),
                   )
-                : e("tr", null, e("td", { colSpan: 3, className: "empty" }, "Belum ada aktivitas")),
+                : e("tr", null, e("td", { colSpan: 3, className: "empty" }, "No activity yet")),
             ),
           ),
         ),
@@ -263,8 +263,8 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
       "div",
       { className: "cols2" },
       e(LogPanel, {
-        title: "Aktivitas terbaru",
-        empty: "Belum ada perintah",
+        title: "Recent activity",
+        empty: "No commands yet",
         rows: status.recentCommands.map((c, i) =>
           e(
             "div",
@@ -275,8 +275,8 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
         ),
       }),
       e(LogPanel, {
-        title: "Log terbaru",
-        empty: "Belum ada log",
+        title: "Recent logs",
+        empty: "No logs yet",
         rows: status.recentLogs.map((l, i) =>
           e(
             "div",
@@ -292,8 +292,8 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
     e(
       "footer",
       { className: "bottom" },
-      e("span", null, s.hostname, " · sinkron tiap 3 detik"),
-      e("span", null, "LEVATAIN dek komando"),
+      e("span", null, s.hostname, " · syncs every 3 seconds"),
+      e("span", null, "LEVATAIN command deck"),
     ),
   );
 }

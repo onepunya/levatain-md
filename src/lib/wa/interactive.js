@@ -68,7 +68,7 @@ export async function sendCategoryMenu(sock, jid, {
             await sendNativeList(sock, jid, { caption, footer, quoted, sections, thumbUrl: url });
             return { mode: 'list' };
         } catch (e) {
-            logger.warn(`[menu] list interaktif gagal, fallback teks: ${e.message}`);
+            logger.warn(`[menu] interactive list failed, text fallback: ${e.message}`);
         }
     }
 
@@ -95,7 +95,7 @@ async function sendNativeList(sock, jid, { caption, footer, quoted, sections, th
                 proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
                     name: 'single_select',
                     buttonParamsJson: JSON.stringify({
-                        title: 'Pilih kategori',
+                        title: 'Select Category',
                         sections,
                     }),
                 }),
@@ -153,3 +153,97 @@ async function sendNativeList(sock, jid, { caption, footer, quoted, sections, th
     });
     return msg;
 }
+
+
+export async function sendLangPicker(sock, jid, { quoted, device } = {}) {
+    const dev = device || detectDevice(quoted);
+    const caption =
+        '🌐 *Choose your language / Pilih bahasa*\n\n' +
+        'This is used for AI replies.\n' +
+        'Ini untuk bahasa balasan AI.\n\n' +
+        '_You can change it later with *.lang*_';
+
+    if (supportsInteractive(dev)) {
+        try {
+            const interactive = proto.Message.InteractiveMessage.create({
+                body: proto.Message.InteractiveMessage.Body.create({ text: caption }),
+                footer: proto.Message.InteractiveMessage.Footer.create({
+                    text: global.botName || 'Levatain-MD',
+                }),
+                nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                    buttons: [
+                        proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
+                            name: 'quick_reply',
+                            buttonParamsJson: JSON.stringify({
+                                display_text: 'English 🇬🇧',
+                                id: 'lang_en',
+                            }),
+                        }),
+                        proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
+                            name: 'quick_reply',
+                            buttonParamsJson: JSON.stringify({
+                                display_text: 'Indonesia 🇮🇩',
+                                id: 'lang_id',
+                            }),
+                        }),
+                    ],
+                }),
+            });
+
+            const msg = generateWAMessageFromContent(
+                jid,
+                {
+                    messageContextInfo: {
+                        deviceListMetadata: {},
+                        deviceListMetadataVersion: 2,
+                    },
+                    interactiveMessage: interactive,
+                },
+                { userJid: sock.user?.id, quoted },
+            );
+
+            const isGroup = jid.endsWith('@g.us');
+            const additionalNodes = [
+                {
+                    tag: 'biz',
+                    attrs: {},
+                    content: [
+                        {
+                            tag: 'interactive',
+                            attrs: { type: 'native_flow', v: '1' },
+                            content: [
+                                {
+                                    tag: 'native_flow',
+                                    attrs: { v: '9', name: 'mixed' },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ];
+            if (!isGroup) {
+                additionalNodes.push({ tag: 'bot', attrs: { biz_bot: '1' } });
+            }
+
+            await sock.relayMessage(jid, msg.message, {
+                messageId: msg.key.id,
+                additionalNodes,
+            });
+            return { mode: 'buttons' };
+        } catch (e) {
+            logger.warn(`[lang-picker] interactive failed: ${e.message}`);
+        }
+    }
+
+    await sock.sendMessage(
+        jid,
+        {
+            text:
+                caption +
+                '\n\nReply with:\n• *EN* or *.lang en*\n• *ID* or *.lang id*',
+        },
+        quoted ? { quoted } : {},
+    );
+    return { mode: 'text' };
+}
+

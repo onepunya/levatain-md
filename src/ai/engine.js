@@ -26,7 +26,7 @@ export const intentEngine = async (text, history, userCtx) => {
         return {
             command: 'chat',
             args: '',
-            message: '⚠️ AI sedang tidak bisa diakses. Coba lagi nanti!',
+            message: '⚠️ AI is unavailable. Try again later!',
             remember: {},
             mood: null,
             voice: false,

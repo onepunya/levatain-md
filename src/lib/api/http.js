@@ -52,8 +52,8 @@ export const curlMultipartFile = async (url, headers, fields, fileField, fileBuf
 		try {
 			({ stdout } = await execFileAsync('curl', args, { maxBuffer: 1024 * 1024 * 20 }));
 		} catch (e) {
-			logger.error(`curlMultipartFile ${url} gagal jalan: ${e.message}`);
-			throw new Error(`curl gagal: ${e.message}`);
+			logger.error(`curlMultipartFile ${url} failed to run: ${e.message}`);
+			throw new Error(`curl failed: ${e.message}`);
 		}
 
 		const idx = stdout.lastIndexOf(MARKER);
@@ -62,8 +62,8 @@ export const curlMultipartFile = async (url, headers, fields, fileField, fileBuf
 
 		logger.debug(`curlMultipartFile ${url} -> HTTP ${status}, body: ${body.slice(0, 300)}`);
 
-		if (status && (status < 200 || status >= 300)) throw new Error(`HTTP ${status}: ${body.slice(0, 200) || '(body kosong)'}`);
-		if (!body || !body.trim()) throw new Error(`Response kosong dari ${url} (HTTP ${status || 'unknown'})`);
+		if (status && (status < 200 || status >= 300)) throw new Error(`HTTP ${status}: ${body.slice(0, 200) || '(empty body)'}`);
+		if (!body || !body.trim()) throw new Error(`Empty response from ${url} (HTTP ${status || 'unknown'})`);
 
 		return body;
 	} finally {
@@ -79,15 +79,15 @@ export const onepost = async (path, body, retries = 4, delay = 3000) => {
 		try {
 			textData = await curlRequest('POST', `${ONEPUNYA_BASE}${path}`, ONEPUNYA_HDR, body);
 		} catch (e) {
-			throw new Error(`Request ke ONEPUNYA gagal: ${e.message}`);
+			throw new Error(`Request to ONEPUNYA failed: ${e.message}`);
 		}
 
 		let data;
 		try {
 			data = JSON.parse(textData);
 		} catch (e) {
-			logger.error(`[onepost] API tidak membalas JSON. Balasan server: ${textData.substring(0, 100)}...`);
-			throw new Error('Server API merespons dengan HTML, kemungkinan diblokir sistem keamanan.');
+			logger.error(`[onepost] API did not respond with JSON. Server response: ${textData.substring(0, 100)}...`);
+			throw new Error('The API server responded with HTML, likely blocked by a security system.');
 		}
 
 		if (!data.status && RETRY_MSGS.includes(data.message)) {
@@ -96,7 +96,7 @@ export const onepost = async (path, body, retries = 4, delay = 3000) => {
 		}
 		return data;
 	}
-	throw new Error('ONEPUNYA API tidak merespons setelah beberapa percobaan.');
+	throw new Error('ONEPUNYA API did not respond after several attempts.');
 };
 
 export const oneget = async (path, params = {}, retries = 3, delay = 2000) => {
@@ -107,15 +107,15 @@ export const oneget = async (path, params = {}, retries = 3, delay = 2000) => {
 		try {
 			textData = await curlRequest('GET', `${ONEPUNYA_BASE}${path}?${q}`, ONEPUNYA_HDR);
 		} catch (e) {
-			throw new Error(`Request ke ONEPUNYA gagal: ${e.message}`);
+			throw new Error(`Request to ONEPUNYA failed: ${e.message}`);
 		}
 
 		let data;
 		try {
 			data = JSON.parse(textData);
 		} catch (e) {
-			logger.error(`[oneget] API tidak membalas JSON. Balasan server: ${textData.substring(0, 100)}...`);
-			throw new Error('Server API merespons dengan HTML, kemungkinan diblokir sistem keamanan.');
+			logger.error(`[oneget] API did not respond with JSON. Server response: ${textData.substring(0, 100)}...`);
+			throw new Error('The API server responded with HTML, likely blocked by a security system.');
 		}
 
 		if (data.message === 'DATABASE_NOT_READY') {
@@ -124,5 +124,5 @@ export const oneget = async (path, params = {}, retries = 3, delay = 2000) => {
 		}
 		return data;
 	}
-	throw new Error('DATABASE_NOT_READY: ONEPUNYA API belum siap.');
+	throw new Error('DATABASE_NOT_READY: ONEPUNYA API is not ready yet.');
 };

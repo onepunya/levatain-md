@@ -48,7 +48,7 @@ export function getStatus() {
         uptime:       formatUptimeFull(Date.now() - startTime),
         plugins:      global.plugins?.size || 0,
         pluginBreakdown: pluginBreakdown(),
-        owner:        global.owner || '(belum diset)',
+        owner:        global.owner || '(not set)',
         memory:       (process.memoryUsage().rss / 1024 / 1024).toFixed(1),
         memTotalMB:   Number((totalMem / 1024 / 1024).toFixed(0)),
         memFreeMB:    Number((freeMem / 1024 / 1024).toFixed(0)),

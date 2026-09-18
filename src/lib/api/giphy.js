@@ -29,7 +29,7 @@ export async function scrapeGiphyStickers(query) {
 
         return results;
     } catch (e) {
-        logger.error(`[giphy] API request gagal ("${query}"): ${e.response ? JSON.stringify(e.response.data) : e.message}`);
+        logger.error(`[giphy] API request failed ("${query}"): ${e.response ? JSON.stringify(e.response.data) : e.message}`);
         return [];
     }
 }
@@ -48,7 +48,7 @@ export async function getRandomMoodSticker(mood) {
         });
         return Buffer.from(res.data);
     } catch (e) {
-        logger.error(`[giphy] download stiker gagal ("${mood}"): ${e.message}`);
+        logger.error(`[giphy] sticker download failed ("${mood}"): ${e.message}`);
         return null;
     }
 }

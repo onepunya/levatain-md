@@ -1,6 +1,6 @@
 import { config } from './config.js';
 import { plugins } from './core/loader.js';
-import { api } from './lib/index.js';
+import { api, msg, MSG } from './lib/index.js';
 
 
 export function initGlobals() {
@@ -11,5 +11,7 @@ export function initGlobals() {
     global.thumb = config.bot.thumb;
     global.plugins = plugins;
     global.api = api;
+    global.msg = msg;
+    global.MSG = MSG;
     global.botConnected = false;
 }

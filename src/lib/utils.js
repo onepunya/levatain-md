@@ -271,7 +271,7 @@ export const uploadToUrl = async (buffer, mimetype = 'image/jpeg') => {
             errors.push(`${svc.name}: ${e.message}`);
         }
     }
-    throw new Error(`Semua layanan upload gagal:${errors.join('')}`);
+    throw new Error(`All upload services failed:${errors.join('')}`);
 };
 
 export const hasRestrictedLinks = body => {

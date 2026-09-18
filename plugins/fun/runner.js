@@ -1,28 +1,28 @@
-import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES } from '../../src/lib/index.js';
+import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('runner', 'lari')
     .in('fun')
     .desc('Endless runner solo canvas')
     .prefixOnly()
-    .signal('User mau main endless runner atau game lari loncat', ['runner', 'lari'])
-    .run(async (sock, { raw, from, pushname }) => {
+    .signal('User wants to play endless runner', ['runner', 'lari'])
+    .run(async (sock, { raw, from, pushname, db, primaryId }) => {
         const name = String(pushname || 'Player').replace(/[<>'\\']/g, '').slice(0, 20);
-        await sock.sendMessage(from, { text: 'tekan unduh untuk membuka panel game' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('game.open_panel') }, { quoted: raw });
         const html = build(name);
         if (Buffer.byteLength(html, 'utf-8') > WEBUI_MAX_PAYLOAD_BYTES) {
-            return sock.sendMessage(from, { text: '❌ Panel terlalu besar.' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('fail.panel_big') }, { quoted: raw });
         }
         try {
             await sendInlineWebUI(sock, from, html, '🏃 Runner');
         } catch (e) {
-            await sock.sendMessage(from, { text: '❌ Gagal: ' + e.message }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 
 function build(name) {
     return `<!DOCTYPE html>
-<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0d1117;color:#c9d1d9;font-family:system-ui,sans-serif;padding:8px;text-align:center;-webkit-user-select:none;user-select:none}
@@ -37,15 +37,15 @@ h1{font-size:15px;color:#58a6ff;margin-bottom:2px}
 #msg.dead{color:#f85149;font-weight:700}
 </style></head><body>
 <h1>🏃 Runner</h1>
-<div class="meta"><b id="nm"></b> · Skor <b id="sc">0</b></div>
+<div class="meta"><b id="nm"></b> · Score <b id="sc">0</b></div>
 <canvas id="cv" width="300" height="160"></canvas>
 <div class="ctrl">
 <button type="button" id="left">⬅️</button>
-<button type="button" id="jump">⬆️ Loncat</button>
+<button type="button" id="jump">⬆️ Jump</button>
 <button type="button" id="right">➡️</button>
 </div>
 <button type="button" id="go">▶ Restart</button>
-<div id="msg">Lari!</div>
+<div id="msg">Run!</div>
 <script>
 (function(){
 document.getElementById('nm').textContent='` + name + `';
@@ -56,7 +56,7 @@ var p,obs,score,baseSpeed,alive,raf,spawnT,grav,jumpV;
 function init(){
 p={x:50,y:G-28,w:18,h:28,vy:0};
 obs=[];score=0;baseSpeed=2.4;alive=true;grav=0.55;jumpV=-11;
-scEl.textContent='0';msg.className='';msg.textContent='Lari!';
+scEl.textContent='0';msg.className='';msg.textContent='Run!';
 cancelAnimationFrame(raf);clearTimeout(spawnT);
 draw();loop();schedule();
 }
@@ -81,7 +81,7 @@ for(var i=obs.length-1;i>=0;i--){
 obs[i].x-=spd;
 if(obs[i].x<-20){obs.splice(i,1);continue}
 if(p.x<obs[i].x+obs[i].w-2&&p.x+p.w>obs[i].x+2&&p.y<obs[i].y+obs[i].h&&p.y+p.h>obs[i].y+2){
-alive=false;msg.className='dead';msg.textContent='💀 Nabrak · Skor '+Math.floor(score);draw();return;
+alive=false;msg.className='dead';msg.textContent='💀 Crashed · Score '+Math.floor(score);draw();return;
 }
 }
 draw();

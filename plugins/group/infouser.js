@@ -9,9 +9,9 @@ function normalizeTarget(raw) {
 
 export default plugin('infouser', 'whois', 'userinfo')
     .in('group')
-    .desc('Lihat info user/member')
+    .desc('View user/member info')
     .prefixOnly()
-    .signal('User minta info member/user', ['infouser @user', 'whois', 'cek profil ini'])
+    .signal('User asks to info member/user', ['infouser @user', 'whois', 'cek profil ini'])
     .run(async (sock, { raw, from, message, mentionedJid, participants, isGroup, primaryId, gdb, pushname }) => {
         let targetId;
         if (message.quoted?.sender) {
@@ -53,12 +53,12 @@ export default plugin('infouser', 'whois', 'userinfo')
             ['LID', htmlEscape(lidDisplay)],
             ...(isGroup ? [['Role', htmlEscape(roleLabel)]] : []),
             ['Status/Bio', htmlEscape(about)],
-            ['Chat ke bot', String(userDb.hit || 0)],
+            ['Bot Chats', String(userDb.hit || 0)],
             ['Warn', String(userDb.warns || 0)],
             ['Banned', userDb.banned
                 ? `<span class="bad">🚫 Ya (${htmlEscape(userDb.bannedReason || '-')})</span>`
-                : '<span class="ok">✅ Tidak</span>'],
-            ['Terakhir chat', htmlEscape(userDb.lastChat ? new Date(userDb.lastChat).toLocaleString('id-ID') : '-')],
+                : '<span class="ok">✅ No</span>'],
+            ['Last Chat', htmlEscape(userDb.lastChat ? new Date(userDb.lastChat).toLocaleString('en-US') : '-')],
         ];
 
         const html = renderInfoCard({
@@ -67,6 +67,6 @@ export default plugin('infouser', 'whois', 'userinfo')
             rows,
         });
 
-        await sendInlineWebUI(sock, from, html, 'Info User');
+        await sendInlineWebUI(sock, from, html, 'User Info');
     });
 

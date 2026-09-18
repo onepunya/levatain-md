@@ -64,7 +64,7 @@ const generateFlux = (prompt) => fluxRetry(async () => {
 		}
 		if (result.status === 'failed') throw new Error(`GENERATION_FAILED: ${JSON.stringify(result).slice(0, 150)}`);
 	}
-	throw new Error('TIMEOUT: task tidak selesai setelah 20x polling');
+	throw new Error('TIMEOUT: task did not complete after 20x polling');
 });
 
 const recognizeSongShazam = async (buffer) => {
@@ -84,7 +84,7 @@ const recognizeSongShazam = async (buffer) => {
 	try {
 		data = JSON.parse(stdout);
 	} catch {
-		throw new Error('Response tidak valid (cek SHAZAM_RAPIDAPI_KEY / kuota RapidAPI)');
+		throw new Error('Response invalid (cek SHAZAM_RAPIDAPI_KEY / kuota RapidAPI)');
 	}
 
 	if (data.message || data.error) throw new Error(data.message || data.error);
@@ -121,7 +121,7 @@ const recognizeSongAudd = async (buffer) => {
 	try {
 		data = JSON.parse(stdout);
 	} catch {
-		throw new Error('Response tidak valid');
+		throw new Error('Response invalid');
 	}
 
 	if (data.status !== 'success') throw new Error(data.error?.error_message || 'AudD API error');
@@ -146,12 +146,12 @@ export const mediaApi = {
 			const data = JSON.parse(raw);
 			if (data?.responseData?.translatedText) txtz = data.responseData.translatedText;
 		} catch (e) {
-			logger.warn(`[imagine] Translate gagal, pakai prompt asli: ${e.message}`);
+			logger.warn(`[imagine] Translate failed, using original prompt: ${e.message}`);
 		}
 
 		const base64 = await generateFlux(txtz);
 		const buffer = Buffer.from(base64, 'base64');
-		if (buffer.length < 1000) throw new Error('Gambar hasil generate tidak valid.');
+		if (buffer.length < 1000) throw new Error('Gambar hasil generate invalid.');
 		return buffer;
 	},
 
@@ -162,25 +162,25 @@ export const mediaApi = {
 	tiktok: async (url) => {
 		const data = await onepost('/download/tiktok', { url, format: 'mp4' });
 		if (data.status && data.result) return data.result;
-		throw new Error(data.message || 'Gagal download TikTok.');
+		throw new Error(data.message || 'Failed to download TikTok.');
 	},
 
 	douyin: async (url) => {
 		const data = await onepost('/download/douyin', { url });
 		if (data.status && data.result) return data.result;
-		throw new Error(data.message || 'Gagal download Douyin.');
+		throw new Error(data.message || 'Failed to download Douyin.');
 	},
 
 	instagram: async (url) => {
 		const data = await onepost('/download/insta', { url });
 		if (data.status && data.result) return data.result;
-		throw new Error(data.message || 'Gagal download Instagram.');
+		throw new Error(data.message || 'Failed to download Instagram.');
 	},
 
 	facebook: async (url) => {
 		const { default: axios } = await import('axios');
 		const m = url.match(/https?:\/\/(www\.)?(facebook\.com\/(?:share\/[rv]\/|watch\/?\?v=|reel\/|.*\/videos\/)|fb\.watch\/)\S+/i) || url.match(/https?:\/\/(www\.)?(facebook\.com|fb\.watch)\/\S+/i);
-		if (!m) throw new Error('URL Facebook tidak valid. Gunakan link video/reel.');
+		if (!m) throw new Error('URL Facebook invalid. Gunakan link video/reel.');
 		const cleanUrl = m[0].trim();
 
 		const { data } = await axios.post('https://getfvid.com/downloader', new URLSearchParams({ url: cleanUrl }), {
@@ -197,13 +197,13 @@ export const mediaApi = {
 		const hdLink = $('a:contains("Download HD")').attr('href') || $('a:contains("Download in HD")').attr('href');
 		const sdLink = $('a:contains("Download Normal")').attr('href') || $('a:contains("Download in SD")').attr('href');
 		const media = hdLink || sdLink;
-		if (!media) throw new Error('Gagal mengambil video Facebook. Pastikan link publik & berupa video/reel.');
+		if (!media) throw new Error('Failed to mengambil video Facebook. Pastikan link publik & berupa video/reel.');
 		return { media, title, quality: hdLink ? 'HD' : 'SD' };
 	},
 
 	threads: async (url) => {
 		const { default: axios } = await import('axios');
-		if (!/threads\.(net|com)\//i.test(url)) throw new Error('URL Threads tidak valid.');
+		if (!/threads\.(net|com)/i.test(url)) throw new Error('URL Threads invalid. Gunakan link post Threads yang publik.');
 
 		const page = await axios.get('https://threadsmate.com/', {
 			headers: {
@@ -219,7 +219,7 @@ export const mediaApi = {
 		const tokenName = targetInput.attr('name');
 		const tokenValue = targetInput.val();
 		const cookies = (page.headers['set-cookie'] || []).map(c => c.split(';')[0]).join('; ');
-		if (!tokenName) throw new Error('Gagal generate token sesi Threads.');
+		if (!tokenName) throw new Error('Failed to generate token sesi Threads.');
 
 		const params = new URLSearchParams();
 		params.append('url', url.trim());
@@ -239,16 +239,16 @@ export const mediaApi = {
 		const medias = [];
 		$('a[href*="download"]').each((_, el) => {
 			const href = $(el).attr('href');
-			if (href && /^https?:\/\//i.test(href)) medias.push(href);
+			if (href && /^https?:\/\//.test(href)) medias.push(href);
 		});
-		if (!medias.length) throw new Error('Gagal mengambil media Threads. Pastikan link publik.');
+		if (!medias.length) throw new Error('Failed to mengambil media Threads. Pastikan link publik.');
 		return { media: medias };
 	},
 
 	capcut: async (url) => {
 		const { default: axios } = await import('axios');
 		const m = url.match(/https?:\/\/(www\.)?(capcut\.com)\/\S+/i);
-		if (!m) throw new Error('URL CapCut tidak valid.');
+		if (!m) throw new Error('URL CapCut invalid.');
 		const cleanUrl = m[0].trim();
 
 		const { data } = await axios.post('https://3bic.com/api/download', { url: cleanUrl }, {
@@ -260,9 +260,9 @@ export const mediaApi = {
 			timeout: 25000,
 		});
 
-		if (!data || data.code !== 200) throw new Error('Gagal mengambil data CapCut. Pastikan URL benar & publik.');
+		if (!data || data.code !== 200) throw new Error('Failed to mengambil data CapCut. Pastikan URL benar & publik.');
 		const media = data.originalVideoUrl ? `https://3bic.com${data.originalVideoUrl}` : data.video_url;
-		if (!media) throw new Error('Video CapCut tidak ditemukan.');
+		if (!media) throw new Error('Video CapCut not found.');
 		return { media, title: data.title || '-', author: data.authorName || '-' };
 	},
 
@@ -272,14 +272,14 @@ export const mediaApi = {
 			const r = data.result;
 			return typeof r === 'string' ? r : (r.url || r.output || r.image || r.result);
 		}
-		throw new Error(data.message || 'Gagal remove background.');
+		throw new Error(data.message || 'Failed to remove background.');
 	},
 
 	tourl: async (buffer, mimetype = 'image/jpeg') => uploadToUrl(buffer, mimetype),
 
 	recognizeSong: async (buffer) => {
 		if (!config.shazam.rapidApiKey && !config.audd.apiKey) {
-			throw new Error('Belum ada API key buat kenali lagu (isi SHAZAM_RAPIDAPI_KEY atau AUDD_API_KEY di .env)');
+			throw new Error('No API key set for song recognition (set SHAZAM_RAPIDAPI_KEY or AUDD_API_KEY in .env)');
 		}
 
 		const errors = [];
@@ -287,7 +287,7 @@ export const mediaApi = {
 		try {
 			const shazamResult = await recognizeSongShazam(buffer);
 			if (shazamResult?.skipped) {
-				logger.debug('recognizeSong: Shazam dilewati (SHAZAM_RAPIDAPI_KEY kosong)');
+				logger.debug('recognizeSong: Shazam skipped (SHAZAM_RAPIDAPI_KEY empty)');
 			} else if (shazamResult) {
 				logger.info(`recognizeSong: Shazam ketemu "${shazamResult.artist} - ${shazamResult.title}"`);
 				return shazamResult;
@@ -302,7 +302,7 @@ export const mediaApi = {
 		try {
 			const auddResult = await recognizeSongAudd(buffer);
 			if (auddResult?.skipped) {
-				logger.debug('recognizeSong: AudD dilewati (AUDD_API_KEY kosong)');
+				logger.debug('recognizeSong: AudD skipped (AUDD_API_KEY empty)');
 			} else if (auddResult) {
 				logger.info(`recognizeSong: AudD ketemu "${auddResult.artist} - ${auddResult.title}"`);
 				return auddResult;
@@ -321,18 +321,18 @@ export const mediaApi = {
 	lyrics: async (query) => {
 		const data = await oneget('/search/lyrics', { q: query });
 		if (data.status && data.result) return data.result;
-		throw new Error(data.message || 'Lirik tidak ditemukan.');
+		throw new Error(data.message || 'Lirik not found.');
 	},
 
 	github: async (query) => {
 		const data = await oneget('/search/github', { q: query });
 		if (data.status && data.result) return data.result;
-		throw new Error(data.message || 'GitHub search gagal.');
+		throw new Error(data.message || 'GitHub search failed.');
 	},
 
 	pixiv: async (query) => {
 		const data = await oneget('/search/pixiv', { q: query });
 		if (data.status && data.result) return data.result;
-		throw new Error(data.message || 'Pixiv search gagal.');
+		throw new Error(data.message || 'Pixiv search failed.');
 	},
 };

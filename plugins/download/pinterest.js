@@ -2,43 +2,43 @@ import axios from 'axios';
 import https from 'https';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { typing, getArgs, sendMediaBatch, sendAnyMedia } from '../../src/lib/index.js';
+import { typing, getArgs, sendMediaBatch, sendAnyMedia, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const execFileAsync = promisify(execFile);
 
 export default plugin('pinterest', 'pin')
     .in('download')
-    .desc('Download Pinterest dari link, atau cari gambar Pinterest dari kata kunci')
+    .desc('Download Pinterest from a link, or search images by keyword')
     .prefixOnly()
     .ai({
-        trigger: 'User minta download Pinterest dengan URL, atau cari/search gambar di Pinterest',
+        trigger: 'User asks to download Pinterest by URL or search Pinterest images',
         examples: [
             'pin https://pin.it/xxxxx',
             'pin https://www.pinterest.com/pin/123456789/',
             'pin kucing lucu',
-            'cariin gambar aesthetic di pinterest',
+            'find aesthetic images on pinterest',
         ],
-        args: { input: 'URL pin Pinterest, atau kata kunci pencarian' },
+        args: { input: 'Pinterest pin URL, or search keyword' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const input = getArgs(body);
         if (!input) return sock.sendMessage(from, {
-            text: '❌ Masukkan link Pinterest atau kata kunci pencarian!\n\n'
-                + 'Contoh:\n'
+            text: msg('need.url.pin')
+                + 'Example:\n'
                 + '• *.pinterest https://pin.it/xxxxx* _(download pin)_\n'
-                + '• *.pinterest kucing lucu* _(cari gambar)_',
+                + '• *.pinterest kucing lucu* _(search images)_',
         }, { quoted: raw });
 
         await typing(sock, from);
 
         if (IS_LINK(input)) {
-            await sock.sendMessage(from, { text: '⏳ Mendownload Pinterest...' }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('wait.download_pin') }, { quoted: raw });
             try {
                 const res = await pinterestDownloader(input);
                 const data = res?.data;
                 if (!res?.success || !data?.url) {
-                    throw new Error(res?.message || 'Media tidak ditemukan. Pastikan link pin valid.');
+                    throw new Error(res?.message || 'Media not found. Make sure the pin link is valid.');
                 }
 
                 const captionParts = [`📌 *${data.title || 'Pinterest'}*`];
@@ -50,12 +50,12 @@ export default plugin('pinterest', 'pin')
                 });
             } catch (e) {
                 console.error(e);
-                await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+                await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
             }
             return;
         }
 
-        await sock.sendMessage(from, { text: `⏳ Mencari "${input}" di Pinterest...` }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.search_pin_q', { q: input }) }, { quoted: raw });
         try {
             const res = await pinterestSearch(input);
             const results = res?.resource_response?.data?.results || [];
@@ -66,24 +66,24 @@ export default plugin('pinterest', 'pin')
                 .slice(0, 6);
 
             if (!items.length) {
-                throw new Error('Gambar tidak ditemukan. Coba kata kunci lain.');
+                throw new Error('Image not found. Try another keyword.');
             }
 
             for (let i = 0; i < items.length; i++) {
                 const it = items[i];
                 const caption = i === 0
-                    ? `📌 *Hasil pencarian: "${input}"*\n_Balas .pin <link> pakai link di bawah untuk download versi original_\n${pinUrl(it.id)}`
+                    ? `📌 *Search results: "${input}"*\n_Reply *.pin <link>* using a link below to download versi original_\n${pinUrl(it.id)}`
                     : pinUrl(it.id);
                 await sendAnyMedia(sock, from, { url: it.url, type: 'image' }, { caption, quoted: raw });
             }
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
-const IS_LINK = (s) => /pin\.it\//i.test(s) || (/pinterest\.[a-z.]+/i.test(s) && /\/pin\//i.test(s));
+const IS_LINK = (s) => /pin\.it|pinterest\.com/i.test(s);
 
 const BROWSER_HEADERS = {
     'accept-language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -105,7 +105,7 @@ async function pinterestDownloader(url) {
             url = expand.request.res.responseUrl;
         } catch (e) {
             if (e.response) {
-                throw new Error(`Gagal expand pin.it (${e.response.status}). Coba pakai link pinterest.com/pin/... langsung.`);
+                throw new Error(`Failed to expand pin.it (${e.response.status}). Try using a pinterest.com link/pin/... directly.`);
             }
             throw e;
         }
@@ -143,7 +143,7 @@ async function pinterestDownloader(url) {
     try {
         ({ stdout } = await execFileAsync('curl', curlArgs));
     } catch (e) {
-        throw new Error(`curl gagal dieksekusi: ${e.message}`);
+        throw new Error(`curl failed: ${e.message}`);
     }
 
     const lastNewline = stdout.lastIndexOf('\n');
@@ -157,7 +157,7 @@ async function pinterestDownloader(url) {
     try {
         return JSON.parse(body);
     } catch {
-        throw new Error(`pindl API respon bukan JSON valid: ${body.slice(0, 200)}`);
+        throw new Error(`pindl API response is not valid JSON: ${body.slice(0, 200)}`);
     }
 }
 

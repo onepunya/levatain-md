@@ -1,23 +1,23 @@
-import { typing, getArgs, sendAnyMedia } from '../../src/lib/index.js';
+import { typing, getArgs, sendAnyMedia, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('snackvideo')
     .in('download')
-    .desc('Download video dari SnackVideo tanpa watermark')
+    .desc('Download SnackVideo without watermark')
     .prefixOnly()
     .ai({
-        trigger: 'User minta download video dari SnackVideo dengan URL',
+        trigger: 'User asks to download a SnackVideo with a URL',
         examples: ['snackvideo https://sck.io/p/xxx', 'download snack ini'],
-        args: { url: 'URL SnackVideo' },
+        args: { url: 'SnackVideo URL' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
-            text: '❌ Masukkan URL SnackVideo!\nContoh: *.snackvideo https://sck.io/p/xxx*'
+            text: msg('need.url.snack')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mengekstrak video dari SnackVideo...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.download_snack') }, { quoted: raw });
 
         try {
             const formData = new FormData();
@@ -48,7 +48,7 @@ export default plugin('snackvideo')
             let videoUrl = hdMatch ? hdMatch[1] : (normalMatch ? normalMatch[1] : null);
 
             if (!videoUrl) {
-                throw new Error('Gagal menemukan link video di dalam halaman.');
+                throw new Error('Failed to find video link on the page.');
             }
 
             videoUrl = videoUrl.replace(/&amp;/g, '&');
@@ -59,7 +59,7 @@ export default plugin('snackvideo')
             });
 
         } catch (e) {
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 

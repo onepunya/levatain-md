@@ -24,7 +24,7 @@ function resolveMeta(mod) {
 function registerMeta(meta, file, counters) {
     const iface = meta.interface;
     if (!iface?.run) {
-        logger.warn(`[Loader] Skip ${file} — tidak ada run()`);
+        logger.warn(`[Loader] Skip ${file} — no run() found`);
         return;
     }
     const cmds = Array.isArray(iface.cmd) ? iface.cmd : [iface.cmd];

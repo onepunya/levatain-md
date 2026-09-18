@@ -1,13 +1,14 @@
 import { plugin } from '../../src/core/plugin.js';
+import { msg } from '../../src/lib/messages.js';
 export default plugin('kick', 'promote', 'demote')
     .in('group')
-    .desc('Manajemen anggota group (kick/promote/demote)')
+    .desc('Group member management (kick/promote/demote)')
     .showAllAliases()
     .adminOnly()
     .groupOnly()
-    .signal('User minta kick, promote, atau demote anggota group', ['kick @user', 'promote @admin', 'keluarkan user ini'])
-    .run(async (sock, { message, raw, from, command, mentionedJid, participants, isBotAdmin }) => {
-        if (!isBotAdmin) return sock.sendMessage(from, { text: '❌ Bot harus jadi admin group dulu!' }, { quoted: raw });
+    .signal('User asks to kick, promote, or demote a group member', ['kick @user', 'promote @admin', 'remove this user'])
+    .run(async (sock, { message, raw, from, command, mentionedJid, participants, isBotAdmin, db, primaryId }) => {
+        if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
 
         let target;
         if (message.quoted) {
@@ -17,7 +18,7 @@ export default plugin('kick', 'promote', 'demote')
             target    = mentionedJid[0].split(':')[0] + '@s.whatsapp.net';
         }
 
-        if (!target) return sock.sendMessage(from, { text: '❌ Tag atau reply anggota dulu.' }, { quoted: raw });
+        if (!target) return sock.sendMessage(from, { text: msg('need.tag') }, { quoted: raw });
 
         const targetNum = target.replace(/\D/g, '');
         const found     = participants.find(p =>
@@ -25,21 +26,21 @@ export default plugin('kick', 'promote', 'demote')
             (p.lid         && p.lid.replace(/\D/g, '') === targetNum) ||
             (p.phoneNumber && p.phoneNumber.replace(/\D/g, '') === targetNum)
         );
-        if (!found) return sock.sendMessage(from, { text: '❌ User tidak ada di group ini.' }, { quoted: raw });
+        if (!found) return sock.sendMessage(from, { text: msg('fail.user_not_in_group') }, { quoted: raw });
 
         const targetId  = found.id;
         const targetTag = `@${targetId.split('@')[0]}`;
 
         const actions = {
-            kick:    ['remove',  `✅ ${targetTag} dikeluarkan.`],
-            promote: ['promote', `✅ ${targetTag} dijadikan admin.`],
-            demote:  ['demote',  `✅ ${targetTag} dicopot dari admin.`],
+            kick:    ['remove',  `✅ ${targetTag} removed.`],
+            promote: ['promote', `✅ ${targetTag} promoted to admin.`],
+            demote:  ['demote',  `✅ ${targetTag} demoted from admin.`],
         };
 
-        const [action, msg] = actions[command] || [];
+        const [action, reply] = actions[command] || [];
         if (!action) return;
 
         await sock.groupParticipantsUpdate(from, [targetId], action);
-        await sock.sendMessage(from, { text: msg, mentions: [targetId] }, { quoted: raw });
+        await sock.sendMessage(from, { text: reply, mentions: [targetId] }, { quoted: raw });
     });
 

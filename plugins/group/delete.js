@@ -1,14 +1,15 @@
 import { plugin } from '../../src/core/plugin.js';
+import { msg } from '../../src/lib/messages.js';
 export default plugin('delete', 'del')
     .in('group')
-    .desc('Hapus pesan yang di-reply (admin only)')
+    .desc('Delete the replied message (admin only)')
     .prefixOnly()
     .adminOnly()
     .groupOnly()
-    .signal('User minta hapus pesan tertentu di group, biasanya sambil reply pesan itu', ['del', 'delete', 'hapus pesan ini'])
-    .run(async (sock, { message, raw, from, isBotAdmin }) => {
-        if (!isBotAdmin) return sock.sendMessage(from, { text: '❌ Bot harus jadi admin group dulu!' }, { quoted: raw });
-        if (!message.quoted) return sock.sendMessage(from, { text: '❌ Reply pesan yang mau dihapus dengan command ini.' }, { quoted: raw });
+    .signal('User asks to delete a specific message in a group, usually by replying to it', ['del', 'delete', 'hapus pesan ini'])
+    .run(async (sock, { message, raw, from, isBotAdmin, db, primaryId }) => {
+        if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
+        if (!message.quoted) return sock.sendMessage(from, { text: msg('need.reply_delete') }, { quoted: raw });
 
         try {
             await sock.sendMessage(from, {
@@ -20,7 +21,7 @@ export default plugin('delete', 'del')
                 },
             });
         } catch (e) {
-            await sock.sendMessage(from, { text: `❌ Gagal hapus pesan: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.delete', { msg: e.message }) }, { quoted: raw });
         }
     });
 

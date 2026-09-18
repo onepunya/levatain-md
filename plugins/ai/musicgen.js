@@ -1,25 +1,25 @@
-import { startSession, updateSession, endSession, generateSong, ProgressMessage } from '../../src/lib/index.js';
+import { startSession, updateSession, endSession, generateSong, ProgressMessage, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const SESSION_TIMEOUT = 3 * 60_000;
 
 export default plugin('musicgen', 'songgen', 'buatlagu')
     .in('ai')
-    .desc('Generate lagu AI: masukin lirik lalu prompt/gaya musik secara bertahap')
+    .desc('Generate AI song: enter lyrics then music style/prompt step by step')
     .prefixOnly()
     .cooldown(5)
-    .signal('User minta buat lagu, generate musik AI, bikin musik dari lirik', ['musicgen', 'buatlagu'])
-    .run(async (sock, { raw, from, primaryId }) => {
+    .signal('User asks to generate a song or AI music from lyrics', ['musicgen', 'buatlagu'])
+    .run(async (sock, { raw, from, primaryId, db }) => {
         startSession(primaryId, { from, step: 'lyrics', lyrics: '', prompt: '' }, {
             timeout: SESSION_TIMEOUT,
             onInput: handleInput,
             onTimeout: session => sock.sendMessage(session.from, {
-                text: '⏰ Sesi musicgen berakhir karena kelamaan gak ada input. Ketik `musicgen` lagi buat mulai ulang.',
+                text: msg('fail.session_timeout') + ' Type `musicgen` again to restart.',
             }),
         });
 
         await sock.sendMessage(from, {
-            text: '🎵 Kirim *lirik* lagunya sekarang.\n\nKetik `batal` kapan aja buat keluar dari sesi ini.',
+            text: msg('need.lyrics_now'),
         }, { quoted: raw });
     });
 
@@ -28,33 +28,33 @@ async function handleInput(sock, body, ctx, session) {
     const text = body.trim();
 
     if (session.step === 'lyrics') {
-        if (!text) return sock.sendMessage(from, { text: '❌ Lirik gak boleh kosong, kirim lagi.' }, { quoted: raw });
+        if (!text) return sock.sendMessage(from, { text: msg('need.lyrics') }, { quoted: raw });
         updateSession(primaryId, { step: 'prompt', lyrics: text });
         return sock.sendMessage(from, {
-            text: '🎨 Sekarang kirim *prompt/gaya musiknya*.\nContoh: pop akustik ceria, lofi santai, rock energik.',
+            text: '🎨 Now send the *music style/prompt*.\nExample: cheerful acoustic pop, chill lofi, energetic rock.',
         }, { quoted: raw });
     }
 
     if (session.step === 'prompt') {
-        if (!text) return sock.sendMessage(from, { text: '❌ Prompt gak boleh kosong, kirim lagi.' }, { quoted: raw });
+        if (!text) return sock.sendMessage(from, { text: msg('need.prompt') }, { quoted: raw });
         const lyrics = session.lyrics;
         endSession(primaryId);
-        await sock.sendMessage(from, { text: '⏳ Generate lagu, tunggu bentar...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.musicgen') }, { quoted: raw });
         await generateMusic(sock, from, raw, lyrics, text);
     }
 }
 
 async function generateMusic(sock, from, raw, lyrics, prompt) {
     const bar = new ProgressMessage(sock, from, raw);
-    await bar.start('🎼 Mengirim permintaan generate lagu...');
+    await bar.start('🎼 Sending song generation request...');
 
     try {
-        const result = await generateSong({ caption: prompt, lyrics }, percent => bar.update('🎧 Generate lagu...', percent));
+        const result = await generateSong({ caption: prompt, lyrics }, percent => bar.update('🎧 Generating song...', percent));
 
-        await bar.done('✅ Lagu selesai dibuat, mengirim...');
+        await bar.done('✅ Song ready, sending...');
 
         const audioRes = await fetch(result.url);
-        if (!audioRes.ok) throw new Error(`Gagal ambil file audio (HTTP ${audioRes.status})`);
+        if (!audioRes.ok) throw new Error(`Failed to fetch audio file (HTTP ${audioRes.status})`);
         const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
 
         await sock.sendMessage(from, {
@@ -64,6 +64,6 @@ async function generateMusic(sock, from, raw, lyrics, prompt) {
             ptt: false,
         }, { quoted: raw });
     } catch (e) {
-        await bar.fail(`Gagal generate lagu: ${e.message}`);
+        await bar.fail(msg('fail.generic', { msg: e.message }));
     }
 }

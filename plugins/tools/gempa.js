@@ -1,5 +1,5 @@
 import { loadDb, saveDb } from '../../src/core/db.js';
-import { fetchJson } from '../../src/lib/index.js';
+import { fetchJson, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const AUTOGEMPA_URL = 'https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json';
@@ -22,7 +22,7 @@ function formatGempa(g, prefix = '📍 *Info Gempa Terkini (BMKG)*') {
 async function fetchGempa() {
     const data = await fetchJson(AUTOGEMPA_URL);
     const g = data?.Infogempa?.gempa;
-    if (!g) throw new Error('Data BMKG kosong/format berubah');
+    if (!g) throw new Error('Data BMKG empty/format changed');
     return g;
 }
 
@@ -67,10 +67,10 @@ if (!global.__gempaWatcherStarted) {
 
 export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
     .in('tools')
-    .desc('Cek info gempa terkini (BMKG) & atur peringatan gempa otomatis di chat ini')
+    .desc('Check latest earthquake info (BMKG) & set auto alerts in this chat')
     .showAllAliases()
-    .signal('User nanya/cek info gempa terkini pakai command="gempa". User minta aktifkan notifikasi gempa otomatis di chat ini pakai command="gempaon". User minta matikan notifikasi gempa otomatis pakai command="gempaoff"', ['ada gempa gak', 'cek gempa terkini', 'info gempa hari ini', 'aktifin peringatan gempa disini', 'matiin notif gempa', 'langganan info gempa otomatis'])
-    .run(async (sock, { raw, from, command, isGroup, isAdmin, isOwner, gdb }) => {
+    .signal('User asks for latest earthquake info with command="gempa", or to enable notifications', ['any earthquakes?', 'check latest earthquake', 'earthquake info today', 'enable earthquake alerts here', 'disable earthquake notifications', 'subscribe to automatic earthquake info'])
+    .run(async (sock, { raw, from, command, isGroup, isAdmin, isOwner, gdb, primaryId }) => {
         if (command === 'gempa' || command === 'cekgempa') {
             try {
                 const g = await fetchGempa();
@@ -82,13 +82,13 @@ export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
                     await sock.sendMessage(from, { text: caption }, { quoted: raw });
                 }
             } catch (e) {
-                await sock.sendMessage(from, { text: `❌ Gagal ambil data BMKG: ${e.message}` }, { quoted: raw });
+                await sock.sendMessage(from, { text: msg('fail.bmkg', { msg: e.message }) }, { quoted: raw });
             }
             return;
         }
 
         if (isGroup && !isAdmin && !isOwner) {
-            return sock.sendMessage(from, { text: '👤 Cuma admin grup yang boleh atur ini.' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('sys.admin_only_short') }, { quoted: raw });
         }
 
         gdb.settings.gempaSubscribers ??= [];
@@ -97,12 +97,12 @@ export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
         if (command === 'gempaon') {
             if (!subs.includes(from)) subs.push(from);
             await saveDb();
-            return sock.sendMessage(from, { text: '✅ Peringatan gempa otomatis diaktifkan di chat ini.' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('done.gempa_on') }, { quoted: raw });
         }
 
         const idx = subs.indexOf(from);
         if (idx !== -1) subs.splice(idx, 1);
         await saveDb();
-        return sock.sendMessage(from, { text: '❌ Peringatan gempa otomatis dimatikan di chat ini.' }, { quoted: raw });
+        return sock.sendMessage(from, { text: msg('done.gempa_off') }, { quoted: raw });
     });
 

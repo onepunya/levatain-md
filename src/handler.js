@@ -9,7 +9,8 @@ import {
     routeSessionInput,
     getGroupMeta,
     bustGroupMetaCache,
-    detectDevice
+    detectDevice,
+    msg
 } from './lib/index.js';
 import { loadDb, saveDb, ensureUser, ensureGroup } from './core/db.js';
 import { handleAI } from './ai/index.js';
@@ -117,21 +118,21 @@ export async function handler(sock, m) {
     const isAdmin    = isGroup ? adminEntries.some(p => matchesAdmin(p, senderIds)) : false;
     const isBotAdmin = isGroup ? adminEntries.some(p => matchesAdmin(p, [botNumber])) : false;
 
-    logger.debug(`[owner-check] primaryId=${primaryId} lid=${lid} jid=${jid} senderIds=${JSON.stringify(senderIds)} global.owner=${global.owner} global.ownerLid=${global.ownerLid || '(belum resolve)'} → isOwner=${isOwner}`);
+    logger.debug(`[owner-check] primaryId=${primaryId} lid=${lid} jid=${jid} senderIds=${JSON.stringify(senderIds)} global.owner=${global.owner} global.ownerLid=${global.ownerLid || '(not resolved yet)'} → isOwner=${isOwner}`);
 
     if (db.users[primaryId]?.banned && !isOwner) {
         if (isCmd) {
             const lastNotice = banNoticeCooldown.get(primaryId) || 0;
             if (Date.now() - lastNotice > BAN_NOTICE_COOLDOWN) {
                 banNoticeCooldown.set(primaryId, Date.now());
-                await sock.sendMessage(from, { text: '🚫 Kamu dibanned dari bot ini.' });
+                await sock.sendMessage(from, { text: msg('sys.banned') });
             }
         }
         return;
     }
     if (isGroup && db.groups[from]?.mute && !isOwner && !isAdmin) return;
     if (db.settings?.maintenance && !isOwner)
-        return sock.sendMessage(from, { text: '🔧 Bot sedang maintenance.' });
+        return sock.sendMessage(from, { text: msg('sys.maintenance') });
 
     const botMode = db.settings?.mode || 'public';
     if (botMode === 'private' && !isOwner) return;
@@ -139,7 +140,7 @@ export async function handler(sock, m) {
 
     if (isGroup && db.groups[from]?.antilink && isBotAdmin && !isOwner && !isAdmin) {
         if (/chat\.whatsapp\.com\/(?:invite\/)?[0-9A-Za-z]{20,24}/i.test(body)) {
-            await sock.sendMessage(from, { text: `🚫 Link group terdeteksi. @${primaryId.split('@')[0]} dikeluarkan.`, mentions: [primaryId] });
+            await sock.sendMessage(from, { text: `🚫 Group link detected. @${primaryId.split('@')[0]} removed.`, mentions: [primaryId] });
             await sock.sendMessage(from, { delete: raw.key });
             await sock.groupParticipantsUpdate(from, [primaryId], 'remove');
             return;
@@ -155,7 +156,7 @@ export async function handler(sock, m) {
             const since = grp.afk[primaryId].since;
             delete grp.afk[primaryId];
             await sock.sendMessage(from, {
-                text: `👋 @${primaryId.split('@')[0]} sudah kembali aktif! (AFK selama ${formatDurationWords(Date.now() - since)})`,
+                text: `👋 @${primaryId.split('@')[0]} is back! (AFK for ${formatDurationWords(Date.now() - since)})`,
                 mentions: [primaryId],
             });
         }
@@ -174,7 +175,7 @@ export async function handler(sock, m) {
         for (const target of afkTargets) {
             const info = grp.afk[target];
             await sock.sendMessage(from, {
-                text: `💤 @${target.split('@')[0]} sedang AFK${info.reason ? `: ${info.reason}` : ''} (${formatDurationWords(Date.now() - info.since)} yang lalu)`,
+                text: `💤 @${target.split('@')[0]} is AFK${info.reason ? `: ${info.reason}` : ''} (${formatDurationWords(Date.now() - info.since)} ago)`,
                 mentions: [target],
             });
         }
@@ -214,16 +215,16 @@ export async function handler(sock, m) {
             const plugin = plugins.get(stickerCmd);
             const { meta, run } = plugin;
 
-            if (meta?.interface?.isOwner && !isOwner) return sock.sendMessage(from, { text: '👑 Owner only.' });
-            if (meta?.interface?.isAdmin && !isAdmin) return sock.sendMessage(from, { text: '👤 Group admin only.' });
-            if (meta?.interface?.isGroup && !isGroup) return sock.sendMessage(from, { text: '👥 Group only.' });
+            if (meta?.interface?.isOwner && !isOwner) return sock.sendMessage(from, { text: msg('sys.owner_only') });
+            if (meta?.interface?.isAdmin && !isAdmin) return sock.sendMessage(from, { text: msg('sys.admin_only') });
+            if (meta?.interface?.isGroup && !isGroup) return sock.sendMessage(from, { text: msg('sys.group_only') });
 
             if (!isOwner) {
                 const cdKey  = `${primaryId}:${stickerCmd}`;
                 const cdTime = meta?.interface?.cooldown ?? 3;
                 const since  = Date.now() - (cooldowns.get(cdKey) || 0);
                 const sisa   = cdTime - Math.floor(since / 1000);
-                if (sisa > 0) return sock.sendMessage(from, { text: `⏳ Tunggu ${sisa} detik lagi.` });
+                if (sisa > 0) return sock.sendMessage(from, { text: msg('sys.cooldown', { sec: sisa }) });
                 cooldowns.set(cdKey, Date.now());
             }
 
@@ -234,7 +235,7 @@ export async function handler(sock, m) {
                 await run(sock, { ...baseCtx, message: m, command: stickerCmd });
             } catch (e) {
                 logger.error(`[STICKER-CMD] ${stickerCmd}: ${e.message}`);
-                await sock.sendMessage(from, { text: `❌ Error: ${e.message}` });
+                await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) });
             }
 
             db.users[primaryId].hit = (db.users[primaryId].hit || 0) + 1;
@@ -262,20 +263,36 @@ export async function handler(sock, m) {
         }
     }
 
+
+    const langPick = String(body || '').trim().toLowerCase();
+    if (langPick === 'lang_en' || langPick === 'lang_id') {
+        const chosen = langPick === 'lang_en' ? 'en' : 'id';
+        if (db.users[primaryId]) {
+            db.users[primaryId].lang = chosen;
+            global.db = db;
+            await saveDb();
+        }
+        const { msg: _msg } = await import('./lib/messages.js');
+        await sock.sendMessage(from, {
+            text: chosen === 'en' ? _msg('lang.set_en') : _msg('lang.set_id'),
+        }, { quoted: raw });
+        return;
+    }
+
     if (isCmd && plugins.has(command)) {
         const plugin = plugins.get(command);
         const { meta, run } = plugin;
 
-        if (meta?.interface?.isOwner && !isOwner) return sock.sendMessage(from, { text: '👑 Owner only.' });
-        if (meta?.interface?.isAdmin && !isAdmin) return sock.sendMessage(from, { text: '👤 Group admin only.' });
-        if (meta?.interface?.isGroup && !isGroup) return sock.sendMessage(from, { text: '👥 Group only.' });
+        if (meta?.interface?.isOwner && !isOwner) return sock.sendMessage(from, { text: msg('sys.owner_only') });
+        if (meta?.interface?.isAdmin && !isAdmin) return sock.sendMessage(from, { text: msg('sys.admin_only') });
+        if (meta?.interface?.isGroup && !isGroup) return sock.sendMessage(from, { text: msg('sys.group_only') });
 
         if (!isOwner) {
             const cdKey  = `${primaryId}:${command}`;
             const cdTime = meta?.interface?.cooldown ?? 3;
             const since  = Date.now() - (cooldowns.get(cdKey) || 0);
             const sisa   = cdTime - Math.floor(since / 1000);
-            if (sisa > 0) return sock.sendMessage(from, { text: `⏳ Tunggu ${sisa} detik lagi.` });
+            if (sisa > 0) return sock.sendMessage(from, { text: msg('sys.cooldown', { sec: sisa }) });
             cooldowns.set(cdKey, Date.now());
         }
 
@@ -286,7 +303,7 @@ export async function handler(sock, m) {
             await run(sock, { ...baseCtx, message: m, command });
         } catch (e) {
             logger.error(`[CMD] ${command}: ${e.message}`);
-            await sock.sendMessage(from, { text: `❌ Error: ${e.message}` });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) });
         }
 
         db.users[primaryId].hit = (db.users[primaryId].hit || 0) + 1;
@@ -334,20 +351,20 @@ export async function participantsUpdate(sock, anu) {
                         if (!captchaPending.has(userJid)) return;
                         captchaPending.delete(userJid);
                         try {
-                            await sock.sendMessage(id, { text: `⏰ @${phoneNum} tidak jawab captcha. Dikeluarkan.`, mentions: [userJid] });
+                            await sock.sendMessage(id, { text: `⏰ @${phoneNum} did not solve captcha. Removed.`, mentions: [userJid] });
                             await sock.groupParticipantsUpdate(id, [userJid], 'remove');
                         } catch {}
                     }, 120000);
                     captchaPending.set(userJid, { answer, groupId: id, timer });
                     await sock.sendMessage(id, {
-                        text: `🔐 Halo @${phoneNum}! Jawab dulu: berapa *${n1} + ${n2}*? (2 menit)`,
+                        text: `🔐 Halo @${phoneNum}! Solve this: what is *${n1} + ${n2}*? (2 minutes)`,
                         mentions: [userJid],
                     });
                 }
 
                 if (grp?.welcome) {
                     await sock.sendMessage(id, {
-                        text: `👋 Selamat datang @${phoneNum}!\nKamu adalah member ke-${memberCount} di *${metadata.subject}*`,
+                        text: `👋 Welcome @${phoneNum}!\nYou are member #${memberCount} in *${metadata.subject}*`,
                         mentions: [userJid],
                     });
                 }
@@ -365,7 +382,7 @@ export async function participantsUpdate(sock, anu) {
                             .replace(/@desc/gi, metadata.desc || '');
                         await sock.sendMessage(id, { text, mentions: [userJid] });
                     } else {
-                        await sock.sendMessage(id, { text: `👋 Sampai jumpa @${phoneNum}!`, mentions: [userJid] });
+                        await sock.sendMessage(id, { text: `👋 Goodbye @${phoneNum}!`, mentions: [userJid] });
                     }
                 }
             }

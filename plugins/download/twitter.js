@@ -1,25 +1,25 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { typing, getArgs, fetchBufferLimited } from '../../src/lib/index.js';
+import { typing, getArgs, fetchBufferLimited, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('twitter', 'twi', 'x')
     .in('download')
-    .desc('Download foto/video dari Twitter (X)')
+    .desc('Download photo/video from Twitter (X)')
     .prefixOnly()
     .ai({
-        trigger: 'User minta download foto atau video dari Twitter/X dengan URL',
+        trigger: 'User asks to download photo or video from Twitter/X with a URL',
         examples: ['tw https://x.com/user/status/xxx', 'download twitter ini'],
-        args: { url: 'URL Twitter/X' },
+        args: { url: 'Twitter/X URL' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
-            text: '❌ Masukkan URL Twitter/X!\nContoh: *.twitter https://x.com/user/status/xxx*'
+            text: msg('need.url.twitter')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mendownload Twitter...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.download_tw') }, { quoted: raw });
 
         try {
             const result = await twitterDownload(url);
@@ -41,7 +41,7 @@ export default plugin('twitter', 'twi', 'x')
             }
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 
@@ -68,7 +68,7 @@ async function twitterDownload(url) {
     const videoRow = $('.files-table tbody tr').first();
     if (videoRow.length) {
         const href = videoRow.find('a.btn-dl').attr('href');
-        if (!href) throw new Error('Link video tidak ditemukan.');
+        if (!href) throw new Error('Video link not found.');
         const title = $('.video-info h4').first().text().trim() || 'Twitter Video';
         return { type: 'video', title, links: [href] };
     }
@@ -80,11 +80,11 @@ async function twitterDownload(url) {
             const href = $(el).find('a.btn-dl').first().attr('href');
             if (href) links.push(href);
         });
-        if (!links.length) throw new Error('Link foto tidak ditemukan.');
+        if (!links.length) throw new Error('Photo link not found.');
         return { type: 'photo', title: 'Twitter Photo', links };
     }
 
-    throw new Error('Media tidak ditemukan. Pastikan URL valid dan tweet bersifat publik.');
+    throw new Error('Media not found. Ensure the URL is valid and the tweet is public.');
 }
 
 async function fetchBuffer(mediaUrl) {

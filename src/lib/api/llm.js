@@ -94,7 +94,7 @@ const callGemini = async (messages, system) => {
 		"cookie": config.ai.gemini.cookie
 	};
 
-	if (!config.ai.gemini.cookie) throw new Error("GEMINI_COOKIE kosong di .env");
+	if (!config.ai.gemini.cookie) throw new Error("GEMINI_COOKIE is empty in .env");
 
 	const res = await fetch(url, {
 		method: 'POST',
@@ -125,14 +125,14 @@ const callGemini = async (messages, system) => {
 	}
 
 	if (finalAnswer) return stripThinking(finalAnswer);
-	throw new Error("Gagal mengambil teks balasan");
+	throw new Error("Failed to retrieve reply text");
 };
 
 const NAGA_KEY = config.ai.naga.apiKey;
 const NAGA_URL = 'https://api.naga.ac/v1/chat/completions';
 
 const callNaga = async (messages, system) => {
-	if (!NAGA_KEY) throw new Error('Tidak ada AI key tersedia (Gemini dan Naga kosong di .env)');
+	if (!NAGA_KEY) throw new Error('No AI key available (both Gemini and Naga are empty in .env)');
 
 	const payload = {
 		model: config.ai.naga.model,
@@ -150,7 +150,7 @@ const callNaga = async (messages, system) => {
 	});
 	const data = await res.json();
 	if (data.choices?.[0]?.message?.content) return stripThinking(data.choices[0].message.content);
-	throw new Error(data.error?.message || 'Naga response kosong');
+	throw new Error(data.error?.message || 'Empty Naga response');
 };
 
 const _callLLM = async (messages, system = '') => {
@@ -166,7 +166,7 @@ export const llmApi = {
 	chatAI: (messages, system = '') => _callLLM(messages, system),
 
 	naga: async (messages, system = '', model = null) => {
-		if (!NAGA_KEY) throw new Error('NAGA_API_KEY tidak diset di .env');
+		if (!NAGA_KEY) throw new Error('NAGA_API_KEY is not set in .env');
 		const res = await fetch(NAGA_URL, {
 			method: 'POST',
 			headers: {
@@ -182,7 +182,7 @@ export const llmApi = {
 		});
 		const data = await res.json();
 		if (data.choices?.[0]?.message?.content) return data.choices[0].message.content;
-		throw new Error(data.error?.message || 'Naga response kosong');
+		throw new Error(data.error?.message || 'Empty Naga response');
 	},
 
 	ai: async (query, model = 'chatgpt') => {
@@ -193,24 +193,24 @@ export const llmApi = {
 			messages: [{ role: 'user', content: query }],
 		});
 		if (data.status && data.result) return data.result.response;
-		throw new Error('ONEPUNYA AI error atau response kosong.');
+		throw new Error('ONEPUNYA AI error or empty response.');
 	},
 
 	intent: async (text, pluginList = [], history = [], userCtx = {}) => {
-		const { isOwner, pushname, memoryStr, allUsersContext, hasSongMedia } = userCtx;
+		const { isOwner, pushname, memoryStr, allUsersContext, hasSongMedia, lang = 'en' } = userCtx;
 		const NL_EXCLUDE = new Set(['s', 'toimg', 'removebg', 'tourl', 'menu', 'ping', 'memory']);
 
 		const cmdList = pluginList
 			.filter(p => (p.tag !== 'owner' || isOwner) && !NL_EXCLUDE.has(p.cmd[0]))
 			.map(p => {
 				const example = p.ai?.examples?.[0];
-				return `- ${p.cmd[0]}: ${p.ai?.trigger || p.desc}${example ? ` | format args contoh: "${example}" (args = bagian setelah command-nya, salin persis)` : ''}`;
+				return `- ${p.cmd[0]}: ${p.ai?.trigger || p.desc}${example ? ` | format args example: "${example}" (args = bagian setelah command-nya, salin persis)` : ''}`;
 			})
 			.join('\n');
 
 		const personality = isOwner ? PERSONALITY_OWNER : PERSONALITY_GENERAL;
 		const ownerBlock = isOwner ? `\n${OWNER_BLOCK}\n` : '';
-		const mediaBlock = hasSongMedia ? `\n[MEDIA] Pesan user ini menyertakan/reply file ${hasSongMedia} (kemungkinan ada lagu di dalamnya). Sistem SUDAH PUNYA file-nya, kamu cuma nggak bisa dengerin isinya.\n` : '';
+		const mediaBlock = hasSongMedia ? `\n[MEDIA] This user's message includes/replies to a ${hasSongMedia} file (it may contain a song). The system already has the file — you just can't listen to its contents directly.\n` : '';
 
 		const userInfo = [
 			`Nama: ${pushname || 'User'}`,
@@ -218,7 +218,11 @@ export const llmApi = {
 			memoryStr ? `Memory: ${memoryStr}` : '',
 		].filter(Boolean).join(' | ');
 
-		const system = `${personality}\n${ownerBlock}${mediaBlock}\nUSER: ${userInfo}\n${allUsersContext ? `${allUsersContext}\n` : ''}COMMAND TERSEDIA:\n${cmdList || '(tidak ada command terdaftar)'}\n\nATURAN:\n${RULES}\n${isOwner ? `${RULES_EXEC}\n` : ''}${hasSongMedia ? `${RULES_SONG_MEDIA}\n` : ''}${isOwner ? 'User ini OWNER terverifikasi sistem — layani loyalitas tertinggi.\n' : ''}\n${JSON_SCHEMA}`;
+		const langRule = (lang === 'id')
+			? 'LANGUAGE: Balas user in Bahasa Indonesia. Intent/command routing tetap pahami input English maupun Indonesia.'
+			: 'LANGUAGE: Reply to the user in English. Intent/command routing must still understand both English and Indonesian input.';
+
+		const system = `${personality}\n${ownerBlock}${mediaBlock}\nUSER: ${userInfo}\n${langRule}\n${allUsersContext ? `${allUsersContext}\n` : ''}AVAILABLE COMMANDS:\n${cmdList || '(no commands registered)'}\n\nRULES:\n${RULES}\n${isOwner ? `${RULES_EXEC}\n` : ''}${hasSongMedia ? `${RULES_SONG_MEDIA}\n` : ''}${isOwner ? 'This user is the verified OWNER — highest priority service.\n' : ''}\n${JSON_SCHEMA}`;
 
 		const messages = [...history.slice(-10), { role: 'user', content: text }];
 		const response = await _callLLM(messages, system);

@@ -1,23 +1,23 @@
-import { typing, getArgs, sendAnyMedia } from '../../src/lib/index.js';
+import { typing, getArgs, sendAnyMedia, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('threads', 'thread')
     .in('download')
-    .desc('Download foto/video dari Threads')
+    .desc('Download photo/video from Threads')
     .prefixOnly()
     .ai({
-        trigger: 'User minta download media dari Threads dengan URL',
+        trigger: 'User asks to download media from Threads with a URL',
         examples: ['threads https://www.threads.net/@user/post/xxx', 'download threads ini'],
-        args: { url: 'URL Threads' },
+        args: { url: 'Threads URL' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
-            text: '❌ Masukkan URL Threads!\nContoh: *.threads https://www.threads.net/@user/post/xxx*'
+            text: msg('need.url.threads')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mendownload media Threads...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.download_threads') }, { quoted: raw });
 
         try {
             const response = await fetch('https://www.threadsdl.app/api/threads', {
@@ -41,13 +41,13 @@ export default plugin('threads', 'thread')
             });
 
             if (!response.ok) {
-                throw new Error(`Gagal menghubungi server (Status: ${response.status})`);
+                throw new Error(`Failed to reach server (Status: ${response.status})`);
             }
 
             const data = await response.json();
 
             if (!data || !data.medias || data.medias.length === 0) {
-                throw new Error('Media tidak ditemukan atau URL tidak valid');
+                throw new Error('Media not found or invalid URL');
             }
 
             const captionText = `🧵 *Threads* - @${data.username || 'user'}\n\n${data.text || ''}`.trim();
@@ -71,7 +71,7 @@ export default plugin('threads', 'thread')
                 });
             }
         } catch (e) {
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 

@@ -1,7 +1,7 @@
 import { intentEngine } from './engine.js';
 import { getHistory, addHistory, clearHistory, getUserMemory, setUserMemory, getAllUsersContext } from './memory.js';
 import { shouldHandleAI, cleanTrigger, isOnCooldown } from './gate.js';
-import { api, logger, toVoiceNoteOpus, getRandomMoodSticker } from '../lib/index.js';
+import { api, logger, toVoiceNoteOpus, getRandomMoodSticker, sendLangPicker, msg } from '../lib/index.js';
 import { plugins } from '../core/loader.js';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
@@ -30,7 +30,26 @@ export async function handleAI(sock, m, ctx) {
     if (!shouldHandleAI(body, { isGroup, isMentioned, isQuotedFromBot })) return false;
     if (isOnCooldown(primaryId)) return false;
 
-    const cleanText = cleanTrigger(body) || 'Halo!';
+
+    const pick = String(body || '').trim().toLowerCase();
+    if (pick === 'lang_en' || pick === 'en' || pick === '.lang en') {
+        if (db) db.lang = 'en';
+        if (typeof saveDb === 'function') await saveDb();
+        await sock.sendMessage(from, { text: msg('lang.set_en') }, { quoted: raw });
+        return true;
+    }
+    if (pick === 'lang_id' || pick === 'id' || pick === '.lang id') {
+        if (db) db.lang = 'id';
+        if (typeof saveDb === 'function') await saveDb();
+        await sock.sendMessage(from, { text: msg('lang.set_id') }, { quoted: raw });
+        return true;
+    }
+    if (!db?.lang) {
+        await sendLangPicker(sock, from, { quoted: raw, device: ctx.device });
+        return true;
+    }
+
+    const cleanText = cleanTrigger(body) || 'Hi!';
 
     const SONG_MEDIA_TYPES = { audioMessage: 'audio', videoMessage: 'video' };
     const ownMediaType = Object.keys(raw?.message || {})[0];
@@ -47,14 +66,16 @@ export async function handleAI(sock, m, ctx) {
         const asksAboutOthers = /\b(siapa (dia|itu|si)|who is|cari user|data user|info user lain|user lain)\b/i.test(cleanText);
         const allUsersContext  = asksAboutOthers ? await getAllUsersContext(primaryId) : '';
 
+        const userLang = (db?.lang === 'id') ? 'id' : 'en';
         const result = await intentEngine(cleanText || body, history, {
             isOwner,
             pushname,
             memoryStr,
             allUsersContext,
             hasSongMedia,
+            lang: userLang,
         });
-        //console.log(result)
+
 
         const { command: aiCmd, args, message: aiMessage, remember, mood, voice: wantsVoice, preReply } = result;
 
@@ -76,7 +97,7 @@ export async function handleAI(sock, m, ctx) {
                 } catch (e) {
                     logger.error(`[AI voice] ${e.message}`);
                     if (preReply) {
-                        await sock.sendMessage(from, { text: '_⚠️ Voice note gagal dikirim, ini balasan teksnya:_\n\n' + aiMessage }, { quoted: raw });
+                        await sock.sendMessage(from, { text: '_⚠️ Voice note failed, text reply:_\n\n' + aiMessage }, { quoted: raw });
                     } else {
                         await sock.sendMessage(from, { text: `${aiMessage}\n\n_⚠️ Voice note unavailable._` }, { quoted: raw });
                     }
@@ -120,11 +141,11 @@ export async function handleAI(sock, m, ctx) {
 
         db.hit = (db.hit || 0) + 1;
         await saveDb();
-        //console.log(args)
+
 
     } catch (e) {
         logger.error(`[AI] ${e.message}`);
-        await sock.sendMessage(from, { text: '⚠️ Terjadi error. Coba lagi!' }, { quoted: raw });
+        await sock.sendMessage(from, { text: '⚠️ Something went wrong. Try again!' }, { quoted: raw });
     }
 
     return true;

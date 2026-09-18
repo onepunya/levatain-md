@@ -1,23 +1,23 @@
-import { typing, getArgs, sendAnyMedia, api } from '../../src/lib/index.js';
+import { typing, getArgs, sendAnyMedia, api, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tiktok', 'tt')
     .in('download')
-    .desc('Download video TikTok tanpa watermark')
+    .desc('Download TikTok video without watermark')
     .prefixOnly()
     .ai({
-        trigger: 'User minta download video TikTok dengan URL',
-        examples: ['tiktok https://tiktok.com/xxx', 'download tiktok ini'],
-        args: { url: 'URL TikTok' },
+        trigger: 'User asks to download a TikTok video with a URL',
+        examples: ['tiktok https://tiktok.com/xxx', 'download this tiktok'],
+        args: { url: 'TikTok URL' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
-            text: '❌ Masukkan URL TikTok!\nContoh: *.tiktok https://vt.tiktok.com/xxx*'
+            text: msg('need.url.tiktok')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mendownload TikTok...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.download_tiktok') }, { quoted: raw });
 
         try {
             const data = await api.tiktok(url);
@@ -26,7 +26,7 @@ export default plugin('tiktok', 'tt')
                 quoted: raw,
             });
         } catch (e) {
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 

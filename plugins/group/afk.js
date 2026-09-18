@@ -1,18 +1,18 @@
-import { getArgs } from '../../src/lib/index.js';
+import {  getArgs, msg } from '../../src/lib/index.js';
 import { saveDb } from '../../src/core/db.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('afk')
     .in('group')
-    .desc('Set status AFK, bot bakal kasih tau kalau kamu di-tag/reply')
+    .desc('Set AFK status; bot notifies when you are tagged/replied')
     .prefixOnly()
     .ai({
-        trigger: 'User mau set status AFK atau sedang tidak aktif',
+        trigger: 'User wants to set AFK status or is unavailable',
         examples: ['afk lagi makan', 'afk', 'afk sholat dulu'],
-        args: { alasan: 'Alasan AFK (opsional)' },
+        args: { reason: 'AFK reason (optional)' },
     })
     .run(async (sock, { body, raw, from, primaryId, gdb, isGroup }) => {
-        if (!isGroup) return sock.sendMessage(from, { text: '👥 Fitur ini cuma bisa dipakai di group.' }, { quoted: raw });
+        if (!isGroup) return sock.sendMessage(from, { text: msg('sys.group_only_short') }, { quoted: raw });
 
         const reason = getArgs(body) || '';
         const grp    = gdb.groups[from];
@@ -21,7 +21,7 @@ export default plugin('afk')
 
         const tag = primaryId.split('@')[0];
         await sock.sendMessage(from, {
-            text: `┌───「 *STATUS AFK AKTIF* 」\n├ *User:* @${tag}\n├ *Alasan:* ${reason || 'Tidak ada alasan'}\n└ _Bot akan memberi tahu jika ada yang menyebutmu._`,
+            text: `┌───「 *AFK STATUS ON* 」\n├ *User:* @${tag}\n├ *Reason:* ${reason || 'None'}\n└ _The bot will notify if someone mentions you._`,
             mentions: [primaryId],
         }, { quoted: raw });
     });

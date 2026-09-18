@@ -1,32 +1,32 @@
-import { getArgs } from '../../src/lib/index.js';
+import { getArgs, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('setgname', 'setgdesc', 'linkgroup', 'revoklink')
     .in('group')
-    .desc('Ubah nama/deskripsi group, ambil atau revoke link invite')
+    .desc('Change group name/description, get or revoke invite link')
     .showAllAliases()
     .adminOnly()
     .groupOnly()
     .ai({
-        trigger: 'User minta ubah nama group, ubah deskripsi group, minta link invite group, atau reset link group',
+        trigger: 'User asks to change group name, description, get invite link, or reset the group link',
         examples: ['setgname Nama Baru', 'setgdesc Deskripsi baru', 'linkgroup', 'revoklink'],
-        args: { text: 'Teks nama/deskripsi baru (untuk setgname/setgdesc)' },
+        args: { text: 'New name/description text (for setgname/setgdesc)' },
     })
-    .run(async (sock, { body, raw, from, command, isBotAdmin }) => {
-        if (!isBotAdmin) return sock.sendMessage(from, { text: '❌ Bot harus jadi admin group dulu!' }, { quoted: raw });
+    .run(async (sock, { body, raw, from, command, isBotAdmin, db, primaryId }) => {
+        if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
 
         if (command === 'setgname') {
             const text = getArgs(body);
-            if (!text) return sock.sendMessage(from, { text: '❌ Contoh: setgname Nama Group Baru' }, { quoted: raw });
+            if (!text) return sock.sendMessage(from, { text: msg('need.gname') }, { quoted: raw });
             await sock.groupUpdateSubject(from, text);
-            return sock.sendMessage(from, { text: `✅ Nama group diubah jadi: *${text}*` }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('done.group_name', { name: text }) }, { quoted: raw });
         }
 
         if (command === 'setgdesc') {
             const text = getArgs(body);
-            if (!text) return sock.sendMessage(from, { text: '❌ Contoh: setgdesc Deskripsi baru group' }, { quoted: raw });
+            if (!text) return sock.sendMessage(from, { text: msg('need.gdesc') }, { quoted: raw });
             await sock.groupUpdateDescription(from, text);
-            return sock.sendMessage(from, { text: '✅ Deskripsi group diubah.' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('done.group_desc') }, { quoted: raw });
         }
 
         if (command === 'linkgroup') {
@@ -36,7 +36,7 @@ export default plugin('setgname', 'setgdesc', 'linkgroup', 'revoklink')
 
         if (command === 'revoklink') {
             const code = await sock.groupRevokeInvite(from);
-            return sock.sendMessage(from, { text: `♻️ Link lama direset.\n🔗 https://chat.whatsapp.com/${code}` }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('done.link_reset', { code }) }, { quoted: raw });
         }
     });
 

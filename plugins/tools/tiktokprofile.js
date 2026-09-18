@@ -1,24 +1,24 @@
 import * as cheerio from 'cheerio';
-import { typing, getArgs, logger } from '../../src/lib/index.js';
+import { typing, getArgs, logger, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')
     .in('tools')
-    .desc('Cek/cari profil TikTok (followers, following, likes, bio, dll)')
+    .desc('Check/search TikTok profile (followers, following, likes, bio, etc.)')
     .prefixOnly()
     .ai({
-        trigger: 'User minta cek/stalk profil TikTok berdasarkan username',
-        examples: ['ttprofile jokowi', 'cek profil tiktok @jokowi', 'stalk tiktok jokowi'],
-        args: { username: 'Username TikTok tanpa @' },
+        trigger: 'User asks to check/stalk a TikTok profile by username',
+        examples: ['ttprofile jokowi', 'check tiktok profile @user', 'stalk tiktok user'],
+        args: { username: 'TikTok username without @' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const username = getArgs(body).replace('@', '').trim();
         if (!username) return sock.sendMessage(from, {
-            text: '❌ Masukkan username TikTok!\nContoh: *.ttprofile jokowi*'
+            text: msg('need.username')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: `⏳ Mengambil profil @${username}...` }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.profile', { user: username }) }, { quoted: raw });
 
         try {
             const html = await fetchTikmatrixProfile(username);
@@ -26,7 +26,7 @@ export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')
 
             if (!data.profile.username) {
                 return sock.sendMessage(from, {
-                    text: `❌ Profil @${username} tidak ditemukan atau diblokir Cloudflare.`
+                    text: msg('fail.profile', { user: username })
                 }, { quoted: raw });
             }
 
@@ -35,13 +35,13 @@ export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')
                 `👤 *${profile.name || profile.username}*\n` +
                 `🔗 @${profile.username}\n` +
                 `📝 ${profile.bio || '-'}\n\n` +
-                `👥 Followers: ${statistics.followers.toLocaleString('id-ID')}\n` +
-                `➡️ Following: ${statistics.following.toLocaleString('id-ID')}\n` +
-                `❤️ Hearts: ${statistics.hearts.toLocaleString('id-ID')}\n` +
-                `🎬 Videos: ${statistics.videos.toLocaleString('id-ID')}\n` +
-                `🧑‍🤝‍🧑 Friends: ${statistics.friends.toLocaleString('id-ID')}\n\n` +
+                `👥 Followers: ${statistics.followers.toLocaleString('en-US')}\n` +
+                `➡️ Following: ${statistics.following.toLocaleString('en-US')}\n` +
+                `❤️ Hearts: ${statistics.hearts.toLocaleString('en-US')}\n` +
+                `🎬 Videos: ${statistics.videos.toLocaleString('en-US')}\n` +
+                `🧑‍🤝‍🧑 Friends: ${statistics.friends.toLocaleString('en-US')}\n\n` +
                 `🆔 User ID: ${account_details.user_id || '-'}\n` +
-                `📅 Dibuat: ${account_details.created_at}`;
+                `📅 Created: ${account_details.created_at}`;
 
             if (profile.avatar_url) {
                 await sock.sendMessage(from, { image: { url: profile.avatar_url }, caption }, { quoted: raw });
@@ -50,7 +50,7 @@ export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')
             }
         } catch (e) {
             logger.error(`[ttprofile] ${e.message}`);
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 

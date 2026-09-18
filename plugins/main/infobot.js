@@ -3,9 +3,9 @@ import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('infobot')
     .in('main')
-    .desc('Lihat info bot')
+    .desc('View bot info')
     .prefixOnly()
-    .signal('User minta info bot', ['infobot', 'info bot'])
+    .signal('User asks to info bot', ['infobot', 'info bot'])
     .run(async (sock, { raw, from }) => {
         const s = getStatus();
 
@@ -15,7 +15,7 @@ export default plugin('infobot')
             ['Plugin', String(s.plugins)],
             ['Owner', htmlEscape(s.owner)],
             ['Total User', String(s.totalUsers)],
-            ['Total Grup', String(s.totalGroups)],
+            ['Total Groups', String(s.totalGroups)],
             ['Total Command', String(s.totalCommands)],
             ['RAM', `${htmlEscape(s.memory)} MB (${htmlEscape(s.memPct)}%)`],
             ['Node', htmlEscape(s.server.nodeVer)],

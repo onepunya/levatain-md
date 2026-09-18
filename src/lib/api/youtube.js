@@ -52,13 +52,13 @@ const streamDownload = (url, headers, outputFile, onProgress) => new Promise((re
     activeReq = requestFollow(url, headers, 5, res => {
         if (res.statusCode < 200 || res.statusCode >= 300) {
             res.destroy();
-            return finish(new Error(`Sumber tidak valid (HTTP ${res.statusCode})`));
+            return finish(new Error(`Sumber invalid (HTTP ${res.statusCode})`));
         }
 
         const contentType = (res.headers['content-type'] || '').toLowerCase();
         if (contentType.includes('text/html') || contentType.includes('application/json')) {
             res.destroy();
-            return finish(new Error(`Sumber tidak valid (respons ${contentType || 'tidak diketahui'}, bukan file media)`));
+            return finish(new Error(`Invalid source (response ${contentType || 'unknown'}, not a media file)`));
         }
 
         const total = parseInt(res.headers['content-length'] || '0', 10);
@@ -88,7 +88,7 @@ const streamDownload = (url, headers, outputFile, onProgress) => new Promise((re
     }, finish);
 }).then(() => {
     if (!fs.existsSync(outputFile) || fs.statSync(outputFile).size <= 0) {
-        throw new Error('Gagal download file: hasil kosong.');
+        throw new Error('Failed to download file: empty result.');
     }
     return fs.statSync(outputFile).size;
 });
@@ -109,7 +109,6 @@ const remuxFaststart = (inputFile, outputFile) => new Promise((resolve, reject) 
         .save(outputFile);
 });
 
-
 const JAKY_API_KEYS = ['jK54EBE6E8', 'jK54EBE6E8'];
 let jakyKeyCursor = 0;
 const nextJakyKey = () => {
@@ -127,7 +126,7 @@ const jakyInfo = async (youtubeUrl, format, quality) => {
     });
     const body = await res.json();
     if (!body || body.status !== true || !body.result?.downloadUrl) {
-        throw new Error(`jaky info gagal: ${JSON.stringify(body).slice(0, 150)}`);
+        throw new Error(`jaky info failed: ${JSON.stringify(body).slice(0, 150)}`);
     }
     return body.result;
 };
@@ -149,7 +148,7 @@ const downloadWithRetry = async (youtubeUrl, format, tempDir, id, onProgress, at
             return await downloadViaJaky(youtubeUrl, format, tempDir, id, onProgress);
         } catch (error) {
             lastError = error;
-            logger.warn(`[yt] percobaan ${i + 1}/${attempts} gagal: ${error.message}`);
+            logger.warn(`[yt] attempt ${i + 1}/${attempts} failed: ${error.message}`);
             if (i < attempts - 1) await sleep(1500);
         }
     }
@@ -171,12 +170,12 @@ export const ytDownload = async (youtubeUrl, formatReq = 'mp4', onProgress) => {
         const { title, thumbnail } = result;
 
         if (format === 'mp3') {
-           
+
             fs.copyFileSync(rawFile, finalMp3);
             cleanupTempFile(rawFile);
 
             if (!fs.existsSync(finalMp3) || fs.statSync(finalMp3).size <= 0) {
-                throw new Error('File MP3 tidak berhasil dibuat.');
+                throw new Error('MP3 file was not created successfully.');
             }
 
             const size = fs.statSync(finalMp3).size;
@@ -188,7 +187,7 @@ export const ytDownload = async (youtubeUrl, formatReq = 'mp4', onProgress) => {
             return { title, thumbnail, format: 'mp3', url: finalMp3, size, isTempFile: true };
         }
 
-        
+
         try {
             await remuxFaststart(rawFile, finalMp4);
         } catch {
@@ -220,7 +219,7 @@ export const ytHandler = {
     search: async query => {
         const searchResult = await yts(query);
         const videos = searchResult.videos.slice(0, 5);
-        if (!videos.length) throw new Error('Video tidak ditemukan.');
+        if (!videos.length) throw new Error('Video not found.');
 
         return videos.map(v => ({
             title: v.title,
@@ -235,7 +234,7 @@ export const ytHandler = {
     play: async (query, onProgress) => {
         const searchResult = await yts(query);
         const video = searchResult.videos[0];
-        if (!video) throw new Error('Lagu tidak ditemukan.');
+        if (!video) throw new Error('Lagu not found.');
 
         const downloadResult = await ytDownload(video.url, 'mp3', onProgress);
 

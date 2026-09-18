@@ -56,7 +56,7 @@ export async function lookupPublicIp({ force = false } = {}) {
         }
     } catch {}
 
-    logger.warn('Gagal auto-detect IP publik (semua layanan lookup gagal/offline).');
+    logger.warn('Failed to auto-detect public IP (all lookup services failed/offline).');
     return cache;
 }
 

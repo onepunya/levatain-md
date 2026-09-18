@@ -4,202 +4,202 @@
 
 # Levatain-MD
 
-Bot WhatsApp AI-first berbasis [Baileys](https://github.com/WhiskeySockets/Baileys) (Node.js, ESM). Selain command dengan prefix biasa, bot ini punya **intent engine** — AI yang membaca chat natural (tanpa prefix) dan otomatis merutekannya ke plugin yang sesuai.
+AI-first WhatsApp bot built on [Baileys](https://github.com/WhiskeySockets/Baileys) (Node.js, ESM). Besides regular prefixed commands, this bot has an **intent engine** — an AI that reads natural chat (no prefix) and automatically routes it to the matching plugin.
 
-## Struktur Folder
+## Folder Structure
 
 ```
 .
-├── index.js              Entry point — koneksi WhatsApp, pairing, event handler utama
-├── package.json          Daftar dependency & script npm
-├── .env.example          Template environment variable (copy jadi .env)
+├── index.js              Entry point — WhatsApp connection, pairing, main event handlers
+├── package.json          Dependency list & npm scripts
+├── .env.example          Environment variable template (copy to .env)
 ├── src/
-│   ├── config.js         Semua environment variable dibaca dari sini (satu sumber kebenaran)
-│   ├── globals.js        Semua `global.*` state (owner, plugins, api, dll) di-init sekali dari sini
-│   ├── handler.js        Router pesan masuk → deteksi prefix/command → plugin, atau lempar ke AI
-│   ├── ai/               Intent engine (engine.js), gate trigger word grup (gate.js), memori percakapan
-│   ├── core/             Loader plugin auto-scan (loader.js) & database lokal (db.js)
-│   └── lib/              Helper, di-barrel lewat lib/index.js — tinggal `import { x, y } from '.../lib/index.js'`
-│       ├── index.js      Barrel — re-export semua helper di bawah ini
-│       ├── utils.js, logger.js, menuCatalog.js   Helper generik dipakai lintas modul
-│       ├── api/          Wrapper API eksternal: LLM (llm.js), TTS (voice.js), downloader/gambar (media.js), http.js (curl helper bersama), youtube/giphy/boppy/photiu/iplookup
-│       ├── wa/            Lapisan WhatsApp: pesan interaktif, rich message card, progress bar, cache grup, session, deteksi device
-│       ├── media/         Pemrosesan file media: efek audio, limit ukuran media
-│       └── dashboard/     Web dashboard admin (server + client statis)
-└── plugins/              Semua command bot, dikelompokkan per kategori, auto ke-load oleh loader
+│   ├── config.js         All environment variables are read from here (single source of truth)
+│   ├── globals.js        All `global.*` state (owner, plugins, api, etc.) is initialized here once
+│   ├── handler.js        Incoming message router → detects prefix/command → plugin, or hands off to AI
+│   ├── ai/               Intent engine (engine.js), group trigger-word gate (gate.js), conversation memory
+│   ├── core/             Plugin auto-scan loader (loader.js) & local database (db.js)
+│   └── lib/              Helpers, barreled through lib/index.js — just `import { x, y } from '.../lib/index.js'`
+│       ├── index.js      Barrel — re-exports all the helpers below
+│       ├── utils.js, logger.js, menuCatalog.js   Generic helpers used across modules
+│       ├── api/          External API wrappers: LLM (llm.js), TTS (voice.js), downloaders/images (media.js), http.js (shared curl helper), youtube/giphy/boppy/photiu/iplookup
+│       ├── wa/            WhatsApp layer: interactive messages, rich message cards, progress bar, group cache, session, device detection
+│       ├── media/         Media file processing: audio effects, media size limits
+│       └── dashboard/     Admin web dashboard (server + static client)
+└── plugins/              All bot commands, grouped by category, auto-loaded by the loader
     ├── main/             menu, ping, sc (script/source)
     ├── ai/                chat, imagine (text-to-image), editimage, musicgen, memory
-    ├── audiochanger/     Efek audio: bassboost, nightcore, reverb, reverse, 8d, dll (pakai ffmpeg)
-    ├── download/         Downloader: TikTok, YouTube, Instagram, Facebook, Twitter/X, Pinterest, dll
-    ├── fun/               Fitur hiburan/game grup: tod, impostor, tembak, pilihacak
-    ├── group/            Fitur grup: tagall, warn (sistem strike), add, groupset, afk, dll
-    ├── owner/            Command khusus owner (mode, system, dashboard, eval)
-    └── tools/            Utility: sticker, upscale, removebg, toimg, tourl, gempa
+    ├── audiochanger/     Audio effects: bassboost, nightcore, reverb, reverse, 8d, etc. (uses ffmpeg)
+    ├── download/         Downloaders: TikTok, YouTube, Instagram, Facebook, Twitter/X, Pinterest, etc.
+    ├── fun/               Group entertainment/game features: tod, impostor, tembak, pilihacak
+    ├── group/            Group features: tagall, warn (strike system), add, groupset, afk, etc.
+    ├── owner/            Owner-only commands (mode, system, dashboard, eval)
+    └── tools/            Utilities: sticker, upscale, removebg, toimg, tourl, gempa
 ```
 
-## Cara Kerja Command
+## How Commands Work
 
-Bot mendukung dua cara pemanggilan command sekaligus:
+The bot supports two ways of invoking a command at once:
 
-1. **Prefix biasa** — ketik simbol apa saja (`.`, `!`, `#`, dll) diikuti nama command, misal `.tiktok <url>`.
-2. **Bahasa natural (AI intent engine)** — ketik kalimat biasa tanpa prefix, misal *"download tiktok ini dong"* atau *"buatin stiker dari foto ini"*. AI (`src/ai/engine.js`) membaca daftar plugin beserta metadata `ai.trigger`/`ai.examples`-nya, lalu memutuskan command mana yang paling cocok dan menjalankannya otomatis.
+1. **Regular prefix** — type any symbol (`.`, `!`, `#`, etc.) followed by the command name, e.g. `.tiktok <url>`.
+2. **Natural language (AI intent engine)** — type an ordinary sentence with no prefix, e.g. *"download this tiktok for me"* or *"make a sticker from this photo"*. The AI (`src/ai/engine.js`) reads the plugin list along with its `ai.trigger`/`ai.examples` metadata, then decides which command best matches and runs it automatically.
 
-**Khusus di dalam grup**, AI (chat maupun intent engine) hanya aktif kalau salah satu dari ini terpenuhi (`src/ai/gate.js`):
-- Pesan mengandung kata pemicu `lev` / `levatain` / `leva`
-- Bot di-mention
-- Pesan me-reply/quote pesan bot
+**Inside groups specifically**, the AI (chat or intent engine) only activates if one of the following is met (`src/ai/gate.js`):
+- The message contains a trigger word: `lev` / `levatain` / `leva`
+- The bot is mentioned
+- The message replies/quotes a bot message
 
-Ini supaya bot tidak ikut nyaut ke semua obrolan di grup.
+This keeps the bot from jumping into every conversation in the group.
 
-## Persyaratan
+## Requirements
 
-- **Node.js** versi 20 ke atas
-- **ffmpeg** harus ter-install di sistem (bukan cuma npm package) — dipakai untuk fitur audio changer dan konversi media
+- **Node.js** version 20 or above
+- **ffmpeg** must be installed on the system (not just the npm package) — used for the audio changer and media conversion features
   - Ubuntu/Debian: `sudo apt install ffmpeg`
-  - Cek sudah ada: `ffmpeg -version`
+  - Check it's installed: `ffmpeg -version`
 
-## Konfigurasi Environment Variable
+## Environment Variable Configuration
 
-Semua konfigurasi lewat file `.env` (tidak pernah di-commit ke repo, sudah masuk `.gitignore`).
+All configuration goes through the `.env` file (never committed to the repo, already in `.gitignore`).
 
 ```bash
 cp .env.example .env
 ```
 
-Buka `.env` dan isi minimal:
-- `PAIRING_NUMBER` — nomor WA yang mau dijadiin bot (format `628xxxxxxxxxx`, tanpa `+`)
-- `OWNER_NUMBER` — nomor WA kamu sebagai owner
-- Minimal salah satu AI key: `GEMINI_KEY_1` (gratis di [Google AI Studio](https://aistudio.google.com/apikey)) atau `NAGA_API_KEY`
+Open `.env` and fill in at minimum:
+- `PAIRING_NUMBER` — the WA number you want to turn into the bot (format `628xxxxxxxxxx`, no `+`)
+- `OWNER_NUMBER` — your WA number as the owner
+- At least one AI key: `GEMINI_KEY_1` (free at [Google AI Studio](https://aistudio.google.com/apikey)) or `NAGA_API_KEY`
 
-Variabel lain (Giphy, OnePunya, Magic Hour, AudD/Shazam, translate, dashboard port, dll) bersifat opsional — lihat komentar di `.env.example` untuk penjelasan tiap variabel.
+Other variables (Giphy, OnePunya, Magic Hour, AudD/Shazam, translate, dashboard port, etc.) are optional — see the comments in `.env.example` for an explanation of each variable.
 
-## Cara Ambil Semua API Key
+## How to Get All API Keys
 
-Semua key di bawah ini ditaruh di file `.env` (bukan `.env.example`), satu baris per variabel, format `NAMA_VARIABEL=nilai-key-nya` tanpa spasi/tanda kutip.
+All the keys below go in the `.env` file (not `.env.example`), one line per variable, in the format `VARIABLE_NAME=key-value` with no spaces/quotes.
 
-| Key dipakai untuk | Env var | Cara ambil |
+| Key used for | Env var | How to get it |
 |---|---|---|
-| AI chat & intent engine (utama) pake cookie GEMINI cari pake devtools |
-| AI chat (fallback) | `NAGA_API_KEY` | Join Discord server [NagaAI](https://naga.ac/) → di channel bot, ketik command `/account key get` → key langsung dikirim bot. Opsional, cuma dipakai kalau semua Gemini key gagal/limit. |
-| Fitur download/tools tertentu | `ONEPUNYA_API_KEY` | OnePunya bukan layanan publik dengan pendaftaran mandiri — ini API pribadi/komunitas milik developer independen. Hubungi langsung pemiliknya lewat [GitHub](https://github.com/onepunya) atau kontak yang tertera di sana untuk minta akses key. |
-| Stiker mood/AI (Giphy) | `GIPHY_API_KEY` | Buka [developers.giphy.com](https://developers.giphy.com/) → **Create an App** → pilih **API** (bukan SDK) → copy API Key yang muncul. |
-| `.editimage` / `.aiedit` (Magic Hour) | `MAGICHOUR_KEY_1` s/d `MAGICHOUR_KEY_3` | Daftar di [magichour.ai](https://magichour.ai/) → masuk **Dashboard** → menu **API Keys** → generate key baru. Bisa isi lebih dari satu untuk auto-rotate. |
-| `.play` kenali lagu (fallback) | `AUDD_API_KEY` | Daftar gratis di [dashboard.audd.io](https://dashboard.audd.io/). |
-| `.play` kenali lagu (dicoba pertama) | `SHAZAM_RAPIDAPI_KEY`, `SHAZAM_RAPIDAPI_HOST` | Daftar & subscribe (ada free plan) di [RapidAPI - Shazam API](https://rapidapi.com/diyorbekkanal/api/shazam-api6). |
+| AI chat & intent engine (primary) | `GEMINI_KEY_1`–`GEMINI_KEY_5` | Uses a Gemini cookie, obtained via devtools. |
+| AI chat (fallback) | `NAGA_API_KEY` | Join the [NagaAI](https://naga.ac/) Discord server → in the bot channel, type `/account key get` → the key is sent to you directly by the bot. Optional, only used if all Gemini keys fail/hit their limit. |
+| Certain download/tools features | `ONEPUNYA_API_KEY` | OnePunya isn't a public self-signup service — it's a private/community API owned by an independent developer. Contact the owner directly via [GitHub](https://github.com/onepunya) or the contact listed there to request key access. |
+| Mood/AI stickers (Giphy) | `GIPHY_API_KEY` | Open [developers.giphy.com](https://developers.giphy.com/) → **Create an App** → choose **API** (not SDK) → copy the API Key shown. |
+| `.editimage` / `.aiedit` (Magic Hour) | `MAGICHOUR_KEY_1` through `MAGICHOUR_KEY_3` | Sign up at [magichour.ai](https://magichour.ai/) → go to **Dashboard** → **API Keys** menu → generate a new key. You can fill in more than one for auto-rotation. |
+| `.play` song recognition (fallback) | `AUDD_API_KEY` | Sign up for free at [dashboard.audd.io](https://dashboard.audd.io/). |
+| `.play` song recognition (tried first) | `SHAZAM_RAPIDAPI_KEY`, `SHAZAM_RAPIDAPI_HOST` | Sign up & subscribe (free plan available) at [RapidAPI - Shazam API](https://rapidapi.com/diyorbekkanal/api/shazam-api6). |
 
-Setelah key didapat, buka `.env`, tempel di baris env var yang sesuai, simpan, lalu restart bot (`npm start` ulang / `pm2 restart levatain-md`).
+Once you have a key, open `.env`, paste it on the matching env var line, save, then restart the bot (`npm start` again / `pm2 restart levatain-md`).
 
-> Semua key di atas gratis untuk mulai (ada limit/kuota gratis masing-masing provider). Jangan pernah commit file `.env` yang sudah terisi ke repo publik.
+> All the keys above are free to get started with (each provider has its own free limit/quota). Never commit a filled-in `.env` file to a public repo.
 
 ---
 
-## Menjalankan di VPS Biasa
+## Running on a Regular VPS
 
-### 1. Install dependency
+### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. Jalankan bot
+### 2. Run the bot
 ```bash
 npm start
 ```
 
-Ada juga `npm run dev` yang menjalankan bot dengan `node --watch` (auto-restart tiap ada perubahan file, enak buat development).
+There's also `npm run dev`, which runs the bot with `node --watch` (auto-restarts on every file change, handy for development).
 
-Proses `npm start` berjalan di foreground dan akan mati kalau terminal/SSH ditutup. Untuk menjaganya tetap hidup, pakai salah satu cara berikut:
+The `npm start` process runs in the foreground and will die if the terminal/SSH session closes. To keep it alive, use one of the following:
 
-**Opsi A — pakai `pm2` (disarankan)**
+**Option A — using `pm2` (recommended)**
 ```bash
 npm install -g pm2
 pm2 start index.js --name levatain-md
 pm2 save
-pm2 startup   # ikuti instruksi yang muncul supaya bot auto-start saat VPS reboot
+pm2 startup   # follow the printed instructions so the bot auto-starts on VPS reboot
 ```
-Cek log: `pm2 logs levatain-md` · Restart: `pm2 restart levatain-md` · Stop: `pm2 stop levatain-md`
+Check logs: `pm2 logs levatain-md` · Restart: `pm2 restart levatain-md` · Stop: `pm2 stop levatain-md`
 
-**Opsi B — pakai `screen`**
+**Option B — using `screen`**
 ```bash
 screen -S levatain-md
 npm start
-# tekan Ctrl+A lalu D untuk detach (bot tetap jalan di background)
+# press Ctrl+A then D to detach (the bot keeps running in the background)
 ```
-Balik ke sesi: `screen -r levatain-md`
+Return to the session: `screen -r levatain-md`
 
-Saat pertama kali jalan, bot akan menampilkan **kode pairing** di terminal. Buka WhatsApp di HP → **⋮ (titik tiga) → Perangkat Tertaut → Tautkan dengan nomor telepon** → masukkan kode tersebut.
+The first time it runs, the bot will show a **pairing code** in the terminal. Open WhatsApp on your phone → **⋮ (three dots) → Linked Devices → Link with phone number** → enter that code.
 
 ---
 
-## Menjalankan di Pterodactyl Panel
+## Running on a Pterodactyl Panel
 
-1. **Buat server baru** dengan egg **Node.js** (Nodejs Generic/YSN Node.js egg atau sejenisnya, minimal versi Node 20).
-2. **Upload source code** bot ke direktori server (lewat file manager panel, SFTP, atau `git clone` dari repo ini kalau egg-nya mendukung).
-3. **Isi environment variable** — dua cara, pilih salah satu:
-   - Buat file `.env` langsung di root project (upload manual isinya, boleh isi ulang dari `.env.example`), **atau**
-   - Kalau egg Pterodactyl-nya menyediakan slot "Environment Variables" di tab Startup, isi variabel yang sama di sana (nama variabel harus sama persis: `PAIRING_NUMBER`, `OWNER_NUMBER`, `GEMINI_KEY_1`, dst).
-4. **Startup command** — set ke:
+1. **Create a new server** with the **Node.js** egg (Nodejs Generic/YSN Node.js egg or similar, minimum Node version 20).
+2. **Upload the bot's source code** to the server directory (via the panel's file manager, SFTP, or `git clone` from this repo if the egg supports it).
+3. **Fill in environment variables** — two options, pick one:
+   - Create a `.env` file directly in the project root (upload its contents manually, or fill it in from `.env.example`), **or**
+   - If your Pterodactyl egg provides an "Environment Variables" slot on the Startup tab, fill in the same variables there (variable names must match exactly: `PAIRING_NUMBER`, `OWNER_NUMBER`, `GEMINI_KEY_1`, etc.).
+4. **Startup command** — set it to:
    ```
    npm install && npm start
    ```
-   atau kalau egg sudah otomatis jalanin `npm install`, cukup:
+   or if the egg already runs `npm install` automatically, just:
    ```
    node index.js
    ```
-5. **Dashboard web bot** — kalau mau diakses dari luar, samakan `DASHBOARD_PORT` di `.env` dengan port allocation yang dikasih Pterodactyl untuk server tersebut.
-6. **Start server** dari panel, buka tab Console untuk lihat kode pairing, lalu tautkan seperti biasa dari WhatsApp.
+5. **Bot web dashboard** — if you want to access it from outside, match `DASHBOARD_PORT` in `.env` to the port allocation Pterodactyl gave that server.
+6. **Start the server** from the panel, open the Console tab to see the pairing code, then link it as usual from WhatsApp.
 
-> Catatan: Pterodactyl biasanya me-restart proses otomatis kalau crash — jadi tidak perlu `pm2`/`screen` tambahan di dalam container.
+> Note: Pterodactyl usually restarts the process automatically if it crashes — so there's no need for extra `pm2`/`screen` inside the container.
 
 ---
 
-## Kalau `isOwner` Gagal Terdeteksi
+## If `isOwner` Fails to Detect
 
-Kadang deteksi owner otomatis gagal (kasus LID WhatsApp). Kalau ini terjadi:
-1. Set `DEBUG=true` di `.env`, restart bot.
-2. Kirim pesan apa saja ke bot dari nomor owner.
-3. Buka `logs/bot.log`, cari baris `[owner-check]`.
-4. Copy angka dari `lid=XXXXXXXXXX@lid` (angka saja, tanpa `@lid`).
-5. Isi ke `OWNER_LID` di `.env`, restart bot.
+Sometimes automatic owner detection fails (a WhatsApp LID edge case). If this happens:
+1. Set `DEBUG=true` in `.env`, restart the bot.
+2. Send any message to the bot from the owner's number.
+3. Open `logs/bot.log`, look for the `[owner-check]` line.
+4. Copy the digits from `lid=XXXXXXXXXX@lid` (digits only, without `@lid`).
+5. Set it as `OWNER_LID` in `.env`, restart the bot.
 
-## Menambah Plugin/Command Baru
+## Adding a New Plugin/Command
 
-Semua plugin pakai format registry `onepunya.interface()` — bukan `export function run()` biasa. Contoh minimal:
+Every plugin uses the `onepunya.interface()` registry format — not a plain `export function run()`. Minimal example:
 
 ```js
 export const meta = {
     interface: {
-        cmd:  ['namacommand', 'alias1'],   // command utama + alias, semua lowercase
-        tag:  'kategori',                  // dipakai buat pengelompokan di menu
-        aliasOnly: true,                   // true = hanya bisa dipanggil pakai prefix
-        desc: 'Deskripsi singkat buat menu',
+        cmd:  ['commandname', 'alias1'],   // main command + aliases, all lowercase
+        tag:  'category',                  // used for grouping in the menu
+        aliasOnly: true,                   // true = can only be invoked with a prefix
+        desc: 'Short description for the menu',
         ai: {
-            trigger: 'Kapan AI harus memicu command ini (dalam bahasa natural)',
-            examples: ['contoh kalimat 1', 'contoh kalimat 2'],
-            args: { url: 'Penjelasan argumen kalau ada' }, // opsional
+            trigger: 'When the AI should trigger this command (in natural language)',
+            examples: ['example sentence 1', 'example sentence 2'],
+            args: { url: 'Explanation of the argument, if any' }, // optional
         },
         async run(sock, { raw, from, body, args, command, isOwner, pushname }) {
-            // logic command di sini
-            await sock.sendMessage(from, { text: 'Halo!' }, { quoted: raw });
+            // command logic goes here
+            await sock.sendMessage(from, { text: 'Hello!' }, { quoted: raw });
         },
     },
 };
 ```
 
-Taruh file baru di folder `plugins/<kategori>/`. Plugin otomatis ke-scan dan didaftarkan oleh `src/core/loader.js` berdasarkan `meta.interface.cmd` — **tidak perlu didaftarin manual di tempat lain**. Blok `ai` opsional tapi disarankan diisi supaya command juga bisa dipicu lewat chat natural, tidak cuma lewat prefix.
+Put new files in the `plugins/<category>/` folder. Plugins are automatically scanned and registered by `src/core/loader.js` based on `meta.interface.cmd` — **no need to register them manually anywhere else**. The `ai` block is optional but recommended, so the command can also be triggered via natural chat, not just via prefix.
 
-Owner bisa reload semua plugin tanpa restart proses pakai command `.reload`.
+The owner can reload all plugins without restarting the process using the `.reload` command.
 
-> Kalau porting plugin dari bot referensi (CommonJS / format `module.exports`), harus diadaptasi ke format `onepunya.interface()` di atas, bukan copy-paste langsung.
+> If porting a plugin from a reference bot (CommonJS / `module.exports` format), it must be adapted to the `onepunya.interface()` format above, not copy-pasted directly.
 
 ## Troubleshooting
 
-| Masalah | Solusi |
+| Issue | Solution |
 |---|---|
-| Bot exit langsung saat start | Cek `PAIRING_NUMBER` sudah diisi di `.env` |
-| Fitur AI chat / intent engine gak jalan | Cek minimal satu `GEMINI_KEY_*` atau `NAGA_API_KEY` sudah diisi |
-| AI tidak merespon di grup | Sebut nama bot / kata `lev`, mention bot, atau reply pesan bot — di grup AI tidak auto-nyaut semua chat |
-| Fitur audio/effect error | Pastikan `ffmpeg` ter-install di sistem, cek `ffmpeg -version` |
-| Session logout terus | Hapus folder `session/`, restart bot, pairing ulang |
-| `isOwner` selalu false | Ikuti langkah di atas untuk isi `OWNER_LID` manual |
-| Bot mati saat SSH ditutup (VPS) | Pakai `pm2` atau `screen`, lihat bagian "Menjalankan di VPS Biasa" |
-| Plugin baru tidak muncul | Pastikan format `meta.interface.cmd` & `meta.interface.run` benar, lalu jalankan `.reload` atau restart bot |
+| Bot exits immediately on start | Check that `PAIRING_NUMBER` is filled in `.env` |
+| AI chat / intent engine feature doesn't work | Check that at least one `GEMINI_KEY_*` or `NAGA_API_KEY` is filled in |
+| AI doesn't respond in a group | Mention the bot's name / the word `lev`, mention the bot, or reply to a bot message — in groups the AI doesn't auto-respond to every chat |
+| Audio/effect feature errors | Make sure `ffmpeg` is installed on the system, check with `ffmpeg -version` |
+| Session keeps logging out | Delete the `session/` folder, restart the bot, pair again |
+| `isOwner` always false | Follow the steps above to manually set `OWNER_LID` |
+| Bot dies when SSH closes (VPS) | Use `pm2` or `screen`, see the "Running on a Regular VPS" section |
+| New plugin doesn't show up | Make sure the `meta.interface.cmd` & `meta.interface.run` format is correct, then run `.reload` or restart the bot |

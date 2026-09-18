@@ -1,35 +1,35 @@
-import { typing, getArgs, sendMediaBatch, base64ToString } from '../../src/lib/index.js';
+import { typing, getArgs, sendMediaBatch, base64ToString, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('instagram', 'ig')
     .in('download')
-    .desc('Download video/foto Instagram (termasuk carousel multi-media)')
+    .desc('Download Instagram video/photo (including multi-media carousel)')
     .prefixOnly()
     .ai({
-        trigger: 'User minta download dari Instagram dengan URL',
+        trigger: 'User asks to download from Instagram with a URL',
         examples: ['ig https://instagram.com/p/xxx', 'download instagram ini'],
-        args: { url: 'URL Instagram' },
+        args: { url: 'Instagram URL' },
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, { body, raw, from, db, primaryId }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
-            text: '❌ Masukkan URL Instagram!\nContoh: *.instagram https://www.instagram.com/p/xxx*'
+            text: msg('need.url.ig')
         }, { quoted: raw });
 
         await typing(sock, from);
-        await sock.sendMessage(from, { text: '⏳ Mendownload Instagram...' }, { quoted: raw });
+        await sock.sendMessage(from, { text: msg('wait.download_ig') }, { quoted: raw });
 
         try {
             const rawText = await fetchDownloadgram(url);
             const items = normalizeDownloadgramMedia(rawText);
 
             if (!items.length) {
-                throw new Error('Media tidak ditemukan. Pastikan URL benar dan akun tidak di-private.');
+                throw new Error('Media not found. Ensure the URL is correct and the account is not private.');
             }
             const captionText = '📸 *Instagram Downloaded*';
             await sendMediaBatch(sock, from, items, { caption: captionText, quoted: raw });
         } catch (e) {
-            await sock.sendMessage(from, { text: `❌ Gagal: ${e.message}` }, { quoted: raw });
+            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
 
@@ -48,7 +48,7 @@ async function fetchDownloadgram(igUrl) {
     });
 
     if (!response.ok) {
-        throw new Error(`Gagal menghubungi server (Status: ${response.status})`);
+        throw new Error(`Failed to reach server (Status: ${response.status})`);
     }
 
     const text = await response.text();

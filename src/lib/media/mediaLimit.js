@@ -6,8 +6,8 @@ export const MAX_MEDIA_MB = 15;
 
 export class MediaTooLargeError extends Error {
     constructor(sizeBytes = 0, kind = 'download') {
-        const mb = sizeBytes ? `${formatMb(sizeBytes)}MB` : `lebih dari ${MAX_MEDIA_MB}MB`;
-        super(`File terlalu besar (${mb}). Batas ${kind} media ${MAX_MEDIA_MB}MB.`);
+        const mb = sizeBytes ? `${formatMb(sizeBytes)}MB` : `over ${MAX_MEDIA_MB}MB`;
+        super(`File too large (${mb}). ${kind} media limit is ${MAX_MEDIA_MB}MB.`);
         this.name = 'MediaTooLargeError';
         this.sizeBytes = sizeBytes;
         this.kind = kind;
@@ -71,7 +71,7 @@ export async function sendRemoteMedia(sock, jid, { url, type = 'video', caption 
         await ensureUrlUnderLimit(url);
     } catch (e) {
         if (e instanceof MediaTooLargeError) throw e;
-        logger.warn(`[mediaLimit] cek ukuran gagal, lanjut kirim: ${e.message}`);
+        logger.warn(`[mediaLimit] size check failed, continuing to send: ${e.message}`);
     }
 
     const payload =

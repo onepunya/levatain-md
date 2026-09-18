@@ -1,36 +1,36 @@
-import { getArgs } from '../../src/lib/index.js';
+import { getArgs, msg } from '../../src/lib/index.js';
 import { saveDb } from '../../src/core/db.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('setleft')
     .in('group')
-    .desc('Atur pesan custom saat member keluar group (pakai @user & @group)')
+    .desc('Set custom leave message when a member leaves (@user & @group)')
     .prefixOnly()
     .adminOnly()
     .groupOnly()
     .ai({
-        trigger: 'User minta atur pesan perpisahan/pesan left saat member keluar group',
-        examples: ['setleft selamat tinggal @user dari @group', 'setleft off'],
-        args: { teks: 'Teks pesan, boleh pakai @user dan @group' },
+        trigger: 'User asks to set leave/goodbye message when a member leaves the group',
+        examples: ['setleft goodbye @user from @group', 'setleft off'],
+        args: { text: 'Message text, can use @user and @group' },
     })
-    .run(async (sock, { body, raw, from, gdb }) => {
+    .run(async (sock, { body, raw, from, gdb, primaryId }) => {
         const text = getArgs(body);
         const grp  = gdb.groups[from];
 
         if (!text) {
             return sock.sendMessage(from, {
-                text: `Gunakan: *.setleft <teks>*\nContoh: *.setleft Selamat tinggal @user dari @group*\n\nTag tersedia:\n• @user — member yang keluar\n• @group — nama group\n\nKetik *.setleft off* untuk pakai pesan default lagi.`,
+                text: msg('need.text'),
             }, { quoted: raw });
         }
 
         if (text.toLowerCase() === 'off') {
             grp.leftText = '';
             await saveDb();
-            return sock.sendMessage(from, { text: '✅ Pesan left dikembalikan ke default.' }, { quoted: raw });
+            return sock.sendMessage(from, { text: msg('done.left_reset') }, { quoted: raw });
         }
 
         grp.leftText = text;
         await saveDb();
-        await sock.sendMessage(from, { text: `✅ Pesan left berhasil diatur:\n\n${text}` }, { quoted: raw });
+        await sock.sendMessage(from, { text: `✅ Leave message set:\n\n${text}` }, { quoted: raw });
     });
 

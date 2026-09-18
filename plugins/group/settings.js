@@ -1,23 +1,24 @@
 import { saveDb } from '../../src/core/db.js';
 import { plugin } from '../../src/core/plugin.js';
+import { msg } from '../../src/lib/messages.js';
 
 export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'setautodl')
     .in('group')
-    .desc('Pengaturan fitur group')
+    .desc('Group feature settings')
     .showAllAliases()
     .adminOnly()
     .groupOnly()
     .ai({
-        trigger: 'User minta aktifkan/nonaktifkan fitur group seperti welcome, antilink, mute',
-        examples: ['aktifkan welcome', 'matiin antilink', 'nyalain captcha'],
-        args: { toggle: 'on/off atau aktif/nonaktif' },
+        trigger: 'User asks to enable/disable a group feature like welcome, antilink, mute',
+        examples: ['enable welcome', 'disable antilink', 'enable captcha'],
+        args: { toggle: 'on/off' },
     })
-    .run(async (sock, { body, raw, from, command, gdb }) => {
+    .run(async (sock, { body, raw, from, command, gdb, primaryId }) => {
         const feature = featureMap[command];
         if (!feature) return;
 
         const grp  = gdb.groups[from];
-        if (!grp)  return sock.sendMessage(from, { text: '❌ Data group tidak ditemukan.' }, { quoted: raw });
+        if (!grp)  return sock.sendMessage(from, { text: msg('fail.group_data') }, { quoted: raw });
 
         const args   = body.split(' ').slice(1).join(' ').trim().toLowerCase();
         const turnOn = ['on', 'aktif', 'nyala', '1', 'enable', 'true'].includes(args);
@@ -30,7 +31,7 @@ export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'set
         }
 
         await saveDb();
-        const status = grp[feature.key] ? '✅ Aktif' : '❌ Nonaktif';
+        const status = grp[feature.key] ? '✅ Active' : '❌ Inactive';
         await sock.sendMessage(from, { text: `${feature.label}: *${status}*` }, { quoted: raw });
     });
 

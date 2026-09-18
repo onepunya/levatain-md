@@ -1,32 +1,23 @@
-import {
-    typing,
-    getArgs,
-    downloadMedia,
-    api,
-    MAX_FILE_SIZE,
-    cleanupTempFile,
-    ProgressMessage,
-    extractAudioClip
-} from '../../src/lib/index.js';
+import { typing, getArgs, downloadMedia, api, MAX_FILE_SIZE, cleanupTempFile, ProgressMessage, extractAudioClip, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('play')
     .in('download')
-    .desc('Cari & download lagu jadi MP3, atau kenali lagu dari audio/video yang direply')
+    .desc('Search & download a song as MP3, or recognize a song from replied audio/video')
     .prefixOnly()
     .ai({
-        trigger: 'User minta putar lagu, download musik, dengerin lagu tertentu, atau reply/kirim audio/video sambil minta dicariin judul lagunya',
+        trigger: 'User asks to play a song, download music, or listen to a track, or reply/send audio/video',
         examples: [
             'play shape of you',
-            'puterin lagu bohemian rhapsody',
-            'download lagu taylor swift',
-            'cariin lagu ini dong',
-            'ini lagu apa ya',
-            'judul lagu di video ini apa',
+            'play bohemian rhapsody',
+            'download taylor swift song',
+            'find this song',
+            'what song is this',
+            'what is the song in this video',
         ],
-        args: { query: 'Judul atau artis lagu (boleh kosong kalau reply audio/video)' },
+        args: { query: 'Song title or artist (can be empty if replying to audio/video)' },
     })
-    .run(async (sock, { body, raw, from, message }) => {
+    .run(async (sock, { body, raw, from, message, db, primaryId }) => {
         const bar = new ProgressMessage(sock, from, raw);
         let filePath = null;
         let searchQuery = getArgs(body);
@@ -36,18 +27,18 @@ export default plugin('play')
                 const media = await downloadMedia(raw, message.quoted, ['audio', 'video']);
                 if (!media) {
                     return sock.sendMessage(from, {
-                        text: '❌ Masukkan judul lagu, atau reply/kirim audio/video yang ada lagunya!'
+                        text: msg('need.play')
                     }, { quoted: raw });
                 }
 
                 await typing(sock, from);
-                await bar.start('🎧 Mendengarkan lagu...');
+                await bar.start(msg('wait.listening'));
 
                 let clip;
                 try {
                     clip = await extractAudioClip(media.buffer, 10);
                 } catch (e) {
-                    await bar.fail(`Gagal memproses audio: ${e.message}`);
+                    await bar.fail(msg('fail.audio', { msg: e.message }));
                     return;
                 }
 
@@ -55,33 +46,33 @@ export default plugin('play')
                 try {
                     recognized = await api.recognizeSong(clip);
                 } catch (e) {
-                    await bar.fail(`Gagal mengenali lagu: ${e.message}`);
+                    await bar.fail(msg('fail.generic', { msg: e.message }));
                     return;
                 }
 
                 if (!recognized) {
-                    await bar.fail('Gak ketemu lagunya 😔 coba reply potongan yang lebih jelas / gak banyak noise.');
+                    await bar.fail(msg('fail.not_found') + ' Try a clearer clip with less noise.');
                     return;
                 }
 
                 searchQuery = `${recognized.artist} ${recognized.title}`.trim();
                 const via = recognized.source === 'kode S' ? 'kode S' : recognized.source === 'kode A' ? 'kode A' : '';
-                await bar.stage(`🎶 Ketemu${via ? ` (${via})` : ''}: ${recognized.artist} - ${recognized.title}`, true);
+                await bar.stage(`🎶 Found${via ? ` (${via})` : ''}: ${recognized.artist} - ${recognized.title}`, true);
             } else {
                 await typing(sock, from);
-                await bar.start('🔍 Mencari lagu...');
+                await bar.start('🔍 Searching for song...');
             }
 
-            const data = await api.ytplay(searchQuery, percent => bar.update('⬇️ Mengunduh & mengonversi...', percent));
+            const data = await api.ytplay(searchQuery, percent => bar.update('⬇️ Downloading & converting...', percent));
             filePath = data.url;
 
             if (data.size > MAX_FILE_SIZE) {
                 cleanupTempFile(filePath);
-                await bar.fail(`File terlalu besar (${(data.size / 1024 / 1024).toFixed(1)}MB). Batas maksimal 15MB.`);
+                await bar.fail(msg('fail.media_large', { mb: (data.size / 1024 / 1024).toFixed(1) }));
                 return;
             }
 
-            await bar.done(`✅ ${data.title}\nMengirim...`);
+            await bar.done(msg('wait.yt_send', { title: data.title }));
 
             await sock.sendMessage(from, {
                 audio: { url: filePath },
@@ -91,7 +82,7 @@ export default plugin('play')
             }, { quoted: raw });
 
         } catch (e) {
-            await bar.fail(`Gagal: ${e.message}`);
+            await bar.fail(msg('fail.generic', { msg: e.message }));
         } finally {
             cleanupTempFile(filePath);
         }

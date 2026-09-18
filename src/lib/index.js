@@ -1,4 +1,6 @@
 export * from './utils.js';
+export * from './messages.js';
+export * from './scrapeEmoji.js';
 export * from './logger.js';
 export * from './menuCatalog.js';
 

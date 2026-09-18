@@ -1,33 +1,33 @@
-import { sendInlineWebUI, renderInfoCard, htmlEscape } from '../../src/lib/index.js';
+import { sendInlineWebUI, renderInfoCard, htmlEscape, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('infogroup', 'ginfo')
     .in('group')
-    .desc('Lihat info group')
+    .desc('View group info')
     .prefixOnly()
     .groupOnly()
-    .signal('User minta info group', ['infogroup', 'ginfo', 'info group'])
-    .run(async (sock, { raw, from, groupMetadata, admins, participants }) => {
-        if (!groupMetadata) return sock.sendMessage(from, { text: '❌ Gagal ambil data group.' }, { quoted: raw });
+    .signal('User asks to info group', ['infogroup', 'ginfo', 'info group'])
+    .run(async (sock, { raw, from, groupMetadata, admins, participants, db, primaryId }) => {
+        if (!groupMetadata) return sock.sendMessage(from, { text: msg('fail.group') }, { quoted: raw });
 
         const created = groupMetadata.creation
-            ? new Date(groupMetadata.creation * 1000).toLocaleDateString('id-ID')
+            ? new Date(groupMetadata.creation * 1000).toLocaleDateString('en-US')
             : '-';
 
         const ephemeral = groupMetadata.ephemeralDuration
             ? `${Math.round(groupMetadata.ephemeralDuration / 3600)} jam`
-            : 'Nonaktif';
+            : 'Disabled';
 
         const rows = [
             ['ID', htmlEscape(from)],
-            ['Dibuat', htmlEscape(created)],
+            ['Created', htmlEscape(created)],
             ['Member', String(participants.length)],
             ['Admin', String(admins.length)],
-            ['Kirim Pesan', groupMetadata.announce ? '🔒 Hanya Admin' : '🔓 Semua Member'],
-            ['Edit Info', groupMetadata.restrict ? '🔒 Hanya Admin' : '🔓 Semua Member'],
-            ['Tambah Member', groupMetadata.memberAddMode === false ? '🔒 Hanya Admin' : '🔓 Semua Member'],
-            ['Sekali Lihat', htmlEscape(ephemeral)],
-            ...(groupMetadata.isCommunity ? [['Community', '✅ Ya']] : []),
+            ['Send Messages', groupMetadata.announce ? '🔒 Only Admin' : '🔓 All Members'],
+            ['Edit Info', groupMetadata.restrict ? '🔒 Only Admin' : '🔓 All Members'],
+            ['Add Members', groupMetadata.memberAddMode === false ? '🔒 Only Admin' : '🔓 All Members'],
+            ['View Once Duration', htmlEscape(ephemeral)],
+            ...(groupMetadata.isCommunity ? [['Community', '✅ Yes']] : []),
         ];
 
         const html = renderInfoCard({
@@ -36,6 +36,6 @@ export default plugin('infogroup', 'ginfo')
             rows,
         });
 
-        await sendInlineWebUI(sock, from, html, 'Info Group');
+        await sendInlineWebUI(sock, from, html, 'Group Info');
     });
 

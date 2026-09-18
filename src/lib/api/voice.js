@@ -22,12 +22,12 @@ export const voiceApi = {
 			const r = data.result;
 			return typeof r === 'string' ? r : (r.url || r.audio || r.output);
 		}
-		throw new Error(data.message || 'Gagal generate TTS.');
+		throw new Error(data.message || 'Failed to generate TTS.');
 	},
 
 	nagaTTS: async (text, voice = 'Shimmer', model = 'eleven-multilingual-v2:free') => {
-		if (!NAGA_KEY) throw new Error('NAGA_API_KEY tidak diset di .env');
-		if (!text || !text.trim()) throw new Error('Teks TTS kosong.');
+		if (!NAGA_KEY) throw new Error('NAGA_API_KEY is not set in .env');
+		if (!text || !text.trim()) throw new Error('TTS text is empty.');
 		const innya = getDynamicInstructions(text);
 
 		let res;
@@ -41,7 +41,7 @@ export const voiceApi = {
 				body: JSON.stringify({ model, voice, input: text, instructions: innya, speed: 1.0 }),
 			});
 		} catch (e) {
-			throw new Error(`Naga TTS tidak bisa diakses: ${e.message}`);
+			throw new Error(`Naga TTS is unreachable: ${e.message}`);
 		}
 
 		const contentType = res.headers.get('content-type') || '';
@@ -58,17 +58,17 @@ export const voiceApi = {
 		}
 
 		const buffer = Buffer.from(await res.arrayBuffer());
-		if (buffer.length < 100) throw new Error('Naga TTS mengembalikan audio kosong/tidak valid.');
+		if (buffer.length < 100) throw new Error('Naga TTS returned empty/invalid audio.');
 		return buffer;
 	},
 
 	elevenlabs: async (text, voice = 'bella', pitch = 0, speed = 0.9) => {
-		if (!text || !text.trim()) throw new Error('Teks TTS kosong.');
+		if (!text || !text.trim()) throw new Error('TTS text is empty.');
 		const url = `https://api.termai.cc/api/text2speech/elevenlabs?text=${encodeURIComponent(text)}&voice=${voice}&pitch=${pitch}&speed=${speed}&key=Bell409`;
 		const res = await fetch(url);
 		if (!res.ok) throw new Error(`ElevenLabs error: ${res.status}`);
 		const buffer = Buffer.from(await res.arrayBuffer());
-		if (buffer.length < 100) throw new Error('ElevenLabs mengembalikan audio kosong/tidak valid.');
+		if (buffer.length < 100) throw new Error('ElevenLabs returned empty/invalid audio.');
 		return buffer;
 	},
 
@@ -76,7 +76,7 @@ export const voiceApi = {
 		try {
 			return await voiceApi.nagaTTS(text, voice);
 		} catch (e) {
-			logger.warn(`[tts] Naga gagal (${e.message}), fallback ke ElevenLabs...`);
+			logger.warn(`[tts] Naga failed (${e.message}), falling back to ElevenLabs...`);
 			return await voiceApi.elevenlabs(text);
 		}
 	},
