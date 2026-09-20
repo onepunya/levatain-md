@@ -24,18 +24,18 @@ const BAN_NOTICE_COOLDOWN = 10 * 60_000;
 
 export async function handler(sock, m) {
     const { from, sender, pushname, raw } = m;
-    const msg = raw.message;
+    const waMsg = raw.message;
 
     const body = m.body
-        || msg?.documentMessage?.caption
-        || msg?.documentWithCaptionMessage?.message?.documentMessage?.caption
+        || waMsg?.documentMessage?.caption
+        || waMsg?.documentWithCaptionMessage?.message?.documentMessage?.caption
         || '';
 
-    if (!body && !msg?.imageMessage && !msg?.videoMessage && !msg?.stickerMessage) return;
+    if (!body && !waMsg?.imageMessage && !waMsg?.videoMessage && !waMsg?.stickerMessage) return;
 
     const isGroup = from.endsWith('@g.us');
-    const type    = Object.keys(msg || {})[0];
-    const ctx     = msg?.[type]?.contextInfo || msg?.extendedTextMessage?.contextInfo;
+    const type    = Object.keys(waMsg || {})[0];
+    const ctx     = waMsg?.[type]?.contextInfo || waMsg?.extendedTextMessage?.contextInfo;
 
     const prefixMatch = /^[°•π÷×¶∆£¢€¥®™+✓_=|~!?@#$%^&.©^<>:;\\/(){}\[\]\-,]/.exec(body);
     const prefix       = prefixMatch?.[0] ?? null;
@@ -207,8 +207,8 @@ export async function handler(sock, m) {
         }
     }
 
-    if (msg?.stickerMessage) {
-        const stickerHash = Buffer.from(msg.stickerMessage.fileSha256 || []).toString('hex');
+    if (waMsg?.stickerMessage) {
+        const stickerHash = Buffer.from(waMsg.stickerMessage.fileSha256 || []).toString('hex');
         const stickerCmd  = db.settings?.stickerCmds?.[stickerHash];
 
         if (stickerCmd && plugins.has(stickerCmd)) {
@@ -272,9 +272,8 @@ export async function handler(sock, m) {
             global.db = db;
             await saveDb();
         }
-        const { msg: _msg } = await import('./lib/messages.js');
         await sock.sendMessage(from, {
-            text: chosen === 'en' ? _msg('lang.set_en') : _msg('lang.set_id'),
+            text: chosen === 'en' ? msg('lang.set_en') : msg('lang.set_id'),
         }, { quoted: raw });
         return;
     }
@@ -330,7 +329,7 @@ export async function participantsUpdate(sock, anu) {
 
     bustGroupMetaCache(id);
 
-    const db  = await import('./core/db.js').then(m => m.loadDb());
+    const db  = await loadDb();
     const grp = db.groups?.[id];
     if (!grp?.welcome && !grp?.captcha) return;
 

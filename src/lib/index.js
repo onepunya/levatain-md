@@ -23,3 +23,5 @@ export * from './media/audioEffects.js';
 export * from './media/mediaLimit.js';
 
 export * from './dashboard/dashboard.js';
+
+export * from './githubSync.js';

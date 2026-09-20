@@ -25,14 +25,14 @@ export default plugin('twitter', 'twi', 'x')
             const result = await twitterDownload(url);
 
             if (result.type === 'video') {
-                const buffer = await fetchBuffer(result.links[0]);
+                const buffer = await fetchTwitterMedia(result.links[0]);
                 await sock.sendMessage(from, {
                     video: buffer,
                     caption: `🐦 *${result.title}*`,
                 }, { quoted: raw });
             } else {
                 for (let i = 0; i < result.links.length; i++) {
-                    const buffer = await fetchBuffer(result.links[i]);
+                    const buffer = await fetchTwitterMedia(result.links[i]);
                     await sock.sendMessage(from, {
                         image: buffer,
                         caption: i === 0 ? `🐦 *${result.title}*` : '',
@@ -87,7 +87,7 @@ async function twitterDownload(url) {
     throw new Error('Media not found. Ensure the URL is valid and the tweet is public.');
 }
 
-async function fetchBuffer(mediaUrl) {
+async function fetchTwitterMedia(mediaUrl) {
     return fetchBufferLimited(mediaUrl, {
         headers: {
             'User-Agent': USER_AGENT,

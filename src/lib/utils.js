@@ -8,39 +8,52 @@ import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import { logger } from './logger.js';
 import { MAX_MEDIA_BYTES, MediaTooLargeError, assertBufferUnderLimit, sendRemoteMedia } from './media/mediaLimit.js';
 
-export const toVoiceNoteOpus = buffer => new Promise((resolve, reject) => {
-    const tempDir = os.tmpdir();
-    const id = uniqueId('vn');
-    const inputFile = path.join(tempDir, `${id}.mp3`);
-    const outputFile = path.join(tempDir, `${id}.ogg`);
+export const uniqueId = (prefixArg = 'id') => `${prefixArg}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-    const cleanup = () => {
-        try { if (fs.existsSync(inputFile)) fs.unlinkSync(inputFile); } catch {}
-        try { if (fs.existsSync(outputFile)) fs.unlinkSync(outputFile); } catch {}
-    };
+export function runFfmpegTempFile(buffer, { inExt = 'in', outExt = 'out', idPrefix = 'ff', configure } = {}) {
+    return new Promise((resolve, reject) => {
+        const tempDir = os.tmpdir();
+        const id = uniqueId(idPrefix);
+        const inputFile = path.join(tempDir, `${id}.${inExt}`);
+        const outputFile = path.join(tempDir, `${id}.${outExt}`);
 
-    fs.writeFileSync(inputFile, buffer);
+        const cleanup = () => {
+            try { if (fs.existsSync(inputFile)) fs.unlinkSync(inputFile); } catch {}
+            try { if (fs.existsSync(outputFile)) fs.unlinkSync(outputFile); } catch {}
+        };
 
-    ffmpeg(inputFile)
+        fs.writeFileSync(inputFile, buffer);
+
+        const command = ffmpeg(inputFile);
+        configure(command);
+        command
+            .on('end', () => {
+                try {
+                    const out = fs.readFileSync(outputFile);
+                    cleanup();
+                    resolve(out);
+                } catch (error) {
+                    cleanup();
+                    reject(error);
+                }
+            })
+            .on('error', error => {
+                cleanup();
+                reject(error);
+            })
+            .save(outputFile);
+    });
+}
+
+export const toVoiceNoteOpus = buffer => runFfmpegTempFile(buffer, {
+    inExt: 'mp3',
+    outExt: 'ogg',
+    idPrefix: 'vn',
+    configure: command => command
         .audioCodec('libopus')
         .audioBitrate(64)
         .audioChannels(1)
-        .format('ogg')
-        .on('end', () => {
-            try {
-                const out = fs.readFileSync(outputFile);
-                cleanup();
-                resolve(out);
-            } catch (error) {
-                cleanup();
-                reject(error);
-            }
-        })
-        .on('error', error => {
-            cleanup();
-            reject(error);
-        })
-        .save(outputFile);
+        .format('ogg'),
 });
 
 export function applyAudioFilter(buffer, filterChain) {
@@ -334,7 +347,6 @@ export function cleanTempFiles(maxAgeMs = 10 * 60 * 1000) {
 
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-export const uniqueId = (prefix = 'id') => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 

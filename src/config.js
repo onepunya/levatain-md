@@ -68,6 +68,12 @@ export const config = {
         repo:  process.env.GITHUB_REPO  || '',    
         path:  process.env.GITHUB_DB_PATH || 'database/db.json',
     },
+
+    githubSync: {
+        token:  process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || '',
+        repo:   process.env.GITHUB_SYNC_REPO  || '',
+        branch: process.env.GITHUB_SYNC_BRANCH || 'main',
+    },
 };
 
 

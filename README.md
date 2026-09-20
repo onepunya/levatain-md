@@ -86,6 +86,7 @@ All the keys below go in the `.env` file (not `.env.example`), one line per vari
 | `.editimage` / `.aiedit` (Magic Hour) | `MAGICHOUR_KEY_1` through `MAGICHOUR_KEY_3` | Sign up at [magichour.ai](https://magichour.ai/) → go to **Dashboard** → **API Keys** menu → generate a new key. You can fill in more than one for auto-rotation. |
 | `.play` song recognition (fallback) | `AUDD_API_KEY` | Sign up for free at [dashboard.audd.io](https://dashboard.audd.io/). |
 | `.play` song recognition (tried first) | `SHAZAM_RAPIDAPI_KEY`, `SHAZAM_RAPIDAPI_HOST` | Sign up & subscribe (free plan available) at [RapidAPI - Shazam API](https://rapidapi.com/diyorbekkanal/api/shazam-api6). |
+| `.pushgh` / `.deploy` (push source to GitHub) | `GITHUB_SYNC_TOKEN` (or reuses `GITHUB_TOKEN`), `GITHUB_SYNC_REPO`, `GITHUB_SYNC_BRANCH` | [github.com/settings/tokens](https://github.com/settings/tokens) → generate a token with `repo` scope (classic) or `Contents: write` (fine-grained, scoped to the target repo). `GITHUB_SYNC_REPO` is `username/repo-name` of the **public** repo you want the bot to push to. |
 
 Once you have a key, open `.env`, paste it on the matching env var line, save, then restart the bot (`npm start` again / `pm2 restart levatain-md`).
 

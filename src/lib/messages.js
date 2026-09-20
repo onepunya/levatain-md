@@ -215,6 +215,11 @@ const M = {
     'fail.ai_down': '⚠️ AI is unavailable. Try again later!',
     'fail.ai_error': '⚠️ Something went wrong. Try again!',
 
+    'wait.github_push':  '⏳ Pushing project files to GitHub...',
+    'done.github_push':  '✅ Pushed *{count}* files to GitHub.\n📦 Commit: {url}',
+    'fail.github_push':  '❌ GitHub push failed: {msg}',
+    'fail.github_not_configured': '❌ GitHub sync not configured.\nSet *GITHUB_SYNC_REPO* (and a token) in .env first.',
+
     'lang.pick': '🌐 Please choose your language first.',
     'lang.set_en': '✅ Language set to *English*. You can chat with the AI now.',
     'lang.set_id': '✅ Bahasa diset ke *Indonesia*. Silakan chat dengan AI.',
