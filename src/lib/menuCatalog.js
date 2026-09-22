@@ -8,12 +8,13 @@ export const TAG_META = {
     audiochanger: { emoji: '🎚️', label: 'Audio Changer' },
     download:     { emoji: '📥', label: 'Download' },
     group:        { emoji: '👥', label: 'Group' },
+    limit:        { emoji: '⚡', label: 'Limit & Plan' },
     owner:        { emoji: '👑', label: 'Owner' },
     main:         { emoji: '⚙️', label: 'Main' },
     general:      { emoji: '📋', label: 'Other' },
 };
 
-const KNOWN_TAG_ORDER = ['ai', 'download', 'tools', 'audiochanger', 'fun', 'group', 'owner', 'main', 'general'];
+const KNOWN_TAG_ORDER = ['ai', 'download', 'tools', 'audiochanger', 'fun', 'group', 'limit', 'owner', 'main', 'general'];
 
 export function uniqueCmds(cmds = []) {
     const list = Array.isArray(cmds) ? cmds : [cmds];
@@ -142,6 +143,8 @@ export function buildAllMenuText(pushname, isOwner) {
     body += `│ • ${totalShown} commands available\n`;
     body += `│ • Uptime ${formatUptime(process.uptime())}\n`;
     body += `│ • Media limit *15MB* (upload & download)\n`;
+    body += `│ • Usage limit reset every *3 hours*\n`;
+    body += `│ • .limit · .register · .plan\n`;
     body += `┗────────────────··\n\n`;
     body += `_Type *.menu* to pick a category._`;
 
@@ -157,7 +160,7 @@ export function buildHomeCaption(pushname, device, isOwner) {
     let text = hasNativeHeader ? '' : `✦ *${global.botName}* ✦\n`;
     text += `${greeting()}, *${pushname || 'kamu'}* 👋\n`;
     text += `_${greetingPhrase()}_\n\n`;
-    text += `${totalShown} command\nlimit media 15MB\n`;
+    text += `${totalShown} command\nmedia limit 15MB\nusage limit reset every 3h\n.limit · .register · .plan\n`;
 
     if (isIos) {
         text += `\n*Pick a category* (iPhone — type a number or command):\n\n`;

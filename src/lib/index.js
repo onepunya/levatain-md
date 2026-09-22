@@ -21,6 +21,7 @@ export * from './wa/device.js';
 
 export * from './media/audioEffects.js';
 export * from './media/mediaLimit.js';
+export * from './limit.js';
 
 export * from './dashboard/dashboard.js';
 

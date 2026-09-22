@@ -1,16 +1,16 @@
 import { typing, getArgs, api, MAX_FILE_SIZE, cleanupTempFile, ProgressMessage, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
-export default plugin('ytmp3', 'ytmp4')
+export default plugin('ytmp3', 'ytmp4', 'ytv', 'ytvideo')
     .in('download')
     .desc('Download audio/video from a YouTube URL')
     .showAllAliases()
     .ai({
         trigger: 'User asks to download from YouTube with a URL, ytmp3 or ytmp4',
-        examples: ['ytmp3 https://youtu.be/xxx', 'download youtube ini jadi mp4'],
+        examples: ['ytmp3 https://youtu.be/xxx', 'ytmp4 https://youtu.be/xxx', 'download youtube as mp4'],
         args: { url: 'Valid YouTube URL' },
     })
-    .run(async (sock, { body, raw, from, command, db, primaryId }) => {
+    .run(async (sock, { body, raw, from, command }) => {
         const url = getArgs(body);
         const format = command === 'ytmp3' ? 'mp3' : 'mp4';
 

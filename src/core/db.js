@@ -18,6 +18,14 @@ const userSchema = (m) => ({
     bannedReason:'',
     lastChat:    Date.now(),
     warns:       0,
+    registered:  false,
+    username:    '',
+    age:         0,
+    province:    '',
+    plan:        'free',
+    planExpiry:  0,
+    limitUsed:   0,
+    lastLimitReset: 0,
 });
 
 const groupSchema = () => ({

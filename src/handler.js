@@ -10,7 +10,10 @@ import {
     getGroupMeta,
     bustGroupMetaCache,
     detectDevice,
-    msg
+    msg,
+    checkAndConsume,
+    buildLimitCard,
+    getLimitInfo
 } from './lib/index.js';
 import { loadDb, saveDb, ensureUser, ensureGroup } from './core/db.js';
 import { handleAI } from './ai/index.js';
@@ -228,6 +231,14 @@ export async function handler(sock, m) {
                 cooldowns.set(cdKey, Date.now());
             }
 
+            const stickerLimit = await checkAndConsume(db.users[primaryId], stickerCmd, isOwner);
+            if (!stickerLimit.ok) {
+                const card = buildLimitCard(stickerLimit.info, db.users[primaryId].name || pushname);
+                return sock.sendMessage(from, {
+                    text: `🚫 *Limit exhausted!*\n\n${card}\n\n💡 Type *.plan* to upgrade or wait for reset.`,
+                }, { quoted: raw });
+            }
+
             logger.cmd(primaryId, `[stiker] ${stickerCmd}`);
             global.db = db;
 
@@ -293,6 +304,19 @@ export async function handler(sock, m) {
             const sisa   = cdTime - Math.floor(since / 1000);
             if (sisa > 0) return sock.sendMessage(from, { text: msg('sys.cooldown', { sec: sisa }) });
             cooldowns.set(cdKey, Date.now());
+        }
+
+        const skipLimit = ['limit', 'ceklimit', 'register', 'daftar', 'plan', 'beli', 'harga', 'setplan', 'addlimit', 'menu', 'allmenu', 'ping', 'infobot', 'lang', 'sc'].includes(command);
+        if (!skipLimit) {
+            const result = await checkAndConsume(db.users[primaryId], command, isOwner);
+            if (!result.ok) {
+                const card = buildLimitCard(result.info, db.users[primaryId].name || pushname);
+                return sock.sendMessage(from, {
+                    text: `🚫 *Limit exhausted!*\n\n${card}\n\n💡 Type *.plan* to upgrade or wait for reset.`,
+                }, { quoted: raw });
+            }
+            global.db = db;
+            await saveDb();
         }
 
         logger.cmd(primaryId, command);
