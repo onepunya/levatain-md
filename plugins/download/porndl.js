@@ -11,7 +11,11 @@ export default plugin('porn', 'bokep')
         examples: ['porn url video dewasa', 'download video porno ini'],
         args: { url: 'Adult video URL' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
             text: msg('need.url.porn')

@@ -10,7 +10,11 @@ export default plugin('imagine', 'genimg')
         examples: ['imagine cat astronaut', 'buatkan gambar naga biru'],
         args: { prompt: 'Description of the image to generate' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const prompt = getArgs(body);
         if (!prompt) return sock.sendMessage(from, {
             text: msg('need.imagine')

@@ -13,8 +13,11 @@ export default plugin('rvo', 'readviewonce', 'readvo', 'viewonce')
         'read view once',
         'open once-viewed message',
     ])
-    .run(async (sock, ctx) => {
-        const { message, raw, from } = ctx;
+    .run(async (sock, {
+        message,
+        raw,
+        from
+    }) => {
         const result = await downloadMedia(raw, message.quoted, ['image', 'video', 'audio']);
 
         if (!result) {

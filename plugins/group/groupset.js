@@ -12,7 +12,13 @@ export default plugin('setgname', 'setgdesc', 'linkgroup', 'revoklink')
         examples: ['setgname Nama Baru', 'setgdesc Deskripsi baru', 'linkgroup', 'revoklink'],
         args: { text: 'New name/description text (for setgname/setgdesc)' },
     })
-    .run(async (sock, { body, raw, from, command, isBotAdmin, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        command,
+        isBotAdmin
+    }) => {
         if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
 
         if (command === 'setgname') {

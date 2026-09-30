@@ -14,8 +14,11 @@ export default plugin('emoticon', 'emoji', 'emo', 'kaomoji')
         'kaomoji love',
         'smile emoji',
     ])
-    .run(async (sock, ctx) => {
-        const { body, raw, from } = ctx;
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const query = getArgs(body, 1);
 
         if (!query) {

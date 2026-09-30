@@ -7,7 +7,12 @@ export default plugin('mode')
     .desc('Set bot mode: public (all chats), group (groups only), private (owner only)')
     .prefixOnly()
     .ownerOnly()
-    .run(async (sock, { body, raw, from, gdb }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        gdb
+    }) => {
         const arg = getArgs(body).toLowerCase();
 
         if (!arg || !VALID.includes(arg)) {

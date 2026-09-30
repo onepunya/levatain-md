@@ -12,7 +12,11 @@ export default plugin('twitter', 'twi', 'x')
         examples: ['tw https://x.com/user/status/xxx', 'download twitter ini'],
         args: { url: 'Twitter/X URL' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
             text: msg('need.url.twitter')

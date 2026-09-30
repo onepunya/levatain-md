@@ -7,7 +7,13 @@ export default plugin('infogroup', 'ginfo')
     .prefixOnly()
     .groupOnly()
     .signal('User asks to info group', ['infogroup', 'ginfo', 'info group'])
-    .run(async (sock, { raw, from, groupMetadata, admins, participants, db, primaryId }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        groupMetadata,
+        admins,
+        participants
+    }) => {
         if (!groupMetadata) return sock.sendMessage(from, { text: msg('fail.group') }, { quoted: raw });
 
         const created = groupMetadata.creation

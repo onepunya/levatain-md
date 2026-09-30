@@ -8,7 +8,17 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
     .groupOnly()
     .cooldown(10)
     .signal('User wants to confess feelings or propose to someone in a group', ['tembak @user', 'lamar @user aku suka kamu', 'terima', 'tolak'])
-    .run(async (sock, { raw, from, command, message, mentionedJid, primaryId, pushname, botNumber, gdb  }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        command,
+        message,
+        mentionedJid,
+        primaryId,
+        pushname,
+        botNumber,
+        gdb
+    }) => {
         const nameOf = (jid, fallbackName) => gdb?.users?.[jid]?.name || fallbackName || `+${jid.split('@')[0]}`;
 
         if (command === 'terima' || command === 'tolak') {

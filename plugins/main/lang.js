@@ -14,7 +14,13 @@ export default plugin('lang', 'language')
         'lang en',
         'lang id',
     ])
-    .run(async (sock, { body, raw, from, db, saveDb }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        db,
+        saveDb
+    }) => {
         const arg = body.split(/\s+/).slice(1).join(' ').trim().toLowerCase();
         const current = (db?.lang === 'id' ? 'id' : 'en');
 

@@ -10,7 +10,11 @@ export default plugin('pushgh', 'deploy')
         trigger: 'Owner asks to push/deploy/sync the bot source code to GitHub',
         examples: ['pushgh', 'deploy ke github', 'sync code ke repo'],
     })
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         if (!isGithubSyncEnabled()) {
             return sock.sendMessage(from, { text: msg('fail.github_not_configured') }, { quoted: raw });
         }

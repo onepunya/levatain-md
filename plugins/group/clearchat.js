@@ -7,7 +7,10 @@ export default plugin('clearchat', 'cleargc')
     .adminOnly()
     .groupOnly()
     .signal('User asks to clear/delete group chat history', ['clearchat', 'bersihkan chat group ini'])
-    .run(async (sock, { raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        raw,
+        from
+    }) => {
         try {
             await sock.chatModify({
                 clear: { messages: [{ id: raw.key.id, fromMe: Boolean(raw.key.fromMe), timestamp: raw.messageTimestamp }] },

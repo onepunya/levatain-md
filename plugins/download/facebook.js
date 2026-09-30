@@ -12,7 +12,11 @@ export default plugin('facebook', 'fb')
         examples: ['fb https://www.facebook.com/share/r/xxx/', 'download facebook ini'],
         args: { url: 'Facebook URL' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
             text: msg('need.url.fb')

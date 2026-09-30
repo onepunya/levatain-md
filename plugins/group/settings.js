@@ -13,7 +13,13 @@ export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'set
         examples: ['enable welcome', 'disable antilink', 'enable captcha'],
         args: { toggle: 'on/off' },
     })
-    .run(async (sock, { body, raw, from, command, gdb, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        command,
+        gdb
+    }) => {
         const feature = featureMap[command];
         if (!feature) return;
 

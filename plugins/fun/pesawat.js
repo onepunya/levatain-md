@@ -6,7 +6,11 @@ export default plugin('pesawat', 'plane', 'shooter')
     .desc('Canvas plane shooter game')
     .prefixOnly()
     .signal('User wants to play plane shooter or space shooter', ['pesawat', 'plane', 'shooter'])
-    .run(async (sock, { raw, from, pushname, db, primaryId }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        pushname
+    }) => {
         const name = String(pushname || 'Player').replace(/[<>'\\']/g, '').slice(0, 20);
         await sock.sendMessage(from, { text: msg('game.open_panel') }, { quoted: raw });
         const html = build(name);

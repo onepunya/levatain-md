@@ -7,7 +7,12 @@ export default plugin('tod', 'truth', 'dare')
     .showAllAliases()
     .cooldown(3)
     .signal('User wants to play truth or dare', ['tod', 'truth', 'dare'])
-    .run(async (sock, { raw, from, command, pushname }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        command,
+        pushname
+    }) => {
         let type = command;
         if (type === 'tod') type = Math.random() < 0.5 ? 'truth' : 'dare';
 

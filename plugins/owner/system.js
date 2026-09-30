@@ -8,7 +8,13 @@ export default plugin('reload', 'maintenance', 'ban', 'unban')
     .desc('System commands for owner')
     .showAllAliases()
     .ownerOnly()
-    .run(async (sock, { body, raw, from, command, mentionedJid, gdb, primaryId }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        command,
+        mentionedJid,
+        gdb
+    }) => {
         if (command === 'reload') {
             const result = await reloadPlugins();
             return sock.sendMessage(from, {

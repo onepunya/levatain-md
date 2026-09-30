@@ -6,7 +6,11 @@ export default plugin('tourl', 'geturl', 'uploadfile')
     .desc('Upload media and get its URL')
     .prefixOnly()
     .signal('User asks to upload a file, convert media to a link/url, or get a url from an image', ['tourl', 'make this a link', 'upload this image', 'make url from this video'])
-    .run(async (sock, { message, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        message,
+        raw,
+        from
+    }) => {
         const types  = ['image', 'video', 'audio', 'sticker', 'document'];
         const result = await downloadMedia(raw, message.quoted, types);
 

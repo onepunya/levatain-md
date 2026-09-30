@@ -5,7 +5,13 @@ export default plugin('memory', 'aiclear')
     .in('ai')
     .desc('View or clear AI memory')
     .showAllAliases()
-    .run(async (sock, { body, raw, from, primaryId, pushname }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        primaryId,
+        pushname
+    }) => {
         const args = body.split(' ').slice(1).join(' ').trim().toLowerCase();
 
         if (['clear', 'reset', 'hapus', 'delete'].includes(args) || body.toLowerCase().startsWith('aiclear')) {

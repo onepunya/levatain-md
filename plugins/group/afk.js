@@ -11,7 +11,14 @@ export default plugin('afk')
         examples: ['afk lagi makan', 'afk', 'afk sholat dulu'],
         args: { reason: 'AFK reason (optional)' },
     })
-    .run(async (sock, { body, raw, from, primaryId, gdb, isGroup }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        primaryId,
+        gdb,
+        isGroup
+    }) => {
         if (!isGroup) return sock.sendMessage(from, { text: msg('sys.group_only_short') }, { quoted: raw });
 
         const reason = getArgs(body) || '';

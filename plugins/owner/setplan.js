@@ -25,7 +25,14 @@ export default plugin('setplan')
     .ownerOnly()
     .prefixOnly()
     .signal('Owner sets user limit plan', ['.setplan @user basic', '.setplan 628xxx pro'])
-    .run(async (sock, { raw, from, message, body, mentionedJid, gdb }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        message,
+        body,
+        mentionedJid,
+        gdb
+    }) => {
         const parts = (body || '').trim().split(/\s+/).slice(1);
         const planKey = (parts.find(p => PLANS[p.toLowerCase()]) || '').toLowerCase();
         if (!planKey || !PLANS[planKey]) {

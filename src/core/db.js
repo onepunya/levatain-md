@@ -7,8 +7,9 @@ const DB_PATH = './database/db.json';
 let _db    = null;
 let _dirty = false;
 let _timer = null;
-let _remoteSha = null;       
-let _remoteTimer = null;     
+let _remoteSha = null;
+let _remoteTimer = null;
+
 const userSchema = (m) => ({
     jid:         '',
     lid:         '',
@@ -69,7 +70,7 @@ export async function saveDb() {
 
 export async function flushDb() {
     if (!_db) return;
-    await _write(true); 
+    await _write(true);
 }
 
 async function _write(forceRemote = false) {
@@ -82,7 +83,6 @@ async function _write(forceRemote = false) {
         logger.error(`[DB] Save failed: ${e.message}`);
     }
 
-    
     scheduleRemotePush(forceRemote);
 }
 
@@ -98,7 +98,7 @@ function scheduleRemotePush(immediate = false) {
         _remoteTimer = null;
         if (!_db) return;
         const ok = await pushRemoteDb(_db, _remoteSha);
-        if (ok) {            
+        if (ok) {
             const remote = await fetchRemoteDb();
             if (remote?.sha) _remoteSha = remote.sha;
         }
@@ -111,15 +111,13 @@ export async function initDb() {
         _db = remote.data;
         _remoteSha = remote.sha;
         logger.info('[DB] Using database recovered from GitHub.');
-    } else {        
+    } else {
         await loadDb();
-    }    
+    }
     if (!_db.users)    _db.users    = {};
     if (!_db.groups)   _db.groups   = {};
     if (!_db.settings) _db.settings = settingsSchema();
-    for (const [k, v] of Object.entries(settingsSchema())) {
-        if (!(k in _db.settings)) _db.settings[k] = v;
-    }
+    applyDefaults(_db.settings, settingsSchema());
     if (typeof _db.settings.self === 'boolean') {
         if (_db.settings.self) _db.settings.mode = 'private';
         delete _db.settings.self;
@@ -131,32 +129,27 @@ export async function initDb() {
     return _db;
 }
 
+function applyDefaults(target, defaults) {
+    let changed = false;
+    for (const [key, value] of Object.entries(defaults)) {
+        if (key in target) continue;
+        target[key] = value;
+        changed = true;
+    }
+    return changed;
+}
+
 export function ensureUser(db, primaryId, m) {
-    if (!db.users[primaryId]) {
-        db.users[primaryId] = userSchema(m);
-        _dirty = true;
-    }
-    for (const [k, v] of Object.entries(userSchema(m))) {
-        if (!(k in db.users[primaryId])) {
-            db.users[primaryId][k] = v;
-            _dirty = true;
-        }
-    }
+    const defaults = userSchema(m);
+    if (!db.users[primaryId]) db.users[primaryId] = {};
+    applyDefaults(db.users[primaryId], defaults);
     db.users[primaryId].lastChat = Date.now();
     _dirty = true;
 }
 
 export function ensureGroup(db, groupId) {
-    if (!db.groups[groupId]) {
-        db.groups[groupId] = groupSchema();
-        _dirty = true;
-    }
-    for (const [k, v] of Object.entries(groupSchema())) {
-        if (!(k in db.groups[groupId])) {
-            db.groups[groupId][k] = v;
-            _dirty = true;
-        }
-    }
+    if (!db.groups[groupId]) db.groups[groupId] = {};
+    if (applyDefaults(db.groups[groupId], groupSchema())) _dirty = true;
 }
 
 export function scheduleAutoReset() {

@@ -10,7 +10,11 @@ export default plugin('capcut')
         examples: ['capcut https://www.capcut.com/template/xxx', 'download capcut ini'],
         args: { url: 'CapCut template URL' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
             text: msg('need.url.capcut')

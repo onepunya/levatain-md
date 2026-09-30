@@ -70,7 +70,15 @@ export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
     .desc('Check latest earthquake info (BMKG) & set auto alerts in this chat')
     .showAllAliases()
     .signal('User asks for latest earthquake info with command="gempa", or to enable notifications', ['any earthquakes?', 'check latest earthquake', 'earthquake info today', 'enable earthquake alerts here', 'disable earthquake notifications', 'subscribe to automatic earthquake info'])
-    .run(async (sock, { raw, from, command, isGroup, isAdmin, isOwner, gdb, primaryId }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        command,
+        isGroup,
+        isAdmin,
+        isOwner,
+        gdb
+    }) => {
         if (command === 'gempa' || command === 'cekgempa') {
             try {
                 const g = await fetchGempa();

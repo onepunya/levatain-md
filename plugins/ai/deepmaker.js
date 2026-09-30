@@ -10,7 +10,7 @@ const JSEncrypt = require('jsencrypt');
 const TEMPMAIL_API = 'https://email.gue.lol';
 const API_BASE = 'https://apiv1.deepfakemaker.io/api';
 const DEEPFAKE_API = `${API_BASE}/user/api`;
-// Prefer domains known to receive DeepFakeMaker mail via email.gue.lol
+
 const DOMAINS = ['dracinku.app', 'dracinku.my.id', 'nbteam.dev', 'dramastream.dev', 'pastego.my.id'];
 const PASSWORD = 'SudahiBirahiMuKawan';
 
@@ -539,7 +539,12 @@ export default plugin('deepmaker', 'remover', 'undress')
     ],
     args: { input: 'Prompt (reply/send image)' },
   })
-  .run(async (sock, { body, message, raw, from }) => {
+  .run(async (sock, {
+      body,
+      message,
+      raw,
+      from
+  }) => {
     const prompt = getArgs(body) || 'remove all clothes, naked body';
     const bar = new ProgressMessage(sock, from, raw);
     

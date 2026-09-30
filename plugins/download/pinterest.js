@@ -21,7 +21,11 @@ export default plugin('pinterest', 'pin')
         ],
         args: { input: 'Pinterest pin URL, or search keyword' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const input = getArgs(body);
         if (!input) return sock.sendMessage(from, {
             text: msg('need.url.pin')

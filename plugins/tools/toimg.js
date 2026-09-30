@@ -6,7 +6,11 @@ export default plugin('toimg')
     .desc('Convert WhatsApp sticker to image')
     .prefixOnly()
     .signal('User asks to convert stiker jadi gambar atau foto', ['convert this sticker to image', 'toimg'])
-    .run(async (sock, { message, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        message,
+        raw,
+        from
+    }) => {
         const result = await downloadMedia(raw, message.quoted, ['sticker']);
         if (!result) return sock.sendMessage(from, { text: msg('need.sticker') }, { quoted: raw });
 

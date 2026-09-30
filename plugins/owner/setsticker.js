@@ -8,7 +8,14 @@ export default plugin('setsticker', 'stikercmd')
     .prefixOnly()
     .ownerOnly()
     .signal('register a sticker as a bot command', ['.setsticker nightcore (reply sticker)', '.setsticker remove (reply sticker)'])
-    .run(async (sock, { message, raw, from, gdb, saveDb, body, primaryId }) => {
+    .run(async (sock, {
+        message,
+        raw,
+        from,
+        gdb,
+        saveDb,
+        body
+    }) => {
         const quoted     = message.quoted;
         const stickerMsg = quoted?.raw?.message?.stickerMessage;
 

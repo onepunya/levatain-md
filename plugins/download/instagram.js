@@ -10,7 +10,11 @@ export default plugin('instagram', 'ig')
         examples: ['ig https://instagram.com/p/xxx', 'download instagram ini'],
         args: { url: 'Instagram URL' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
             text: msg('need.url.ig')

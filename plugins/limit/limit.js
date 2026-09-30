@@ -7,7 +7,13 @@ export default plugin('limit', 'ceklimit')
     .desc('Check remaining usage limit with animated bar')
     .prefixOnly()
     .signal('User wants to check limit quota remaining', ['.limit', '.ceklimit'])
-    .run(async (sock, { raw, from, primaryId, gdb, pushname }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        primaryId,
+        gdb,
+        pushname
+    }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
         const info = getLimitInfo(user);

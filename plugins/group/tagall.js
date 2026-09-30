@@ -11,7 +11,13 @@ export default plugin('tagall', 'hidetag')
         examples: ['tagall attention', 'tag all members'],
         args: { text: 'Message to send' },
     })
-    .run(async (sock, { body, raw, from, command, participants }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        command,
+        participants
+    }) => {
         const text     = body.split(' ').slice(1).join(' ') || '📢 Attention!';
         const mentions = participants.map(p => p.id);
 

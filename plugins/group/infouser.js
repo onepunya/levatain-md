@@ -12,7 +12,16 @@ export default plugin('infouser', 'whois', 'userinfo')
     .desc('View user/member info')
     .prefixOnly()
     .signal('User asks to info member/user', ['infouser @user', 'whois', 'cek profil ini'])
-    .run(async (sock, { raw, from, message, mentionedJid, participants, isGroup, primaryId, gdb, pushname }) => {
+    .run(async (sock, {
+        from,
+        message,
+        mentionedJid,
+        participants,
+        isGroup,
+        primaryId,
+        gdb,
+        pushname
+    }) => {
         let targetId;
         if (message.quoted?.sender) {
             targetId = normalizeTarget(message.quoted.sender);

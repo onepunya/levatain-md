@@ -17,7 +17,12 @@ export default plugin('play')
         ],
         args: { query: 'Song title or artist (can be empty if replying to audio/video)' },
     })
-    .run(async (sock, { body, raw, from, message, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        message
+    }) => {
         const bar = new ProgressMessage(sock, from, raw);
         let filePath = null;
         let searchQuery = getArgs(body);

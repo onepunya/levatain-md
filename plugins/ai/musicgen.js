@@ -9,7 +9,11 @@ export default plugin('musicgen', 'songgen', 'buatlagu')
     .prefixOnly()
     .cooldown(5)
     .signal('User asks to generate a song or AI music from lyrics', ['musicgen', 'buatlagu'])
-    .run(async (sock, { raw, from, primaryId, db }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        primaryId
+    }) => {
         startSession(primaryId, { from, step: 'lyrics', lyrics: '', prompt: '' }, {
             timeout: SESSION_TIMEOUT,
             onInput: handleInput,

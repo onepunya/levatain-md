@@ -11,7 +11,11 @@ export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')
         examples: ['ttprofile jokowi', 'check tiktok profile @user', 'stalk tiktok user'],
         args: { username: 'TikTok username without @' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const username = getArgs(body).replace('@', '').trim();
         if (!username) return sock.sendMessage(from, {
             text: msg('need.username')

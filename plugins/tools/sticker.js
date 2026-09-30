@@ -7,7 +7,12 @@ export default plugin('sticker', 's')
     .desc('Convert image/video to a WhatsApp sticker')
     .prefixOnly()
     .signal('User asks to make a sticker from a sent image or video', ['make this a sticker', 'sticker from this image'])
-    .run(async (sock, { message, raw, from, pushname, db, primaryId }) => {
+    .run(async (sock, {
+        message,
+        raw,
+        from,
+        pushname
+    }) => {
         const result = await downloadMedia(raw, message.quoted, ['image', 'video']);
         if (!result) return sock.sendMessage(from, { text: msg('need.image_video') }, { quoted: raw });
 

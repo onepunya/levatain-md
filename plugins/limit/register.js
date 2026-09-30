@@ -7,7 +7,14 @@ export default plugin('register', 'daftar')
     .desc('Register account for 200% limit bonus')
     .prefixOnly()
     .signal('User wants to register account for limit bonus', ['.register username 18 West Java', '.daftar levatain 20 Jakarta'])
-    .run(async (sock, { raw, from, primaryId, gdb, pushname, body }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        primaryId,
+        gdb,
+        pushname,
+        body
+    }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 

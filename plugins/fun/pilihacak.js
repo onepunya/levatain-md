@@ -14,7 +14,13 @@ export default plugin('pilihnama', 'spinnama')
         ],
         args: { text: 'Comma-separated names, or tag people (can mix)' },
     })
-    .run(async (sock, { body, raw, from, mentionedJid, gdb, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        mentionedJid,
+        gdb
+    }) => {
         const rawText = body.split(' ').slice(1).join(' ').trim();
 
         if (!rawText) {

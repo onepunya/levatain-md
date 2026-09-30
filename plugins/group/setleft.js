@@ -13,7 +13,12 @@ export default plugin('setleft')
         examples: ['setleft goodbye @user from @group', 'setleft off'],
         args: { text: 'Message text, can use @user and @group' },
     })
-    .run(async (sock, { body, raw, from, gdb, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        gdb
+    }) => {
         const text = getArgs(body);
         const grp  = gdb.groups[from];
 

@@ -11,7 +11,14 @@ export default plugin('testhtml', 'sendhtml')
             'send this html to webui: <button onclick="alert(1)">click</button>',
             'reply to a message with html then .testhtml',
         ])
-    .run(async (sock, { raw, from, body, message, db, primaryId }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        body,
+        message,
+        db,
+        primaryId
+    }) => {
         const _i18n = { db, primaryId };         
         let html = body.replace(/^\S+\s*/, '');
 

@@ -7,7 +7,13 @@ export default plugin('plan', 'beli', 'harga')
     .desc('View limit packages & how to buy')
     .prefixOnly()
     .signal('User asks about limit plans prices or how to buy premium', ['.plan', '.beli', '.harga'])
-    .run(async (sock, { raw, from, primaryId, gdb, pushname }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        primaryId,
+        gdb,
+        pushname
+    }) => {
         const user = gdb.users[primaryId];
         const info = user ? getLimitInfo(user) : null;
         const ownerNum = (config.owner.number || '').replace(/\D/g, '');

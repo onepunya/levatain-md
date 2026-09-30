@@ -6,7 +6,15 @@ export default plugin('menu', 'allmenu')
     .desc('Category menu (Android list / iPhone text) and allmenu')
     .showAllAliases()
     .signal('User asks for command list, menu, help, or allmenu', ['menu', 'allmenu', 'command apa aja', 'help'])
-    .run(async (sock, { raw, from, pushname, isOwner, command, body, device: deviceHint }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        pushname,
+        isOwner,
+        command,
+        body,
+        device: deviceHint
+    }) => {
         const device = deviceHint || detectDevice(raw);
         const arg = command === 'allmenu' ? 'all' : getArgs(body);
         const target = resolveMenuArg(arg, isOwner);

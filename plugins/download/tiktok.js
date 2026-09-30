@@ -10,7 +10,11 @@ export default plugin('tiktok', 'tt')
         examples: ['tiktok https://tiktok.com/xxx', 'download this tiktok'],
         args: { url: 'TikTok URL' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
             text: msg('need.url.tiktok')

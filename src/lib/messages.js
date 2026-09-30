@@ -114,6 +114,7 @@ const M = {
     'done.mode':         '✅ Bot mode changed to:\n{mode}',
     'done.mode_set':     '✅ Bot mode changed to:\n{mode}',
     'done.reload':       '♻️ Reload done!\n✅ {ok} plugins | ❌ {fail} failed',
+    'wait.plugin_check': '🔎 Checking all plugins and API hosts, this may take a few seconds...',
     'done.sticker_cmd':  '✅ This sticker now triggers *.{cmd}*\nSend it again to run the command.',
     'done.sticker_set':  '✅ This sticker now triggers *.{cmd}*\nSend it again anytime to run the command.',
     'done.sticker_unset':'🗑️ This sticker was removed from triggers.',

@@ -8,7 +8,10 @@ export default plugin('dashboard', 'cekdash', 'dashbot')
     .prefixOnly()
     .ownerOnly()
     .signal('User (owner) asks for dashboard link, check dashboard, or panel address', ['cekdash', 'link dashboard', 'dashbot'])
-    .run(async (sock, { raw, from }) => {
+    .run(async (sock, {
+        raw,
+        from
+    }) => {
         const port = config.dashboardPort;
 
         await sock.sendMessage(from, { text: msg('wait.dashboard') }, { quoted: raw });

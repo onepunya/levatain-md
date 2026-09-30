@@ -38,7 +38,11 @@ export default plugin('exec', 'sh', 'term')
     .prefixOnly()
     .ownerOnly()
     .signal('Owner asks to run/test shell commands, curl APIs, ls/cd/cat files, or anything that needs shell access', ['run this curl: curl https://api.example.com', 'try ls workspace', 'cd folder-test then ls', 'cat file.json in workspace'])
-    .run(async (sock, { body, raw, from }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const rawCmd = getArgs(body).trim();
         if (!rawCmd) {
             return sock.sendMessage(from, {

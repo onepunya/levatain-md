@@ -7,7 +7,16 @@ export default plugin('warn', 'unwarn', 'warnlist')
     .adminOnly()
     .groupOnly()
     .signal('User asks to warn, give a warning, or check group warn list', ['warn @user', 'unwarn @user', 'warnlist'])
-    .run(async (sock, { raw, from, command, mentionedJid, message, gdb, isBotAdmin, saveDb, primaryId }) => {
+    .run(async (sock, {
+        raw,
+        from,
+        command,
+        mentionedJid,
+        message,
+        gdb,
+        isBotAdmin,
+        saveDb
+    }) => {
         const grp = gdb.groups[from];
         if (!grp.warns) grp.warns = {};
 

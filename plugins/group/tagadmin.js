@@ -12,7 +12,12 @@ export default plugin('tagadmin')
         examples: ['tagadmin please check', 'call all admins'],
         args: { text: 'Message to send' },
     })
-    .run(async (sock, { body, raw, from, admins, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        admins
+    }) => {
         if (!admins?.length) return sock.sendMessage(from, { text: msg('fail.no_admins') }, { quoted: raw });
 
         const text = getArgs(body) || '📢 Calling all admins!';

@@ -43,7 +43,12 @@ export default plugin('editimage', 'aiedit')
         examples: ['editimage put black glasses on the face', 'aiedit change background to beach'],
         args: { input: 'Edit prompt (reply/send image)' },
     })
-    .run(async (sock, { body, message, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        message,
+        raw,
+        from
+    }) => {
         const prompt = getArgs(body);
 
         if (!prompt) {

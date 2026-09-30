@@ -7,7 +7,15 @@ export default plugin('kick', 'promote', 'demote')
     .adminOnly()
     .groupOnly()
     .signal('User asks to kick, promote, or demote a group member', ['kick @user', 'promote @admin', 'remove this user'])
-    .run(async (sock, { message, raw, from, command, mentionedJid, participants, isBotAdmin, db, primaryId }) => {
+    .run(async (sock, {
+        message,
+        raw,
+        from,
+        command,
+        mentionedJid,
+        participants,
+        isBotAdmin
+    }) => {
         if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
 
         let target;

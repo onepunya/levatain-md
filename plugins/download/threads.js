@@ -10,7 +10,11 @@ export default plugin('threads', 'thread')
         examples: ['threads https://www.threads.net/@user/post/xxx', 'download threads ini'],
         args: { url: 'Threads URL' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
             text: msg('need.url.threads')

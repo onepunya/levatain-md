@@ -17,7 +17,17 @@ export default plugin('impostor', 'wordwolf')
         ],
         args: { text: 'Subcommands: create, join, start, vote, status, cancel, mykata' },
     })
-    .run(async (sock, { body, raw, from, primaryId, pushname, gdb, mentionedJid, isOwner, isGroup  }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        primaryId,
+        pushname,
+        gdb,
+        mentionedJid,
+        isOwner,
+        isGroup
+    }) => {
         const args = body.trim().split(/\s+/);
         const sub  = (args[1] || '').toLowerCase();
 

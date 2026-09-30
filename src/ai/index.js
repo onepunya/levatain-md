@@ -3,6 +3,7 @@ import { getHistory, addHistory, clearHistory, getUserMemory, setUserMemory, get
 import { shouldHandleAI, cleanTrigger, isOnCooldown } from './gate.js';
 import { api, logger, toVoiceNoteOpus, getRandomMoodSticker, sendLangPicker, msg } from '../lib/index.js';
 import { plugins } from '../core/loader.js';
+import { denyReason } from '../core/access.js';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
 async function sendMoodSticker(sock, from, mood, raw) {
@@ -127,9 +128,7 @@ export async function handleAI(sock, m, ctx) {
             return true;
         }
 
-        if (plugin.meta?.interface?.isOwner && !isOwner) return true;
-        if (plugin.meta?.interface?.isGroup && !isGroup) return true;
-        if (plugin.meta?.interface?.isAdmin && !isAdmin) return true;
+        if (denyReason(plugin.meta?.interface, { isOwner, isAdmin, isGroup })) return true;
 
         logger.cmd(primaryId, `${aiCmd} [AI]`);
         await plugin.run(sock, {

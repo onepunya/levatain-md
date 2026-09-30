@@ -16,6 +16,7 @@ export * from './wa/webui-templates.js';
 export * from './wa/interactive.js';
 export * from './wa/progress.js';
 export * from './wa/groupCache.js';
+export * from './wa/msgCache.js';
 export * from './wa/session.js';
 export * from './wa/device.js';
 

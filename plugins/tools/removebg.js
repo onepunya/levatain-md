@@ -6,7 +6,11 @@ export default plugin('removebg', 'rmbg')
     .desc('Remove background from an image')
     .prefixOnly()
     .signal('User asks to remove image background or make it transparent', ['remove background foto ini', 'removebg'])
-    .run(async (sock, { message, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        message,
+        raw,
+        from
+    }) => {
         const result = await downloadMedia(raw, message.quoted, ['image']);
         if (!result) return sock.sendMessage(from, { text: msg('need.image') }, { quoted: raw });
 

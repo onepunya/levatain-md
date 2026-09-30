@@ -10,7 +10,12 @@ export default plugin('ytmp3', 'ytmp4', 'ytv', 'ytvideo')
         examples: ['ytmp3 https://youtu.be/xxx', 'ytmp4 https://youtu.be/xxx', 'download youtube as mp4'],
         args: { url: 'Valid YouTube URL' },
     })
-    .run(async (sock, { body, raw, from, command }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        command
+    }) => {
         const url = getArgs(body);
         const format = command === 'ytmp3' ? 'mp3' : 'mp4';
 

@@ -7,7 +7,11 @@ export default plugin('upscale', 'hd', 'enhance')
     .prefixOnly()
     .cooldown(15)
     .signal('User asks to upscale an image, increase resolution, or enhance photo quality buram', ['upscale this photo', 'hd enhance this', 'enhance this image'])
-    .run(async (sock, { message, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        message,
+        raw,
+        from
+    }) => {
         const result = await downloadMedia(raw, message.quoted, ['image']);
         if (!result) return sock.sendMessage(from, { text: msg('need.image') }, { quoted: raw });
 

@@ -12,7 +12,12 @@ export default plugin('add')
         examples: ['add 6281234567890'],
         args: { text: 'Target WhatsApp number' },
     })
-    .run(async (sock, { body, raw, from, isBotAdmin, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from,
+        isBotAdmin
+    }) => {
         if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
 
         const num = getArgs(body).replace(/\D/g, '');

@@ -5,7 +5,10 @@ export default plugin('ping')
     .desc('Check bot status and latency')
     .prefixOnly()
     .signal('User asks to check bot status, ping, or latency', ['ping', 'is the bot alive?'])
-    .run(async (sock, { raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        raw,
+        from
+    }) => {
         const start = Date.now();
         await sock.sendMessage(from, { text: msg('ping.pong') }, { quoted: raw });
         const latency = Date.now() - start;

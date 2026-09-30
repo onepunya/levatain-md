@@ -10,7 +10,11 @@ export default plugin('snackvideo')
         examples: ['snackvideo https://sck.io/p/xxx', 'download snack ini'],
         args: { url: 'SnackVideo URL' },
     })
-    .run(async (sock, { body, raw, from, db, primaryId }) => {
+    .run(async (sock, {
+        body,
+        raw,
+        from
+    }) => {
         const url = getArgs(body);
         if (!url) return sock.sendMessage(from, {
             text: msg('need.url.snack')

@@ -7,7 +7,13 @@ export default plugin('ai', 'tanya')
     .desc('Chat with AI (with memory)')
     .prefixOnly()
     .signal('User explicitly asks the AI a question or wants an AI answer', ['ask AI who is Einstein', 'ai explain photosynthesis'])
-    .run(async (sock, { body, message, raw, from, primaryId, db }) => {
+    .run(async (sock, {
+        body,
+        message,
+        raw,
+        from,
+        primaryId
+    }) => {
         const { quoted } = message;
         const args = getArgs(body) || quoted?.text;
 

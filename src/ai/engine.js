@@ -8,10 +8,11 @@ const getPluginList = () => {
         if (!p.meta || seen.has(p.meta)) continue;
         seen.add(p.meta);
         const iface = p.meta.interface || {};
+        const cmds  = [iface.cmd].flat().filter(Boolean);
         list.push({
-            cmd: iface.cmd,
+            cmd: cmds,
             tag: iface.tag || 'general',
-            desc: iface.desc || iface.cmd?.[0],
+            desc: iface.desc || cmds[0],
             ai: iface.ai
         });
     }
