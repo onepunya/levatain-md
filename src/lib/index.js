@@ -6,6 +6,7 @@ export * from './menuCatalog.js';
 
 export * from './api/index.js';
 export * from './api/youtube.js';
+export * from './api/songfinder.js';
 export * from './api/giphy.js';
 export * from './api/boppy.js';
 export * from './api/photiu.js';

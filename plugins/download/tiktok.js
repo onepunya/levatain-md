@@ -6,7 +6,7 @@ export default plugin('tiktok', 'tt')
     .desc('Download TikTok video without watermark')
     .prefixOnly()
     .ai({
-        trigger: 'User asks to download a TikTok video with a URL',
+        trigger: 'User asks to download a TikTok video with a URL (only for getting the video file — if they ask what song/music is in it, use songfinder instead)',
         examples: ['tiktok https://tiktok.com/xxx', 'download this tiktok'],
         args: { url: 'TikTok URL' },
     })

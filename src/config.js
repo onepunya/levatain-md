@@ -59,6 +59,10 @@ export const config = {
         ].filter(Boolean),
     },
 
+    songFinder: {
+        baseUrl: (process.env.SONGFINDER_BASE_URL || 'https://freesongfinder.com').replace(/\/+$/, ''),
+    },
+
     translateEmail: process.env.TRANSLATE_EMAIL || '',
     dashboardPort: Number(process.env.DASHBOARD_PORT) || 3000,
     debug: process.env.DEBUG === 'true',

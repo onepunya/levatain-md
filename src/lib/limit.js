@@ -27,6 +27,8 @@ const FEATURE_COST = {
     ytv:         2.5,
     ytvideo:     2.5,
     play:        2.5,
+    songfinder:  2.0,
+    findsong:    2.0,
     tiktok:      1.8,
     instagram:   1.8,
     facebook:    1.8,

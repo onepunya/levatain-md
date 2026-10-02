@@ -34,7 +34,7 @@ AI-first WhatsApp bot built on [Baileys](https://github.com/WhiskeySockets/Baile
     ├── main/             menu, ping, sc (script/source)
     ├── ai/                chat, imagine (text-to-image), editimage, musicgen, memory
     ├── audiochanger/     Audio effects table (effects.js): bassboost, nightcore, reverb, reverse, 8d, etc. (uses ffmpeg)
-    ├── download/         Downloaders: TikTok, YouTube, Instagram, Facebook, Twitter/X, Pinterest, etc.
+    ├── download/         Downloaders: TikTok, YouTube, Instagram, Facebook, Twitter/X, Pinterest, play, songfinder, etc.
     ├── fun/               Group entertainment/game features: tod, impostor, tembak, pilihacak
     ├── group/            Group features: tagall, warn (strike system), add, groupset, afk, etc.
     ├── owner/            Owner-only commands (mode, system, dashboard, eval)
@@ -75,7 +75,7 @@ Open `.env` and fill in at minimum:
 - `OWNER_NUMBER` — your WA number as the owner
 - At least one AI key: `GEMINI_KEY_1` (free at [Google AI Studio](https://aistudio.google.com/apikey)) or `NAGA_API_KEY`
 
-Other variables (Giphy, OnePunya, Magic Hour, AudD/Shazam, translate, dashboard port, etc.) are optional — see the comments in `.env.example` for an explanation of each variable.
+Other variables (Giphy, OnePunya, Magic Hour, AudD/Shazam, translate, song finder base URL, dashboard port, etc.) are optional — see the comments in `.env.example` for an explanation of each variable.
 
 ## How to Get All API Keys
 
@@ -165,6 +165,13 @@ Sometimes automatic owner detection fails (a WhatsApp LID edge case). If this ha
 3. Open `logs/bot.log`, look for the `[owner-check]` line.
 4. Copy the digits from `lid=XXXXXXXXXX@lid` (digits only, without `@lid`).
 5. Set it as `OWNER_LID` in `.env`, restart the bot.
+
+## Song Finder
+
+- `.songfinder <TikTok or Instagram link>` (alias `.findsong`) identifies the song used in a video or reel. It also works when you reply to a message that contains the link.
+- `.play <TikTok or Instagram link>` identifies the song from the link and then downloads it as MP3.
+- `.play` while replying to an audio/video file recognizes the song from the file itself (AudD/Shazam), and `.play <title>` searches by title.
+- No API key is needed. The scraper opens a session on the site, reads the page nonce, keeps the cookies, and refreshes both automatically when the site rejects them. If the site ever moves, set `SONGFINDER_BASE_URL` in `.env`.
 
 ## Plugin Checker
 

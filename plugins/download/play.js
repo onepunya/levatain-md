@@ -1,4 +1,4 @@
-import { typing, getArgs, downloadMedia, api, MAX_FILE_SIZE, cleanupTempFile, ProgressMessage, extractAudioClip, msg } from '../../src/lib/index.js';
+import { typing, getArgs, downloadMedia, api, MAX_FILE_SIZE, cleanupTempFile, ProgressMessage, extractAudioClip, extractSongUrl, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('play')
@@ -6,7 +6,7 @@ export default plugin('play')
     .desc('Search & download a song as MP3, or recognize a song from replied audio/video')
     .prefixOnly()
     .ai({
-        trigger: 'User asks to play a song, download music, or listen to a track, or reply/send audio/video',
+        trigger: 'User asks to play a song or download music by title/artist, or to identify a song from an audio/video FILE they send or reply to (a TikTok/Instagram link goes to songfinder instead)',
         examples: [
             'play shape of you',
             'play bohemian rhapsody',
@@ -26,9 +26,22 @@ export default plugin('play')
         const bar = new ProgressMessage(sock, from, raw);
         let filePath = null;
         let searchQuery = getArgs(body);
+        const songUrl = extractSongUrl(searchQuery);
 
         try {
-            if (!searchQuery) {
+            if (songUrl) {
+                await typing(sock, from);
+                await bar.start(msg('wait.songfinder'));
+
+                const found = await api.songFromUrl(songUrl);
+                if (!found) {
+                    await bar.fail(msg('fail.not_found'));
+                    return;
+                }
+
+                searchQuery = `${found.artist} ${found.title}`.trim();
+                await bar.stage(`🎶 Found: ${found.artist ? `${found.artist} - ` : ''}${found.title}`, true);
+            } else if (!searchQuery) {
                 const media = await downloadMedia(raw, message.quoted, ['audio', 'video']);
                 if (!media) {
                     return sock.sendMessage(from, {

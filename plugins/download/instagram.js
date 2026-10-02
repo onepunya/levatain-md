@@ -6,7 +6,7 @@ export default plugin('instagram', 'ig')
     .desc('Download Instagram video/photo (including multi-media carousel)')
     .prefixOnly()
     .ai({
-        trigger: 'User asks to download from Instagram with a URL',
+        trigger: 'User asks to download from Instagram with a URL (only for getting the media file — if they ask what song/music is in it, use songfinder instead)',
         examples: ['ig https://instagram.com/p/xxx', 'download instagram ini'],
         args: { url: 'Instagram URL' },
     })

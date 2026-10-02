@@ -52,6 +52,7 @@ function scannableFiles() {
 
 function stripNoise(text) {
     return text
+        .replace(/\bexamples\s*:\s*\[[\s\S]*?\]/g, '')
         .split('\n')
         .filter(line => !/\bexamples\s*:|\.signal\(/.test(line))
         .join('\n');

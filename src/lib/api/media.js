@@ -3,6 +3,7 @@ import { config } from '../../config.js';
 import { sleep, uploadToUrl } from '../utils.js';
 import { curlRequest, curlMultipart, curlMultipartFile, onepost, oneget } from './http.js';
 import { ytHandler } from './youtube.js';
+import { findSongFromUrl } from './songfinder.js';
 
 global.yt = ytHandler;
 
@@ -276,6 +277,8 @@ export const mediaApi = {
 	},
 
 	tourl: async (buffer, mimetype = 'image/jpeg') => uploadToUrl(buffer, mimetype),
+
+	songFromUrl: (url) => findSongFromUrl(url),
 
 	recognizeSong: async (buffer) => {
 		if (!config.shazam.rapidApiKey && !config.audd.apiKey) {
