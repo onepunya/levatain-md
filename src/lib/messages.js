@@ -9,6 +9,7 @@ const M = {
     'need.audio':        '❌ Send or reply to an audio first.',
     'need.audio_video':  '❌ Send or reply to an audio/video first.',
     'need.image_video':  '❌ Send or reply to an image/video first.',
+    'need.translate':    '❌ Enter some text or reply to a message.\nExample: *.tr id good morning* (default: English)',
     'need.sticker':      '❌ Send or reply to a sticker first.',
     'need.reply':        '❌ Reply to the target message first.',
     'need.reply_delete': '❌ Reply to the message you want to delete.',

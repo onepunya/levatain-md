@@ -1,13 +1,4 @@
-import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { randomBytes, randomUUID } from 'crypto';
-
-export function normalizeUserJid(source) {
-    if (!source) return undefined;
-    if (typeof source === 'string') return source;
-    if (source.user?.id) return source.user.id;
-    if (source.id) return source.id;
-    return undefined;
-}
 
 export const WEBUI_PRIMITIVE_TYPENAME = 'GenAIaeacdsnwHtmlPrimitive';
 export const DEFAULT_BOT_JID = '867051314767696@bot';

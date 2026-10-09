@@ -1,4 +1,4 @@
-import { typing, downloadMedia, uploadToUrl, api, msg } from '../../src/lib/index.js';
+import { typing, downloadMedia, api, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('removebg', 'rmbg')
@@ -18,11 +18,13 @@ export default plugin('removebg', 'rmbg')
         await sock.sendMessage(from, { text: msg('wait.removebg') }, { quoted: raw });
 
         try {
-            const imageUrl = await uploadToUrl(result.buffer, result.mimetype || 'image/jpeg');
-            const output   = await api.removebg(imageUrl);
-            await sock.sendMessage(from, { image: { url: output }, caption: msg('done.bg_removed') }, { quoted: raw });
+            const output = await api.removebg(result.buffer, result.mimetype || 'image/jpeg');
+            await sock.sendMessage(from, {
+                image: output,
+                mimetype: 'image/png',
+                caption: msg('done.bg_removed'),
+            }, { quoted: raw });
         } catch (e) {
             await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
-

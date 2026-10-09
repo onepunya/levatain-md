@@ -1,4 +1,4 @@
-import { getArgs, detectDevice, deviceLabel, supportsInteractive, sendCategoryMenu, sendThumbFromUrl, TAG_META, collectGrouped, buildAllMenuText, buildHomeCaption, buildCategoryText, buildListSections, resolveMenuArg, labelize , msg } from '../../src/lib/index.js';
+import { getArgs, detectDevice, deviceLabel, supportsInteractive, sendCategoryMenu, sendThumbFromUrl, TAG_META, collectGrouped, buildAllMenuText, buildHomeCaption, buildCategoryText, buildListSections, resolveMenuArg, labelize, backHint, msg } from '../../src/lib/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('menu', 'allmenu')
@@ -34,7 +34,7 @@ export default plugin('menu', 'allmenu')
                 }, { quoted: raw });
             }
             const { emoji, label } = TAG_META[target.tag] || { emoji: '📋', label: labelize(target.tag) };
-            const caption = `✦ *${global.botName}* — ${emoji} ${label}\n\n${buildCategoryText(target.tag, items)}\n\n_Type *.menu* to go back · *.allmenu* for all commands_`;
+            const caption = `✦ *${global.botName}* — ${emoji} ${label}\n\n${buildCategoryText(target.tag, items)}\n\n${backHint()}`;
             await sendThumbFromUrl(sock, from, { caption, quoted: raw });
             return;
         }

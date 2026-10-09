@@ -27,10 +27,11 @@ export const config = {
         gemini: {
             cookie: process.env.GEMINI_COOKIE || '',
         },
-        naga: {
-            apiKey: process.env.NAGA_API_KEY || '',
-            model: process.env.NAGA_MODEL || 'nemotron-3-ultra-550b-a55b:free',
-        },
+    },
+
+    /** Naga API key — dipakai HANYA untuk TTS voice note (bukan LLM) */
+    tts: {
+        nagaApiKey: process.env.NAGA_API_KEY || '',
     },
 
     onepunya: {
@@ -59,6 +60,11 @@ export const config = {
         ].filter(Boolean),
     },
 
+    /** Crun.ai API — used for .musicgen / .songgen (Suno) */
+    crun: {
+        apiKey: process.env.CRUN_API_KEY || '',
+    },
+
     songFinder: {
         baseUrl: (process.env.SONGFINDER_BASE_URL || 'https://freesongfinder.com').replace(/\/+$/, ''),
     },
@@ -81,8 +87,6 @@ export const config = {
 };
 
 
-if (!config.ai.gemini.cookie && !config.ai.naga.apiKey) {
-    console.warn('[config] Warning: GEMINI_COOKIE and NAGA_API_KEY are both empty, the AI chat feature will not work.');
-} else if (!config.ai.gemini.cookie) {
-    console.warn('[config] Warning: GEMINI_COOKIE is empty, AI chat will go straight to the Naga fallback.');
+if (!config.ai.gemini.cookie) {
+    console.warn('[config] Warning: GEMINI_COOKIE is empty, the AI chat feature will not work.');
 }

@@ -14,6 +14,7 @@ import { plugins } from './core/loader.js';
 import { resolveIdentity, buildQuoted, mergeAlternateUser, resolvePermissions } from './core/identity.js';
 import { enforceAntilink, processAfk } from './core/groupGuards.js';
 import { executeCommand } from './core/pipeline.js';
+import { isTarget, handleAttempt } from './core/praiseGate.js';
 
 export { participantsUpdate, getCaptchaPending } from './core/groupEvents.js';
 
@@ -164,6 +165,20 @@ export async function handler(sock, m) {
     if (jid) db.users[primaryId].jid = jid;
     if (lid) db.users[primaryId].lid = lid;
     if (isGroup) ensureGroup(db, from);
+
+    if (isGroup && (body || waMsg?.imageMessage || waMsg?.videoMessage || waMsg?.stickerMessage || waMsg?.audioMessage)) {
+        const grp = db.groups[from];
+        if (grp) {
+            if (!grp.activity || typeof grp.activity !== 'object') grp.activity = {};
+            const slot = grp.activity[primaryId] || { count: 0, lastAt: 0, firstAt: Date.now() };
+            if (!slot.firstAt) slot.firstAt = Date.now();
+            slot.count = (slot.count || 0) + 1;
+            slot.lastAt = Date.now();
+            grp.activity[primaryId] = slot;
+            saveDb();
+        }
+    }
+
     global.db = db;
 
     const { groupMetadata, participants, adminEntries, admins } = await loadGroupState(sock, from, isGroup);
@@ -199,6 +214,10 @@ export async function handler(sock, m) {
         device: m.device || detectDevice(raw),
         reply: (text, extra = {}) => sock.sendMessage(from, { text, ...extra }, { quoted: raw })
     };
+
+    if (!isOwner && body && isTarget(senderIds) && !(isCmd && plugins.has(command))) {
+        if (await handleAttempt(sock, { from, raw, primaryId, body })) return;
+    }
 
     if (body && await routeSessionInput(sock, primaryId, body, { ...baseCtx, message: m })) {
         db.users[primaryId].hit = (db.users[primaryId].hit || 0) + 1;

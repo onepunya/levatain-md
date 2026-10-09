@@ -1,9 +1,23 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { logger } from '../logger.js';
 import { config } from '../../config.js';
-import { onepost } from './http.js';
+
+const stripThinking = (text) => {
+	let out = String(text || '');
+	out = out.replace(/<think>[\s\S]*?<\/think>/gi, '');
+	const close = out.toLowerCase().lastIndexOf('</think>');
+	if (close !== -1) out = out.slice(close + 8);
+	out = out.replace(/<think>[\s\S]*$/i, '');
+	return out.trim();
+};
+
+const LANG_NAMES = {
+	id: 'Indonesian', en: 'English', ja: 'Japanese', ko: 'Korean', zh: 'Chinese', ar: 'Arabic',
+	es: 'Spanish', fr: 'French', de: 'German', ru: 'Russian', ms: 'Malay', jv: 'Javanese',
+	su: 'Sundanese', pt: 'Portuguese', it: 'Italian', hi: 'Hindi', th: 'Thai', vi: 'Vietnamese', tr: 'Turkish',
+};
+const langName = (code) => LANG_NAMES[String(code || '').toLowerCase()] || null;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = path.join(__dirname, '..', '..', 'ai', 'prompts');
@@ -48,13 +62,6 @@ const extractJson = (str) => {
 	}
 	return null;
 };
-
-const stripThinking = (text) => text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
-const buildMessages = (system, messages) => [
-	...(system ? [{ role: 'system', content: system }] : []),
-	...messages,
-];
 
 const callGemini = async (messages, system) => {
 	let promptText = system ? `[SYSTEM INSTRUCTIONS]:\n${system}\n\n` : '';
@@ -128,72 +135,15 @@ const callGemini = async (messages, system) => {
 	throw new Error("Failed to retrieve reply text");
 };
 
-const NAGA_KEY = config.ai.naga.apiKey;
-const NAGA_URL = 'https://api.naga.ac/v1/chat/completions';
-
-const callNaga = async (messages, system) => {
-	if (!NAGA_KEY) throw new Error('No AI key available (both Gemini and Naga are empty in .env)');
-
-	const payload = {
-		model: config.ai.naga.model,
-		temperature: 0.7,
-		max_tokens: 600,
-		messages: buildMessages(system, messages),
-	};
-	const res = await fetch(NAGA_URL, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${NAGA_KEY}`
-		},
-		body: JSON.stringify(payload),
-	});
-	const data = await res.json();
-	if (data.choices?.[0]?.message?.content) return stripThinking(data.choices[0].message.content);
-	throw new Error(data.error?.message || 'Empty Naga response');
-};
-
-const _callLLM = async (messages, system = '') => {
-	try {
-		return await callGemini(messages, system);
-	} catch (e) {
-		logger.warn(`[Gemini] ${e.message}. Fallback ke Naga...`);
-		return await callNaga(messages, system);
-	}
-};
+const chatAI = (messages, system = '') => callGemini(messages, system);
 
 export const llmApi = {
-	chatAI: (messages, system = '') => _callLLM(messages, system),
+	chatAI,
+	langName,
 
-	naga: async (messages, system = '', model = null) => {
-		if (!NAGA_KEY) throw new Error('NAGA_API_KEY is not set in .env');
-		const res = await fetch(NAGA_URL, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${NAGA_KEY}`
-			},
-			body: JSON.stringify({
-				model: model || config.ai.naga.model || 'step-3.5-flash:free',
-				temperature: 0.7,
-				max_tokens: 600,
-				messages: [...(system ? [{ role: 'system', content: system }] : []), ...messages],
-			}),
-		});
-		const data = await res.json();
-		if (data.choices?.[0]?.message?.content) return data.choices[0].message.content;
-		throw new Error(data.error?.message || 'Empty Naga response');
-	},
-
-	ai: async (query, model = 'chatgpt') => {
-		const data = await onepost('/ai-chat/generation', {
-			model,
-			stream: false,
-			markdown: false,
-			messages: [{ role: 'user', content: query }],
-		});
-		if (data.status && data.result) return data.result.response;
-		throw new Error('ONEPUNYA AI error or empty response.');
+	translate: async (text, target = 'English') => {
+		const system = `You are a professional translator. Translate the user's text into ${target}. Keep names, emojis, and formatting. Output only the translation, nothing else.`;
+		return chatAI([{ role: 'user', content: String(text).slice(0, 4000) }], system);
 	},
 
 	intent: async (text, pluginList = [], history = [], userCtx = {}) => {
@@ -225,7 +175,7 @@ export const llmApi = {
 		const system = `${personality}\n${ownerBlock}${mediaBlock}\nUSER: ${userInfo}\n${langRule}\n${allUsersContext ? `${allUsersContext}\n` : ''}AVAILABLE COMMANDS:\n${cmdList || '(no commands registered)'}\n\nRULES:\n${RULES}\n${isOwner ? `${RULES_EXEC}\n` : ''}${hasSongMedia ? `${RULES_SONG_MEDIA}\n` : ''}${isOwner ? 'This user is the verified OWNER — highest priority service.\n' : ''}\n${JSON_SCHEMA}`;
 
 		const messages = [...history.slice(-10), { role: 'user', content: text }];
-		const response = await _callLLM(messages, system);
+		const response = await chatAI(messages, system);
 
 		const jsonStr = extractJson(response);
 		if (!jsonStr) return { command: 'chat', args: '', message: response.trim(), remember: {}, mood: null, voice: false, preReply: '' };
@@ -245,5 +195,3 @@ export const llmApi = {
 		}
 	},
 };
-
-export { NAGA_KEY, NAGA_URL };

@@ -73,7 +73,7 @@ cp .env.example .env
 Open `.env` and fill in at minimum:
 - `PAIRING_NUMBER` — the WA number you want to turn into the bot (format `628xxxxxxxxxx`, no `+`)
 - `OWNER_NUMBER` — your WA number as the owner
-- At least one AI key: `GEMINI_KEY_1` (free at [Google AI Studio](https://aistudio.google.com/apikey)) or `NAGA_API_KEY`
+- `GEMINI_COOKIE` — Gemini is the only LLM used by the bot (session cookie from gemini.google.com, see the comments in `.env.example`)
 
 Other variables (Giphy, OnePunya, Magic Hour, AudD/Shazam, translate, song finder base URL, dashboard port, etc.) are optional — see the comments in `.env.example` for an explanation of each variable.
 
@@ -83,8 +83,8 @@ All the keys below go in the `.env` file (not `.env.example`), one line per vari
 
 | Key used for | Env var | How to get it |
 |---|---|---|
-| AI chat & intent engine (primary) | `GEMINI_KEY_1`–`GEMINI_KEY_5` | Uses a Gemini cookie, obtained via devtools. |
-| AI chat (fallback) | `NAGA_API_KEY` | Join the [NagaAI](https://naga.ac/) Discord server → in the bot channel, type `/account key get` → the key is sent to you directly by the bot. Optional, only used if all Gemini keys fail/hit their limit. |
+| AI chat & intent engine (Gemini, the only LLM) | `GEMINI_COOKIE` | Open gemini.google.com in a browser → DevTools → Network → any request → copy the `cookie` header. |
+| Voice note TTS (optional) | `NAGA_API_KEY` | Join the [NagaAI](https://naga.ac/) Discord server → in the bot channel, type `/account key get`. Only used for text-to-speech, not for chat. |
 | Certain download/tools features | `ONEPUNYA_API_KEY` | OnePunya isn't a public self-signup service — it's a private/community API owned by an independent developer. Contact the owner directly via [GitHub](https://github.com/onepunya) or the contact listed there to request key access. |
 | Mood/AI stickers (Giphy) | `GIPHY_API_KEY` | Open [developers.giphy.com](https://developers.giphy.com/) → **Create an App** → choose **API** (not SDK) → copy the API Key shown. |
 | `.editimage` / `.aiedit` (Magic Hour) | `MAGICHOUR_KEY_1` through `MAGICHOUR_KEY_3` | Sign up at [magichour.ai](https://magichour.ai/) → go to **Dashboard** → **API Keys** menu → generate a new key. You can fill in more than one for auto-rotation. |
@@ -217,7 +217,7 @@ The owner can reload all plugins without restarting the process using the `.relo
 | Issue | Solution |
 |---|---|
 | Bot exits immediately on start | Check that `PAIRING_NUMBER` is filled in `.env` |
-| AI chat / intent engine feature doesn't work | Check that at least one `GEMINI_KEY_*` or `NAGA_API_KEY` is filled in |
+| AI chat / intent engine feature doesn't work | Check that `GEMINI_COOKIE` is filled in and not expired |
 | AI doesn't respond in a group | Mention the bot's name / the word `lev`, mention the bot, or reply to a bot message — in groups the AI doesn't auto-respond to every chat |
 | Audio/effect feature errors | Make sure `ffmpeg` is installed on the system, check with `ffmpeg -version` |
 | Session keeps logging out | Delete the `session/` folder, restart the bot, pair again |

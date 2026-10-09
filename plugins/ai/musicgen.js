@@ -57,16 +57,22 @@ async function generateMusic(sock, from, raw, lyrics, prompt) {
 
         await bar.done('✅ Song ready, sending...');
 
-        const audioRes = await fetch(result.url);
-        if (!audioRes.ok) throw new Error(`Failed to fetch audio file (HTTP ${audioRes.status})`);
-        const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
+        const urls = result.urls?.length ? result.urls : [result.url];
+        for (let i = 0; i < urls.length; i++) {
+            const audioRes = await fetch(urls[i]);
+            if (!audioRes.ok) throw new Error(`Failed to fetch audio file (HTTP ${audioRes.status})`);
+            const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
 
-        await sock.sendMessage(from, {
-            audio: audioBuffer,
-            mimetype: 'audio/mpeg',
-            fileName: 'musicgen.mp3',
-            ptt: false,
-        }, { quoted: raw });
+            const trackTitle = result.tracks?.[i]?.title || result.title || 'AI Song';
+            const suffix = urls.length > 1 ? ` (${i + 1}/${urls.length})` : '';
+
+            await sock.sendMessage(from, {
+                audio: audioBuffer,
+                mimetype: 'audio/mpeg',
+                fileName: `${trackTitle}${suffix}.mp3`.replace(/[^\w.\- ()]/g, '_').slice(0, 80),
+                ptt: false,
+            }, { quoted: raw });
+        }
     } catch (e) {
         await bar.fail(msg('fail.generic', { msg: e.message }));
     }

@@ -1,7 +1,7 @@
 import { logger } from '../logger.js';
-import { onepost } from './http.js';
-import { NAGA_KEY } from './llm.js';
+import { config } from '../../config.js';
 
+const NAGA_KEY = config.tts.nagaApiKey;
 const NAGA_TTS_URL = 'https://api.naga.ac/v1/audio/speech';
 
 function getDynamicInstructions(text) {
@@ -16,15 +16,6 @@ function getDynamicInstructions(text) {
 }
 
 export const voiceApi = {
-	tts: async (text, voice = 'id-ID-GadisNeural') => {
-		const data = await onepost('/ai-voice/tts-generation', { text, voice });
-		if (data.status && data.result) {
-			const r = data.result;
-			return typeof r === 'string' ? r : (r.url || r.audio || r.output);
-		}
-		throw new Error(data.message || 'Failed to generate TTS.');
-	},
-
 	nagaTTS: async (text, voice = 'Shimmer', model = 'eleven-multilingual-v2:free') => {
 		if (!NAGA_KEY) throw new Error('NAGA_API_KEY is not set in .env');
 		if (!text || !text.trim()) throw new Error('TTS text is empty.');

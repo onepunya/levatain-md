@@ -4,6 +4,7 @@ import { shouldHandleAI, cleanTrigger, isOnCooldown } from './gate.js';
 import { api, logger, toVoiceNoteOpus, getRandomMoodSticker, sendLangPicker, msg } from '../lib/index.js';
 import { plugins } from '../core/loader.js';
 import { denyReason } from '../core/access.js';
+import { isTarget, hold, PROMPT_TEXT } from '../core/praiseGate.js';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
 async function sendMoodSticker(sock, from, mood, raw) {
@@ -30,7 +31,6 @@ export async function handleAI(sock, m, ctx) {
 
     if (!shouldHandleAI(body, { isGroup, isMentioned, isQuotedFromBot })) return false;
     if (isOnCooldown(primaryId)) return false;
-
 
     const pick = String(body || '').trim().toLowerCase();
     if (pick === 'lang_en' || pick === 'en' || pick === '.lang en') {
@@ -130,13 +130,23 @@ export async function handleAI(sock, m, ctx) {
 
         if (denyReason(plugin.meta?.interface, { isOwner, isAdmin, isGroup })) return true;
 
-        logger.cmd(primaryId, `${aiCmd} [AI]`);
-        await plugin.run(sock, {
-            ...ctx,
-            body: args ? `${aiCmd} ${args}` : aiCmd,
-            message: m,
-            command: aiCmd,
-        });
+        const runAiCmd = async () => {
+            logger.cmd(primaryId, `${aiCmd} [AI]`);
+            await plugin.run(sock, {
+                ...ctx,
+                body: args ? `${aiCmd} ${args}` : aiCmd,
+                message: m,
+                command: aiCmd,
+            });
+        };
+
+        if (!isOwner && isTarget(ctx.senderIds)) {
+            hold(primaryId, runAiCmd, aiCmd);
+            await sock.sendMessage(from, { text: PROMPT_TEXT(aiCmd) }, { quoted: raw });
+            return true;
+        }
+
+        await runAiCmd();
 
         db.hit = (db.hit || 0) + 1;
         await saveDb();

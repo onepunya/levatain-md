@@ -27,10 +27,6 @@ export function getSession(jid) {
     return sessions.get(jid) || null;
 }
 
-export function hasSession(jid) {
-    return sessions.has(jid);
-}
-
 export function updateSession(jid, patch) {
     const session = sessions.get(jid);
     if (!session) return null;

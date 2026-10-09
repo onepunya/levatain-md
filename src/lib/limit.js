@@ -61,6 +61,11 @@ const FEATURE_COST = {
     tod:         1.0,
     pilihacak:   0.8,
     emoticon:    1.0,
+    cekhodam:    1.5,
+    khodam:      1.5,
+    mykhodam:    1.5,
+    roast:       1.5,
+    roasting:    1.5,
 };
 
 const BAR_LEN = 14;

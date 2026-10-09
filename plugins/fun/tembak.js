@@ -107,12 +107,6 @@ const DITOLAK = [
     'Sometimes all it takes is one brave moment and one yes.',
 ];
 
-const TIDAK_DIJAWAB = [
-    'Not every feeling must be returned — that is just a different path.',
-    'Rejection does not mean you are worthless. Stay strong.',
-    'Having the courage to speak is already a win. Keep going.',
-];
-
 function resolveTarget(message, mentionedJid) {
     if (message?.quoted) {
         const s = message.quoted.sender.replace(/@.*/, '').split(':')[0];

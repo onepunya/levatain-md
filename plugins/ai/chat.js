@@ -29,7 +29,7 @@ export default plugin('ai', 'tanya')
         await typing(sock, from);
         try {
             const history = await getHistory(primaryId);
-            const response = await api.naga([
+            const response = await api.chatAI([
                 ...history.slice(-10),
                 { role: 'user', content: args },
             ], `You are Levatain, a friendly and smart AI assistant. Reply in the same language as the user.`);

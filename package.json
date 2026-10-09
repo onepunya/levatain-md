@@ -12,6 +12,9 @@
     "dev": "node --watch index.js",
     "check": "node scripts/check-plugins.js"
   },
+  "overrides": {
+  "sharp": "$sharp"
+},
   "dependencies": {
     "@whiskeysockets/baileys": "7.0.0-rc14",
     "axios": "^1.7.2",

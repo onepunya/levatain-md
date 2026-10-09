@@ -201,15 +201,6 @@ export async function downloadMedia(raw, quoted, types = ['image', 'video', 'aud
     return { buffer, type: result.type, mimetype: result.media.mimetype || null, size };
 }
 
-export const adReply = (title, body = '') => ({
-    externalAdReply: {
-        title, body,
-        sourceUrl: global.link || '',
-        thumbnailUrl: global.thumb,
-        mediaType: 1
-    }
-});
-
 export const getExtFromMime = (mime) => {
     const map = { jpeg: 'jpg', jpg: 'jpg', png: 'png', gif: 'gif', webp: 'webp',
                   mp4: 'mp4', webm: 'webm', mpeg: 'mp3', mp3: 'mp3', ogg: 'ogg',
@@ -287,47 +278,6 @@ export const uploadToUrl = async (buffer, mimetype = 'image/jpeg') => {
     throw new Error(`All upload services failed:${errors.join('')}`);
 };
 
-export const hasRestrictedLinks = body => {
-    try {
-        const regex = /\bhttps?:\/\/(?:chat\.whatsapp\.com\/[a-zA-Z0-9]+|wa\.me\/[0-9]+|whatsapp\.com\/channel\/[a-zA-Z0-9]+)/gi;
-        return (body?.match(regex)?.length || 0) > 0;
-    } catch {
-        return false;
-    }
-};
-
-export const socmed = url => {
-    const patterns = {
-        tiktok:    /^(?:https?:\/\/)?(?:www\.|vt\.|vm\.|t\.)?(?:tiktok\.com\/)(?:\S+)?$/,
-        instagram: /^(?:https?:\/\/)?(?:www\.)?(?:instagram\.com\/)(?:tv\/|p\/|reel\/|stories\/|s\/)(?:\S+)?$/,
-        facebook:  /^(?:https?:\/\/)?(?:web\.|www\.|m\.)?(?:facebook|fb)\.(?:com|watch)\/\S+$/,
-        twitter:   /https?:\/\/(?:www\.|mobile\.)?(?:twitter|x)\.com\/([a-zA-Z0-9_]+)/,
-        youtube:   /^(?:https?:\/\/)?(?:www\.|m\.|music\.)?youtu\.?be(?:\.com)?\/.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)&?/,
-        pinterest: /pin(?:terest)?(?:\.it|\.com)/,
-        mediafire: /^(?:https?:\/\/)?(?:www\.)?(?:mediafire\.com\/)(?:\S+)?$/,
-    };
-    for (const [platform, regex] of Object.entries(patterns)) {
-        if (regex.test(url)) return platform;
-    }
-    return null;
-};
-
-export const ttFixed = url => {
-    if (!/tiktok\.com\/t\//.test(url)) return url;
-    const id = url.split('/t/')[1];
-    return 'https://vm.tiktok.com/' + id;
-};
-
-export const igFixed = url => {
-    const parts = url.split('/');
-    if (parts.length !== 7) return url;
-    return parts.filter((_, i) => i !== 3).join('/');
-};
-
-export const isBot = id => {
-    return !!id && ((id.startsWith('3EB0') && id.length === 40) || id.startsWith('BAE') || /-/.test(id));
-};
-
 export function cleanTempFiles(maxAgeMs = 10 * 60 * 1000) {
     try {
         const dir = os.tmpdir();
@@ -395,25 +345,12 @@ export function formatDurationWords(ms) {
     return `${seconds} detik`;
 }
 
-export function clockString(date = new Date(), timeZone) {
-    const pad = n => String(n).padStart(2, '0');
-    const parts = timeZone
-        ? new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(date).reduce((o, p) => (o[p.type] = p.value, o), {})
-        : { hour: pad(date.getHours()), minute: pad(date.getMinutes()), second: pad(date.getSeconds()) };
-    return `${parts.hour}:${parts.minute}:${parts.second}`;
-}
-
 export function base64ToBuffer(b64 = '') {
     return Buffer.from(String(b64).replace(/^data:.*;base64,/, ''), 'base64');
 }
 
 export function base64ToString(b64 = '') {
     return Buffer.from(String(b64), 'base64').toString('utf-8');
-}
-
-export function bufferToBase64(buffer, mime) {
-    const b64 = Buffer.from(buffer).toString('base64');
-    return mime ? `data:${mime};base64,${b64}` : b64;
 }
 
 export async function fetchJson(url, options = {}) {

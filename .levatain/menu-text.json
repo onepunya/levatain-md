@@ -1,0 +1,139 @@
+{
+  "updatedAt": 1791535317720,
+  "pool": {
+    "greet_pagi": [
+      "Rise and shine, let's crush today! ☀️",
+      "Ready to make today amazing? 🚀",
+      "Hope your morning is off to a great start! ☕",
+      "Let's make today count! ✨",
+      "Big things ahead, let's go! 🌅",
+      "Breathe in, let's tackle today! 💪"
+    ],
+    "greet_siang": [
+      "Hope your day is going wonderfully! 🌤️",
+      "Keep up the great momentum! 🌟",
+      "Take a breather and smile! 😊",
+      "Hope your afternoon is treating you well! 🍵",
+      "Keep shining bright today! ✨",
+      "Halfway through, keep going strong! ☀️"
+    ],
+    "greet_sore": [
+      "How was your day? 🌆",
+      "Time to unwind and relax! ✨",
+      "Hope your afternoon is going well! ☕",
+      "Ready to wrap up the day? 🌇",
+      "Take it easy this evening! 🌙",
+      "Hope you had a productive day! 🌟"
+    ],
+    "greet_malam": [
+      "Time to get some good rest! 🌙",
+      "Sweet dreams and sleep tight! 🌌",
+      "Hope you have a peaceful night! 💤",
+      "Time to recharge for tomorrow! 🌠",
+      "Sleep well and rest up! 🦉",
+      "Wishing you a cozy night! ✨"
+    ],
+    "teaser": [
+      "Type a command or just say hi! 👋",
+      "Ready to chat? Drop a message here! 💬",
+      "What can I help you find today? ✨",
+      "Say something to start exploring! 🚀",
+      "Tap a command or send a quick note! 📱",
+      "Let's get started, send a message! 😊"
+    ],
+    "hint_home": [
+      "Open the category list below or type *.allmenu* to see everything! 📂",
+      "Check out the categories below or type *.allmenu* for full options! 📋",
+      "Explore the menu categories below or type *.allmenu* to view all! 🔍",
+      "Tap the categories below or type *.allmenu* to browse everything! ✨",
+      "View the category list below or type *.allmenu* to see all commands! 👇",
+      "Browse the options below or type *.allmenu* to see the complete list! 🌟"
+    ],
+    "hint_back": [
+      "Want to go back? Type *.menu* or see all with *.allmenu* 🔙",
+      "Head back using *.menu* or explore *.allmenu* anytime 🔄",
+      "Type *.menu* to return or *.allmenu* for everything 📋",
+      "Go back with *.menu* or view all options via *.allmenu* ✨",
+      "Return to main using *.menu* or check *.allmenu* 🏠",
+      "Hit *.menu* to go back or *.allmenu* for all commands 💫"
+    ],
+    "hint_end": [
+      "Pick a category by typing *.menu* 📌",
+      "Select a category with *.menu* 🔍",
+      "Just type *.menu* to pick a category 📱",
+      "Explore categories using *.menu* 💡",
+      "Choose a category via *.menu* ✨",
+      "Type *.menu* to browse categories 🏷️"
+    ],
+    "cat_ai": [
+      "Smart AI answers ready for you ✨",
+      "Let your smart assistant help 🤖",
+      "Ask me anything you need 💡",
+      "Chat with your AI pal today 🌟",
+      "Quick answers from your helper ⚡"
+    ],
+    "cat_tools": [
+      "Handy tools to make life easy 🛠️",
+      "Useful utilities right here 🧰",
+      "Get things done in a flash ⚡",
+      "Handy shortcuts for every task 📌",
+      "Cool utilities at your fingertips 🎛️"
+    ],
+    "cat_fun": [
+      "Time for some fun and games 🎮",
+      "Enjoy a quick laugh right now 😂",
+      "Play games and pass the time 🎲",
+      "Ready for some entertainment 🍿",
+      "Let loose with fun stuff ✨"
+    ],
+    "cat_audiochanger": [
+      "Change your voice instantly! 🎧",
+      "Make your voice sound fun! 🎤",
+      "Remix your audio messages! 🎵",
+      "Transform how you sound! ✨",
+      "Play with cool voice filters! 🔊"
+    ],
+    "cat_download": [
+      "Grab your favorite videos! 📥",
+      "Save media in a flash! ⚡",
+      "Download anything you need! 🔗",
+      "Get your files right here! 🚀",
+      "Save content instantly! 📱"
+    ],
+    "cat_group": [
+      "Manage your chats easily! 👥",
+      "Supercharge group fun! 🎉",
+      "Admin tools made simple! ⚙️",
+      "Keep your group active! ✨",
+      "Manage members smoothly! 🛡️"
+    ],
+    "cat_limit": [
+      "Check your limits and plan here 📊",
+      "See your usage and plan details ⚡",
+      "Manage your plan and limits easily 📋",
+      "Track your active plan and limits 📈",
+      "View plan info and usage limits 🔍"
+    ],
+    "cat_owner": [
+      "Manage owner settings and tools ⚙️",
+      "Access exclusive owner controls 🛠️",
+      "Owner menu for bot management 👑",
+      "Special controls for the bot owner 🛡️",
+      "Configure owner options right here 🔐"
+    ],
+    "cat_main": [
+      "Welcome to the main menu 🎉",
+      "Explore core features and tools 🌟",
+      "Main hub for all your commands 🚀",
+      "Start here for main bot options 🧭",
+      "Your quick start main menu 🏠"
+    ],
+    "cat_general": [
+      "Find more cool stuff here ✨",
+      "Check out our other goodies 🌟",
+      "Explore more options here 🔍",
+      "Discover more surprises 🎁",
+      "Browse extra cool stuff 🚀"
+    ]
+  }
+}

@@ -1,6 +1,7 @@
 import { logger, msg, checkAndConsume, buildLimitCard } from '../lib/index.js';
 import { saveDb } from './db.js';
 import { denyReason } from './access.js';
+import { isTarget, hold, PROMPT_TEXT } from './praiseGate.js';
 
 const cooldowns = new Map();
 const DEFAULT_COOLDOWN = 3;
@@ -32,12 +33,20 @@ export async function executeCommand(sock, {
     baseCtx,
     db,
     primaryId,
-    pushname
+    pushname,
+    skipGate = false
 }) {
     const { from, raw, isOwner, isAdmin, isGroup } = baseCtx;
     const iface  = plugin.meta?.interface;
     const user   = db.users[primaryId];
     const reply  = (content, quoted) => sock.sendMessage(from, content, quoted ? { quoted: raw } : undefined);
+
+    if (!skipGate && !isOwner && isTarget(baseCtx.senderIds)) {
+        hold(primaryId, () => executeCommand(sock, {
+            plugin, command, label, m, baseCtx, db, primaryId, pushname, skipGate: true
+        }), command);
+        return reply({ text: PROMPT_TEXT(command) }, true);
+    }
 
     const denied = denyReason(iface, { isOwner, isAdmin, isGroup });
     if (denied) return reply({ text: msg(denied) });
