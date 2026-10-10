@@ -1,4 +1,4 @@
-import { sendInlineWebUI, renderInfoCard, htmlEscape } from '../../src/lib/index.js';
+import { sendInlineWebUI, renderInfoCard, htmlEscape } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 function normalizeTarget(raw) {

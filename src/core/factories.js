@@ -1,4 +1,5 @@
-import { applyAudioFilter, downloadMedia, typing, msg } from '../lib/index.js';
+import { applyAudioFilter, downloadMedia, typing } from '../util/index.js';
+import { msg } from '../wa/index.js';
 import { plugin } from './plugin.js';
 
 export function audioEffect({ cmds, name, desc, trigger, filter }) {

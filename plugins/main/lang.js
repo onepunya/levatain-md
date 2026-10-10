@@ -1,5 +1,5 @@
 import { plugin } from '../../src/core/plugin.js';
-import { msg } from '../../src/lib/messages.js';
+import { msg } from '../../src/wa/messages.js';
 
 const LANGS = ['en', 'id'];
 

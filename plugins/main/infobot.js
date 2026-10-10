@@ -1,4 +1,5 @@
-import { getStatus, sendInlineWebUI, renderInfoCard, htmlEscape } from '../../src/lib/index.js';
+import { getStatus } from '../../src/dashboard/dashboard.js';
+import { sendInlineWebUI, renderInfoCard, htmlEscape } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('infobot')

@@ -1,5 +1,5 @@
 import { plugin } from '../../src/core/plugin.js';
-import { PLANS, getLimitInfo, buildLimitCard } from '../../src/lib/limit.js';
+import { PLANS, getLimitInfo, buildLimitCard } from '../../src/limits/limit.js';
 import { config } from '../../src/config.js';
 
 export default plugin('plan', 'beli', 'harga')

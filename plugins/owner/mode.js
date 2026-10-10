@@ -1,5 +1,6 @@
-import { saveDb } from '../../src/core/db.js';
-import {  getArgs, msg } from '../../src/lib/index.js';
+import { saveDb } from '../../src/storage/db.js';
+import { getArgs } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('mode')

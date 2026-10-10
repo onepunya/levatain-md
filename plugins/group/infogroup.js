@@ -1,4 +1,4 @@
-import { sendInlineWebUI, renderInfoCard, htmlEscape, msg } from '../../src/lib/index.js';
+import { sendInlineWebUI, renderInfoCard, htmlEscape, msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('infogroup', 'ginfo')

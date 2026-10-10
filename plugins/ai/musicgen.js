@@ -1,4 +1,5 @@
-import { startSession, updateSession, endSession, generateSong, ProgressMessage, msg } from '../../src/lib/index.js';
+import { generateSong } from '../../src/api/index.js';
+import { startSession, updateSession, endSession, ProgressMessage, msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const SESSION_TIMEOUT = 3 * 60_000;

@@ -1,4 +1,5 @@
-import {  getLocalIps, getHostname, lookupPublicIp, msg } from '../../src/lib/index.js';
+import { getLocalIps, getHostname, lookupPublicIp } from '../../src/api/index.js';
+import { msg } from '../../src/wa/index.js';
 import { config } from '../../src/config.js';
 import { plugin } from '../../src/core/plugin.js';
 

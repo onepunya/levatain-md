@@ -1,4 +1,7 @@
-import { typing, getArgs, downloadMedia, api, MAX_FILE_SIZE, cleanupTempFile, ProgressMessage, extractAudioClip, extractSongUrl, msg } from '../../src/lib/index.js';
+import { api, MAX_FILE_SIZE, cleanupTempFile, extractSongUrl } from '../../src/api/index.js';
+import { extractAudioClip } from '../../src/media/audioEffects.js';
+import { typing, getArgs, downloadMedia } from '../../src/util/index.js';
+import { ProgressMessage, msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('play')

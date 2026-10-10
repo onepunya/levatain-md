@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { checkPlugins, formatReport } from '../src/lib/pluginCheck.js';
+import { checkPlugins, formatReport } from '../src/tools/pluginCheck.js';
 
 const args  = process.argv.slice(2);
 const flags = new Set(args.filter(arg => arg.startsWith('--')));

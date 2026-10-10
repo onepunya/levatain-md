@@ -1,4 +1,6 @@
-import { typing, getArgs, api, MAX_FILE_SIZE, cleanupTempFile, ProgressMessage, msg } from '../../src/lib/index.js';
+import { api, MAX_FILE_SIZE, cleanupTempFile } from '../../src/api/index.js';
+import { typing, getArgs } from '../../src/util/index.js';
+import { ProgressMessage, msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('ytmp3', 'ytmp4', 'ytv', 'ytvideo')

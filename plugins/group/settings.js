@@ -1,6 +1,6 @@
-import { saveDb } from '../../src/core/db.js';
+import { saveDb } from '../../src/storage/db.js';
 import { plugin } from '../../src/core/plugin.js';
-import { msg } from '../../src/lib/messages.js';
+import { msg } from '../../src/wa/messages.js';
 
 export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'setautodl')
     .in('group')

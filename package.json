@@ -23,7 +23,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "check": "node scripts/check-plugins.js"
+    "check": "node scripts/check-plugins.js",
+    "check:imports": "node scripts/check-imports.js"
   },
   "overrides": {
     "sharp": "$sharp"

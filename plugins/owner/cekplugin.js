@@ -1,6 +1,7 @@
-import { typing, getArgs, truncate, msg } from '../../src/lib/index.js';
+import { typing, getArgs, truncate } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
-import { checkPlugins, formatReport } from '../../src/lib/pluginCheck.js';
+import { checkPlugins, formatReport } from '../../src/tools/pluginCheck.js';
 
 const MODES = ['full', 'code'];
 

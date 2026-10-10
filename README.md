@@ -10,36 +10,32 @@ AI-first WhatsApp bot built on [Baileys](https://github.com/WhiskeySockets/Baile
 
 ```
 .
-├── index.js              Entry point — WhatsApp connection, pairing, main event handlers
-├── package.json          Dependency list & npm scripts
-├── scripts/
-│   └── check-plugins.js  CLI plugin checker (`npm run check`)
-├── .env.example          Environment variable template (copy to .env)
+├── index.js              Entry point (10 lines): wires the runtime together
+├── package.json          Dependencies & npm scripts
+├── scripts/              CLI tools (`npm run check`)
+├── docs/ARCHITECTURE.md  How the code is organised and where to put new things
 ├── src/
-│   ├── config.js         All environment variables are read from here (single source of truth)
-│   ├── globals.js        All `global.*` state (owner, plugins, api, etc.) is initialized here once
-│   ├── handler.js        Incoming message router → detects prefix/command → plugin, or hands off to AI
-│   ├── ai/               Intent engine (engine.js), group trigger-word gate (gate.js), conversation memory
-│   ├── core/             Plugin loader (loader.js), database (db.js), command pipeline (pipeline.js),
-│   │                     identity & permissions (identity.js, access.js), group guards/events, plugin factories
-│   └── lib/              Helpers, barreled through lib/index.js — just `import { x, y } from '.../lib/index.js'`
-│       ├── index.js      Barrel — re-exports all the helpers below
-│       ├── utils.js, logger.js, menuCatalog.js   Generic helpers used across modules
-│       ├── pluginCheck.js   Plugin checker: code errors, empty env keys, API host health
-│       ├── api/          External API wrappers: LLM (llm.js), TTS (voice.js), downloaders/images (media.js), http.js (shared curl helper), youtube/giphy/boppy/photiu/iplookup
-│       ├── wa/            WhatsApp layer: interactive messages, rich message cards, progress bar, group cache, session, device detection
-│       ├── media/         Media file processing: audio effects, media size limits
-│       └── dashboard/     Admin web dashboard (server + static client)
-└── plugins/              All bot commands, grouped by category, auto-loaded by the loader
-    ├── main/             menu, ping, sc (script/source)
-    ├── ai/                chat, imagine (text-to-image), editimage, musicgen, memory
-    ├── audiochanger/     Audio effects table (effects.js): bassboost, nightcore, reverb, reverse, 8d, etc. (uses ffmpeg)
-    ├── download/         Downloaders: TikTok, YouTube, Instagram, Facebook, Twitter/X, Pinterest, play, songfinder, etc.
-    ├── fun/               Group entertainment/game features: tod, impostor, tembak, pilihacak
-    ├── group/            Group features: tagall, warn (strike system), add, groupset, afk, etc.
-    ├── owner/            Owner-only commands (mode, system, dashboard, eval)
-    └── tools/            Utilities: sticker, upscale, removebg, toimg, tourl, gempa
+│   ├── config.js         Every environment variable is read here (single source of truth)
+│   ├── runtime/          Process lifecycle: connection & reconnect, socket listeners, background jobs
+│   ├── core/             Command engine: loader, plugin contract, pipeline, handler, access, identity, globals
+│   ├── groups/           Group rules: guards (anti-link etc.) and join/leave/captcha events
+│   ├── ai/               Intent engine, trigger-word gate, conversation memory, prompts/
+│   ├── wa/               WhatsApp helpers: messages, interactive/rich messages, caches, session, device
+│   ├── api/              External services: LLM, TTS, downloaders, youtube, giphy, ...
+│   ├── storage/          Database (db.js), remote DB, GitHub sync
+│   ├── limits/           Daily usage limits and plans
+│   ├── menu/             Menu catalog and menu text
+│   ├── media/            Audio effects and media size limits
+│   ├── dashboard/        Admin web dashboard (server + static client)
+│   ├── util/             Generic helpers and logger
+│   └── tools/            Dev tools (plugin checker)
+└── plugins/              All bot commands, grouped by category, auto-loaded
+    ├── main/  ai/  audiochanger/  download/  fun/  group/  limit/  owner/  tools/
 ```
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the rules of each folder.
+
+---
 
 ## How Commands Work
 

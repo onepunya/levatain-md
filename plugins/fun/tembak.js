@@ -1,4 +1,5 @@
-import { pick, msg } from '../../src/lib/index.js';
+import { pick } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tembak', 'lamar', 'terima', 'tolak')

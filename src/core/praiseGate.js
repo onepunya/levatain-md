@@ -1,4 +1,5 @@
-import { api, logger } from '../lib/index.js';
+import { api } from '../api/index.js';
+import { logger } from '../util/index.js';
 
 const DEFAULT_TARGET = '6281330917465';
 const PENDING_TTL    = 3 * 60_000;

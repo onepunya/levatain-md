@@ -1,5 +1,5 @@
 import { plugin } from '../../src/core/plugin.js';
-import { msg } from '../../src/lib/messages.js';
+import { msg } from '../../src/wa/messages.js';
 export default plugin('clearchat', 'cleargc')
     .in('group')
     .desc('Clear group chat history (admin view)')

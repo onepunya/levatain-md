@@ -1,5 +1,5 @@
 import { readdirSync } from 'fs';
-import { logger } from '../lib/logger.js';
+import { logger } from '../util/logger.js';
 
 export const plugins = new Map();
 

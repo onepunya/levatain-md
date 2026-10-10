@@ -1,4 +1,5 @@
-import { typing, getArgs, msg } from '../../src/lib/index.js';
+import { typing, getArgs } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import axios from 'axios';
 import { plugin } from '../../src/core/plugin.js';
 

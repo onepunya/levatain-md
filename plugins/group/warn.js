@@ -1,5 +1,5 @@
 import { plugin } from '../../src/core/plugin.js';
-import { msg } from '../../src/lib/messages.js';
+import { msg } from '../../src/wa/messages.js';
 export default plugin('warn', 'unwarn', 'warnlist')
     .in('group')
     .desc('Group member warn/strike system (auto-kick at 3rd warn)')

@@ -1,7 +1,7 @@
 import { reloadPlugins } from '../../src/core/loader.js';
-import { saveDb, loadDb } from '../../src/core/db.js';
+import { saveDb, loadDb } from '../../src/storage/db.js';
 import { plugin } from '../../src/core/plugin.js';
-import { msg } from '../../src/lib/messages.js';
+import { msg } from '../../src/wa/messages.js';
 
 export default plugin('reload', 'maintenance', 'ban', 'unban')
     .in('owner')

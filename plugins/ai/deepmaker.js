@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 import CryptoJS from 'crypto-js';
 import { createRequire } from 'module';
-import { typing, getArgs, downloadMedia, sleep, msg, ProgressMessage } from '../../src/lib/index.js';
+import { typing, getArgs, downloadMedia, sleep } from '../../src/util/index.js';
+import { msg, ProgressMessage } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const require = createRequire(import.meta.url);

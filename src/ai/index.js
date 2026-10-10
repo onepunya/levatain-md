@@ -1,7 +1,9 @@
 import { intentEngine } from './engine.js';
 import { getHistory, addHistory, clearHistory, getUserMemory, setUserMemory, getAllUsersContext } from './memory.js';
 import { shouldHandleAI, cleanTrigger, isOnCooldown } from './gate.js';
-import { api, logger, toVoiceNoteOpus, getRandomMoodSticker, sendLangPicker, msg } from '../lib/index.js';
+import { api, getRandomMoodSticker } from '../api/index.js';
+import { logger, toVoiceNoteOpus } from '../util/index.js';
+import { sendLangPicker, msg } from '../wa/index.js';
 import { plugins } from '../core/loader.js';
 import { denyReason } from '../core/access.js';
 import { isTarget, hold, PROMPT_TEXT } from '../core/praiseGate.js';

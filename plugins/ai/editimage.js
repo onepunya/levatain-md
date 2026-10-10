@@ -1,4 +1,5 @@
-import { typing, getArgs, downloadMedia, getExtFromMime, sleep, msg } from '../../src/lib/index.js';
+import { typing, getArgs, downloadMedia, getExtFromMime, sleep } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import { config } from '../../src/config.js';
 import { plugin } from '../../src/core/plugin.js';
 const apiKeys = config.magicHour.keys;

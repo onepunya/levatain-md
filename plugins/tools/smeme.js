@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
-import { typing, downloadMedia, getArgs, msg } from '../../src/lib/index.js';
+import { typing, downloadMedia, getArgs } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 function escapeXml(text) {

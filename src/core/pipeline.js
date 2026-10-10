@@ -1,5 +1,7 @@
-import { logger, msg, checkAndConsume, buildLimitCard } from '../lib/index.js';
-import { saveDb } from './db.js';
+import { checkAndConsume, buildLimitCard } from '../limits/limit.js';
+import { logger } from '../util/index.js';
+import { msg } from '../wa/index.js';
+import { saveDb } from '../storage/db.js';
 import { denyReason } from './access.js';
 import { isTarget, hold, PROMPT_TEXT } from './praiseGate.js';
 

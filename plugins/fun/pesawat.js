@@ -1,4 +1,4 @@
-import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES, msg } from '../../src/lib/index.js';
+import { sendInlineWebUI, WEBUI_MAX_PAYLOAD_BYTES, msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('pesawat', 'plane', 'shooter')

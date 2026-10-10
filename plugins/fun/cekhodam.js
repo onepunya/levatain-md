@@ -1,6 +1,8 @@
-import { typing, api, msg } from '../../src/lib/index.js';
+import { api } from '../../src/api/index.js';
+import { typing } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
-import { saveDb } from '../../src/core/db.js';
+import { saveDb } from '../../src/storage/db.js';
 
 const MAX_TAKEN_IN_PROMPT = 80;
 const MAX_RETRY = 2;

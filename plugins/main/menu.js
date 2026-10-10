@@ -1,4 +1,6 @@
-import { getArgs, detectDevice, deviceLabel, supportsInteractive, sendCategoryMenu, sendThumbFromUrl, TAG_META, collectGrouped, buildAllMenuText, buildHomeCaption, buildCategoryText, buildListSections, resolveMenuArg, labelize, backHint, msg } from '../../src/lib/index.js';
+import { TAG_META, collectGrouped, buildAllMenuText, buildHomeCaption, buildCategoryText, buildListSections, resolveMenuArg, labelize, backHint } from '../../src/menu/menuCatalog.js';
+import { getArgs } from '../../src/util/index.js';
+import { detectDevice, deviceLabel, supportsInteractive, sendCategoryMenu, sendThumbFromUrl, msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('menu', 'allmenu')

@@ -1,5 +1,5 @@
 import { plugin } from '../../src/core/plugin.js';
-import { refreshMenuText, ensureMenuText, menuTextStatus } from '../../src/lib/menuText.js';
+import { refreshMenuText, ensureMenuText, menuTextStatus } from '../../src/menu/menuText.js';
 
 ensureMenuText();
 

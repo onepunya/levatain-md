@@ -1,6 +1,6 @@
 import { plugin } from '../../src/core/plugin.js';
-import { getLimitInfo, animateLimitBar, buildLimitCard } from '../../src/lib/limit.js';
-import { saveDb } from '../../src/core/db.js';
+import { getLimitInfo, animateLimitBar, buildLimitCard } from '../../src/limits/limit.js';
+import { saveDb } from '../../src/storage/db.js';
 
 export default plugin('limit', 'ceklimit')
     .in('limit')

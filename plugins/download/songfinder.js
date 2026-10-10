@@ -1,4 +1,6 @@
-import { typing, getArgs, extractSongUrl, api, msg } from '../../src/lib/index.js';
+import { extractSongUrl, api } from '../../src/api/index.js';
+import { typing, getArgs } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const LINK_ORDER = ['Spotify', 'Apple Music', 'YouTube Music', 'YouTube', 'Deezer', 'SoundCloud'];

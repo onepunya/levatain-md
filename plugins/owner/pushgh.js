@@ -1,5 +1,6 @@
 import { plugin } from '../../src/core/plugin.js';
-import { syncProjectToGithub, isGithubSyncEnabled, ProgressMessage, msg } from '../../src/lib/index.js';
+import { syncProjectToGithub, isGithubSyncEnabled } from '../../src/storage/githubSync.js';
+import { ProgressMessage, msg } from '../../src/wa/index.js';
 
 export default plugin('pushgh', 'deploy')
     .in('owner')

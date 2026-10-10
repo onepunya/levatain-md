@@ -1,4 +1,6 @@
-import { typing, getArgs, sendAnyMedia, api, msg } from '../../src/lib/index.js';
+import { api } from '../../src/api/index.js';
+import { typing, getArgs, sendAnyMedia } from '../../src/util/index.js';
+import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tiktok', 'tt')

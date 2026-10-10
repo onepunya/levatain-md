@@ -1,6 +1,6 @@
 import { plugin } from '../../src/core/plugin.js';
 import { setEnabled, setTarget, getConfig } from '../../src/core/praiseGate.js';
-import { saveDb } from '../../src/core/db.js';
+import { saveDb } from '../../src/storage/db.js';
 
 export default plugin('jail')
     .in('owner')

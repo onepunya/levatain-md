@@ -1,6 +1,6 @@
 import { plugin } from '../../src/core/plugin.js';
-import { applyPlan, PLANS, getLimitInfo, buildLimitCard } from '../../src/lib/limit.js';
-import { saveDb } from '../../src/core/db.js';
+import { applyPlan, PLANS, getLimitInfo, buildLimitCard } from '../../src/limits/limit.js';
+import { saveDb } from '../../src/storage/db.js';
 
 function digits(id = '') {
     return String(id).replace(/\D/g, '');
