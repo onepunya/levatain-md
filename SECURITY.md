@@ -1,21 +1,13 @@
 # Security Policy
 
-## Supported Versions
+## Reporting a vulnerability
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Please do **not** open a public issue for security problems.
+Report privately through GitHub: **Security → Report a vulnerability** on this repository.
+Include what you found, how to reproduce it, and the impact. We aim to reply within a few days.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+## Keep your own bot safe
 
-## Reporting a Vulnerability
-
-Use this section to tell people how to report a vulnerability.
-
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+- Never commit `.env`, the `session/` folder or `database/`. Anyone with `session/` can control your WhatsApp account.
+- If an API key or cookie leaks, revoke it and create a new one.
+- Do not expose the dashboard port to the internet without a firewall or reverse proxy with authentication.

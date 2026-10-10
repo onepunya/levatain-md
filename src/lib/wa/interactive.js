@@ -43,12 +43,39 @@ export function extractBody(m) {
         || '';
 }
 
+const VIDEO_RE = /\.(mp4|mov|webm|gif)(\?.*)?$/i;
+const mediaCache = new Map();
+
+export function isVideoUrl(url) {
+    return VIDEO_RE.test(String(url || ''));
+}
+
+async function loadMedia(url) {
+    if (mediaCache.has(url)) return mediaCache.get(url);
+    const res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok) throw new Error(`thumb fetch ${res.status}`);
+    const buf = Buffer.from(await res.arrayBuffer());
+    mediaCache.set(url, buf);
+    return buf;
+}
+
+async function thumbContent(url, caption) {
+    if (isVideoUrl(url)) {
+        return { video: await loadMedia(url), gifPlayback: true, mimetype: 'video/mp4', caption: caption || '' };
+    }
+    return { image: { url }, caption: caption || '' };
+}
+
 export async function sendThumbFromUrl(sock, jid, { caption, quoted, thumbUrl } = {}) {
     const url = thumbUrl || global.thumb;
-    return sock.sendMessage(jid, {
-        image: { url },
-        caption: caption || '',
-    }, quoted ? { quoted } : {});
+    let content;
+    try {
+        content = await thumbContent(url, caption);
+    } catch (e) {
+        logger.warn(`[menu] thumb video failed, text only: ${e.message}`);
+        content = { text: caption || '' };
+    }
+    return sock.sendMessage(jid, content, quoted ? { quoted } : {});
 }
 
 export async function sendCategoryMenu(sock, jid, {
@@ -77,8 +104,11 @@ export async function sendCategoryMenu(sock, jid, {
 }
 
 async function sendNativeList(sock, jid, { caption, footer, quoted, sections, thumbUrl }) {
+    const isVid = isVideoUrl(thumbUrl);
     const media = await prepareWAMessageMedia(
-        { image: { url: thumbUrl } },
+        isVid
+            ? { video: await loadMedia(thumbUrl), gifPlayback: true, mimetype: 'video/mp4' }
+            : { image: { url: thumbUrl } },
         { upload: sock.waUploadToServer },
     );
 
@@ -88,7 +118,7 @@ async function sendNativeList(sock, jid, { caption, footer, quoted, sections, th
         header: proto.Message.InteractiveMessage.Header.create({
             title: global.botName || 'Levatain-MD',
             hasMediaAttachment: true,
-            imageMessage: media.imageMessage,
+            ...(isVid ? { videoMessage: media.videoMessage } : { imageMessage: media.imageMessage }),
         }),
         nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
             buttons: [

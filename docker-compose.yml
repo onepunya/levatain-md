@@ -1,0 +1,20 @@
+services:
+  levatain:
+    build: .
+    container_name: levatain-md
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3000:3000"   # web dashboard; match DASHBOARD_PORT in .env
+    volumes:
+      - levatain-session:/app/session    # WhatsApp login, do not lose this
+      - levatain-database:/app/database  # bot database
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  levatain-session:
+  levatain-database:

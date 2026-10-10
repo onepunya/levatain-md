@@ -1,0 +1,21 @@
+# systemd unit. Edit User and WorkingDirectory, then:
+#   sudo cp deploy/levatain.service /etc/systemd/system/levatain.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now levatain
+#   journalctl -u levatain -f
+[Unit]
+Description=Levatain-MD WhatsApp Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/levatain-md
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

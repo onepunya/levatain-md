@@ -2,6 +2,19 @@
   "name": "levatain-md",
   "version": "2.0.0",
   "description": "AI-First WhatsApp Bot powered by Baileys",
+  "license": "MIT",
+  "author": "Levatain & onepunya",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onepunya/levatain-md.git"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys",
+    "ai",
+    "nodejs"
+  ],
   "type": "module",
   "main": "index.js",
   "engines": {
@@ -13,8 +26,8 @@
     "check": "node scripts/check-plugins.js"
   },
   "overrides": {
-  "sharp": "$sharp"
-},
+    "sharp": "$sharp"
+  },
   "dependencies": {
     "@whiskeysockets/baileys": "7.0.0-rc14",
     "axios": "^1.7.2",

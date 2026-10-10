@@ -75,6 +75,8 @@ Open `.env` and fill in at minimum:
 - `OWNER_NUMBER` — your WA number as the owner
 - `GEMINI_COOKIE` — Gemini is the only LLM used by the bot (session cookie from gemini.google.com, see the comments in `.env.example`)
 
+- `BOT_THUMB` — (optional) menu thumbnail. Accepts an image URL (`.png/.jpg`) **or** a video URL (`.mp4/.mov/.webm`). A video is sent as a looping GIF-style clip. Keep it small (under ~2 MB, no audio) so WhatsApp auto-downloads it; the recipient's *Auto-download → Video* setting also has to be on, otherwise they see a download button.
+
 Other variables (Giphy, OnePunya, Magic Hour, AudD/Shazam, translate, song finder base URL, dashboard port, etc.) are optional — see the comments in `.env.example` for an explanation of each variable.
 
 ## How to Get All API Keys
@@ -132,6 +134,27 @@ npm start
 Return to the session: `screen -r levatain-md`
 
 The first time it runs, the bot will show a **pairing code** in the terminal. Open WhatsApp on your phone → **⋮ (three dots) → Linked Devices → Link with phone number** → enter that code.
+
+---
+
+## Running with Docker
+
+```bash
+cp .env.example .env      # fill PAIRING_NUMBER, OWNER_NUMBER, GEMINI_COOKIE
+docker compose up -d --build
+docker compose logs -f    # the pairing code appears here on first run
+```
+
+WhatsApp session and database are kept in Docker volumes (`levatain-session`, `levatain-database`), so they survive updates. Update with `git pull && docker compose up -d --build`.
+
+## Running with systemd or pm2 (VPS)
+
+- **pm2:** `pm2 start ecosystem.config.cjs && pm2 save && pm2 startup`
+- **systemd:** edit `deploy/levatain.service` (`User`, `WorkingDirectory`), copy it to `/etc/systemd/system/`, then `sudo systemctl enable --now levatain`. Logs: `journalctl -u levatain -f`.
+
+## Other hosts (Railway, Render, Koyeb, etc.)
+
+Deploy from the `Dockerfile` (or use the `Procfile`, process type `worker`). Set the variables from `.env.example` in the host's environment settings. **Attach a persistent volume to `/app/session` and `/app/database`**, otherwise you must pair WhatsApp again on every redeploy. Pick a worker/background service type if the host offers one.
 
 ---
 
@@ -224,3 +247,13 @@ The owner can reload all plugins without restarting the process using the `.relo
 | `isOwner` always false | Follow the steps above to manually set `OWNER_LID` |
 | Bot dies when SSH closes (VPS) | Use `pm2` or `screen`, see the "Running on a Regular VPS" section |
 | New plugin doesn't show up | Make sure the `meta.interface.cmd` & `meta.interface.run` format is correct, then run `.reload` or restart the bot |
+
+## License
+
+This project is released under the [MIT License](LICENSE). You are free to use, copy, modify, publish, distribute, sublicense and even sell it — including turning your fork into a closed-source project — as long as the copyright notice and license text stay included.
+
+## Credits
+
+Made by **Levatain** & **onepunya**.
+
+Please keep these credits (and the `LICENSE` file) intact in any copy or fork of this project. Built on [Baileys](https://github.com/WhiskeySockets/Baileys).
