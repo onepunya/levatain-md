@@ -9,6 +9,25 @@ function required(name) {
     return val;
 }
 
+
+function resolveDashboardPort() {
+    const candidates = [
+        ['DASHBOARD_PORT', process.env.DASHBOARD_PORT],
+        ['SERVER_PORT', process.env.SERVER_PORT],
+        ['PORT', process.env.PORT],
+    ];
+    for (const [source, raw] of candidates) {
+        if (raw === undefined || raw === null || String(raw).trim() === '') continue;
+        const n = Number(String(raw).trim());
+        if (Number.isFinite(n) && n > 0 && n <= 65535) {
+            resolveDashboardPort._source = source;
+            return Math.floor(n);
+        }
+    }
+    resolveDashboardPort._source = 'default';
+    return 3000;
+}
+
 export const config = {
     bot: {
         name: 'Levatain-MD',
@@ -70,7 +89,8 @@ export const config = {
     },
 
     translateEmail: process.env.TRANSLATE_EMAIL || '',
-    dashboardPort: Number(process.env.DASHBOARD_PORT) || 3000,
+    dashboardPort: resolveDashboardPort(),
+    dashboardPortSource: null,
     debug: process.env.DEBUG === 'true',
 
     github: {
@@ -87,6 +107,9 @@ export const config = {
 };
 
 
+config.dashboardPortSource = resolveDashboardPort._source || 'default';
+
 if (!config.ai.gemini.cookie) {
     console.warn('[config] Warning: GEMINI_COOKIE is empty, the AI chat feature will not work.');
 }
+

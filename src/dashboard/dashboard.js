@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { logger, recentCommands, recentLogs } from '../util/logger.js';
 import { getLocalIps, getHostname, getCachedIpInfo, lookupPublicIp } from '../api/iplookup.js';
+import { getTunnelUrl } from './tunnel.js';
 import { formatUptimeFull } from '../util/utils.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,6 +64,7 @@ export function getStatus() {
             hostname:  getHostname(),
             localIps:  getLocalIps(),
             publicIp:  ipInfo.publicIp,
+            tunnelUrl: getTunnelUrl(),
             city:      ipInfo.city,
             country:   ipInfo.country,
             isp:       ipInfo.isp,
@@ -132,8 +134,8 @@ export function startDashboard(port) {
         });
     });
 
-    server.listen(port, () => {
-        logger.success(`Dashboard jalan di port ${port}`);
+    server.listen(port, '0.0.0.0', () => {
+        logger.success(`Dashboard listen 0.0.0.0:${port}`);
         lookupPublicIp({ force: true }).catch(() => {});
     });
 

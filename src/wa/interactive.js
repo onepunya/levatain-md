@@ -4,6 +4,7 @@ import {
     prepareWAMessageMedia,
 } from '@whiskeysockets/baileys';
 import { logger } from '../util/logger.js';
+import { runFfmpegTempFile } from '../util/utils.js';
 import { detectDevice, supportsInteractive } from './device.js';
 
 export function unwrapMessage(message) {
@@ -140,7 +141,6 @@ async function sendNativeList(sock, jid, { caption, footer, quoted, sections, th
         }),
     });
 
-
     const msg = generateWAMessageFromContent(
         jid,
         {
@@ -153,29 +153,7 @@ async function sendNativeList(sock, jid, { caption, footer, quoted, sections, th
         { userJid: sock.user?.id, quoted },
     );
 
-
-    const isGroup = jid.endsWith('@g.us');
-    const additionalNodes = [
-        {
-            tag: 'biz',
-            attrs: {},
-            content: [
-                {
-                    tag: 'interactive',
-                    attrs: { type: 'native_flow', v: '1' },
-                    content: [
-                        {
-                            tag: 'native_flow',
-                            attrs: { v: '9', name: 'mixed' },
-                        },
-                    ],
-                },
-            ],
-        },
-    ];
-    if (!isGroup) {
-        additionalNodes.push({ tag: 'bot', attrs: { biz_bot: '1' } });
-    }
+    const additionalNodes = buildBizNodes(jid);
 
     await sock.relayMessage(jid, msg.message, {
         messageId: msg.key.id,
@@ -183,7 +161,6 @@ async function sendNativeList(sock, jid, { caption, footer, quoted, sections, th
     });
     return msg;
 }
-
 
 export async function sendLangPicker(sock, jid, { quoted, device } = {}) {
     const dev = device || detectDevice(quoted);
@@ -277,3 +254,85 @@ export async function sendLangPicker(sock, jid, { quoted, device } = {}) {
     return { mode: 'text' };
 }
 
+function buildBizNodes(jid) {
+    const nodes = [
+        {
+            tag: 'biz',
+            attrs: {},
+            content: [
+                {
+                    tag: 'interactive',
+                    attrs: { type: 'native_flow', v: '1' },
+                    content: [{ tag: 'native_flow', attrs: { v: '9', name: 'mixed' } }],
+                },
+            ],
+        },
+    ];
+    if (!jid.endsWith('@g.us')) nodes.push({ tag: 'bot', attrs: { biz_bot: '1' } });
+    return nodes;
+}
+
+const cardThumbCache = new Map();
+
+export async function getCardThumb(url, width = 320) {
+    if (cardThumbCache.has(url)) return cardThumbCache.get(url);
+    const source = await loadMedia(url);
+    const jpeg = await runFfmpegTempFile(source, {
+        inExt: 'src',
+        outExt: 'jpg',
+        idPrefix: 'cardthumb',
+        configure: command => command
+            .frames(1)
+            .outputOptions(['-vf', `scale=${width}:-2`, '-q:v', '6']),
+    });
+    cardThumbCache.set(url, jpeg);
+    return jpeg;
+}
+
+export async function sendInfoCard(sock, jid, {
+    header = {},
+    body = '\u200B',
+    footer = '',
+    buttons = [],
+    mentions = [],
+    quoted,
+    viewOnce = true,
+} = {}) {
+    const IM = proto.Message.InteractiveMessage;
+    const interactive = IM.create({
+        header: IM.Header.create({
+            hasMediaAttachment: true,
+            locationMessage: proto.Message.LocationMessage.create({
+                degreesLatitude: 0,
+                degreesLongitude: 0,
+                name: header.name || '',
+                address: header.address || '',
+                url: header.url || '',
+                jpegThumbnail: header.thumbnail,
+            }),
+        }),
+        body: IM.Body.create({ text: body }),
+        footer: IM.Footer.create({ text: footer }),
+        nativeFlowMessage: IM.NativeFlowMessage.create({
+            buttons: buttons.map(b => IM.NativeFlowMessage.NativeFlowButton.create({
+                name: b.name,
+                buttonParamsJson: JSON.stringify(b.params ?? {}),
+            })),
+            messageParamsJson: '{}',
+        }),
+        contextInfo: proto.ContextInfo.create({ mentionedJid: mentions }),
+    });
+
+    const inner = {
+        messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 },
+        interactiveMessage: interactive,
+    };
+    const content = viewOnce ? { viewOnceMessage: { message: inner } } : inner;
+
+    const message = generateWAMessageFromContent(jid, content, { userJid: sock.user?.id, quoted });
+    await sock.relayMessage(jid, message.message, {
+        messageId: message.key.id,
+        additionalNodes: buildBizNodes(jid),
+    });
+    return message;
+}

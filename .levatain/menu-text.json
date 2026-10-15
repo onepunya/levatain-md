@@ -1,139 +1,137 @@
 {
-  "updatedAt": 1791615998593,
+  "updatedAt": 1792107873484,
   "pool": {
     "greet_pagi": [
-      "Rise and shine, let's crush today! ☀️",
-      "Ready to make today amazing? 💪",
-      "Wishing you a super productive morning! ✨",
-      "Hope your day starts with a smile! 😊",
-      "Let's start fresh and conquer goals! 🚀",
-      "Grab your coffee and own this morning! ☕"
+      "Rise and shine, let's crush today ☀️",
+      "Hope your morning is off to a great start ☕",
+      "Ready to conquer the day ahead? 🚀",
+      "Sending good energy for your morning 🌅",
+      "Make today amazing, you've got this 💪",
+      "Breathe in and enjoy the fresh morning 🌸"
     ],
     "greet_siang": [
-      "Hope your day is going wonderfully! 🌟",
-      "Keep up the great energy today! 🔥",
-      "Take a moment to breathe and smile! 😊",
-      "You're doing fantastic, keep going! 👍",
-      "Hope your afternoon is bright and fun! ☀️",
-      "Stay focused and finish strong today! 💪"
+      "Hope your afternoon is going smoothly ☀️",
+      "Take a nice break and recharge 🍵",
+      "Keep up the awesome momentum today 🚀",
+      "Stay focused and keep smiling 🌟",
+      "Hope you're having a wonderful day so far 🌻",
+      "Power through the rest of the day with a smile ✨"
     ],
     "greet_sore": [
-      "Hope your day went well! 🌟",
-      "Take a breather, you've earned it! 🛋️",
-      "How was your day today? ✨",
-      "Time to unwind and relax now! 🍃",
-      "Hope you're having a cozy evening! ☕",
-      "Unwind and enjoy your evening! 🌆"
+      "Hope your day went well! 🌅",
+      "Time to unwind and relax. ☕",
+      "You crushed today, awesome job! 💪",
+      "Almost time to clock out! 🌆",
+      "Keep up the great energy! ✨",
+      "Enjoy a peaceful evening ahead. 🍃"
     ],
     "greet_malam": [
-      "Time to get some well-deserved rest! 🌙",
-      "Sweet dreams and sleep tight! 💤",
-      "Rest up for an amazing tomorrow! ⭐",
-      "Hope you have a peaceful night! 🌌",
-      "Time to recharge those batteries! 🔋",
-      "Sleep well and sweet dreams! 🦉"
+      "Time to rest and recharge. 🌙",
+      "Hope you had a wonderful day! 🌌",
+      "Sweet dreams and sleep well. 😴",
+      "Relax, you've earned it. 🛌",
+      "Unwind and let go of stress. 🌟",
+      "Have a cozy, restful night. 💤"
     ],
     "teaser": [
-      "Hey there, type a command to start! 👋",
-      "Drop a message or command to begin! ✨",
-      "Ready when you are, just type a command! 🚀",
-      "Say hi or type a command to chat! 💬",
-      "What's up? Type a command to explore! 🌟",
-      "Let's chat! Type a command below. 😊"
+      "Hey there, ready to chat? 🤖",
+      "What can I do for you today? ✨",
+      "Drop a command to get started! 💬",
+      "Curious? Let's explore together! 🚀",
+      "Say hi and let's have some fun! 👋",
+      "Type anything to kick things off! ⚡"
     ],
     "hint_home": [
-      "Tap the categories below or type *.allmenu* to see everything! 📂",
-      "Explore the list below or type *.allmenu* for all options. 👇",
-      "Check out the categories below or type *.allmenu*. ✨",
-      "Browse the menu below or type *.allmenu* to view all. 📋",
-      "Pick a category below or type *.allmenu* anytime! 💡",
-      "Tap below or type *.allmenu* to see all features. 🚀"
+      "Tap the category list below or type *.allmenu* to see everything! 📂",
+      "Explore the categories below or type *.allmenu* to view all commands! 🌟",
+      "Check out the menu below or type *.allmenu* for the full list! 📋",
+      "Browse categories below or type *.allmenu* to explore more! 🔍",
+      "Pick a category below or type *.allmenu* to see all options! ✨",
+      "Take a look below or type *.allmenu* to unlock all features! 🚀"
     ],
     "hint_back": [
-      "Type *.menu* to head back or *.allmenu* for everything! 🔙",
-      "Want to go back? Type *.menu* or see *.allmenu* for all commands! ✨",
-      "Head back with *.menu* or check out *.allmenu* to see everything! 📱",
-      "Use *.menu* to return or explore all options with *.allmenu*! 🔍",
-      "Go back anytime by typing *.menu* or view *.allmenu* for the list! 👇",
-      "Type *.menu* to return home or *.allmenu* to see all commands! 🌟"
+      "Head back to the main menu with *.menu* or see all commands via *.allmenu*! 🔙",
+      "Want to return? Type *.menu* or check *.allmenu* for everything! ✨",
+      "Go back home using *.menu* or explore all commands with *.allmenu*! 🏠",
+      "Use *.menu* to return or *.allmenu* to view every command available! 📋",
+      "Type *.menu* to go back or check *.allmenu* for the complete list! 🔍",
+      "Return to the main menu with *.menu* or view all with *.allmenu*! 👋"
     ],
     "hint_end": [
-      "Pick a category by typing *.menu*! 📂",
-      "Type *.menu* to choose a category! ✨",
-      "Select your category with *.menu*! 🧭",
-      "Find your category by typing *.menu*! 📋",
-      "Type *.menu* to browse categories! 🚀",
-      "Pick what you need using *.menu*! 💡"
+      "Pick a category by typing *.menu* right now! 📂",
+      "Choose your path by typing *.menu*! 🌟",
+      "Find what you need by typing *.menu* to start! 🚀",
+      "Select a category using *.menu* to continue! 👉",
+      "Type *.menu* to explore our categories! 💡",
+      "Get started by typing *.menu* to pick a category! 🎉"
     ],
     "cat_ai": [
-      "Smart AI ready to help! 🤖",
-      "Ask me anything you need! 💡",
-      "Your personal AI assistant. ✨",
-      "Let's chat and explore! 🚀",
-      "Smart answers on the go. 🧠"
+      "Chat with smart AI bots anytime 🤖",
+      "Your personal AI helper is here ✨",
+      "Ask me anything you want to know 🧠",
+      "Quick answers powered by AI 💡",
+      "Let AI make your day easier 🚀"
     ],
     "cat_tools": [
-      "Useful tools at hand. 🛠️",
-      "Handy helpers for you. 🔧",
-      "Quick utils for daily tasks. ⚙️",
-      "Handy tools made easy. 📦",
-      "Get things done faster. ⚡"
+      "Handy utilities for your chats 🛠️",
+      "Handy shortcuts you will love 📌",
+      "Handy tools to boost your day 🔧"
     ],
     "cat_fun": [
-      "Play games and chill! 🎮",
-      "Time for some fun! 🎉",
-      "Let's play and laugh. 😄",
-      "Fun stuff waiting here. 🎲",
-      "Enjoy games and jokes. 🚀"
+      "Play games and have fun together 🎮",
+      "Enjoy fun commands and games 🎲",
+      "Time to relax and play around 🕹️",
+      "Bring some fun into your chat 🎯",
+      "Awesome games to pass the time 🎪"
     ],
     "cat_audiochanger": [
-      "Voice effects made fun! 🎤",
-      "Change your voice now! 🎧",
-      "Sound totally different! 🤖",
-      "Pitch shifting magic! ✨",
-      "Transform your audio! 🎙️"
+      "Change your voice instantly! 🎧",
+      "Make your audio sound cool! 🎤",
+      "Remix your voice fast! 🔊",
+      "Play with voice effects! 🎵",
+      "Transform any audio clip! ✨"
     ],
     "cat_download": [
-      "Grab files instantly! 📥",
-      "Save your media fast! ⚡",
-      "Download anything quick! 🌐",
-      "Get files in a tap! 📲",
-      "Fetch media with ease! 🚀"
+      "Grab files in seconds! 📥",
+      "Save media instantly! ⚡",
+      "Download your stuff fast! 🚀",
+      "Get files right here! 📲",
+      "Fetch media with ease! 🌐"
     ],
     "cat_group": [
-      "Manage chats smoothly! 👥",
+      "Manage your chats easily! 👥",
       "Supercharge your group! ⚡",
-      "Admin tools made easy! 🛠️",
-      "Keep your group active! 💬",
-      "Run your chats better! 🌟"
+      "Admin tools made simple! 🛠️",
+      "Keep your group active! 🎉",
+      "Run your community smoothly! 💬"
     ],
     "cat_limit": [
-      "Check your limits here 📊",
-      "See your plan & usage 📈",
-      "View your quota details 🔒",
-      "Manage your plan here ✨",
-      "Check your limits & usage 📌"
+      "Check your limits here! 📊",
+      "See your usage and plan! ⚡",
+      "Track your remaining quota! 📈",
+      "View your plan details! 💡",
+      "Check your current status! ✨"
     ],
     "cat_owner": [
-      "Bot owner info here 👑",
-      "Meet the bot creator 💡",
-      "Owner & developer details 🛠️",
-      "Contact the bot owner 📞",
-      "About the owner 👑"
+      "Contact the bot creator! 👨‍💻",
+      "Get in touch with the owner! 📞",
+      "Meet the developer behind this! 🛠️",
+      "Send a note to the owner! 💌",
+      "Check owner info here! 👑"
     ],
     "cat_main": [
-      "Main menu options 🏠",
-      "Explore main features 🌟",
-      "Main bot controls 📱",
-      "Welcome to main menu 🚀",
-      "Primary bot features ✨"
+      "Explore core bot features! 🌟",
+      "Check out the main menu! 🏠",
+      "Discover essential tools here! ⚙️",
+      "Browse primary commands! 🚀",
+      "Explore the main features! 🔥"
     ],
     "cat_general": [
-      "Anything else? 🌟",
-      "Find more here! ✨",
-      "Check this out! 👇",
-      "Explore more. 🚀",
-      "More options! 💡"
+      "Check out more cool stuff here! ✨",
+      "Explore extra goodies right now. 🎁",
+      "Find more fun options over here! 🌟",
+      "Discover more handy tools inside. 🛠️",
+      "Check these extra options out! 🚀"
     ]
   }
 }

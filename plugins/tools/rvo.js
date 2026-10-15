@@ -7,7 +7,6 @@ export default plugin('rvo', 'readviewonce', 'readvo', 'viewonce')
     .desc('Open a View Once message (image/video/audio) so it can be viewed again')
     .prefixOnly()
     .cooldown(3)
-
     .signal('User asks to buka / baca pesan view once atau rvo', [
         'open this view once',
         'rvo',

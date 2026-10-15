@@ -4,3 +4,8 @@ session/
 database/
 *.log
 .DS_Store
+.bin/
+cloudflared
+cloudflared-*
+tunnel.log
+*.part
