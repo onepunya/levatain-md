@@ -16,7 +16,7 @@ export default plugin('setsticker', 'stikercmd')
         saveDb,
         body
     }) => {
-        const quoted     = message.quoted;
+        const quoted = message.quoted;
         const stickerMsg = quoted?.raw?.message?.stickerMessage;
 
         if (!stickerMsg) {
@@ -45,4 +45,3 @@ export default plugin('setsticker', 'stikercmd')
         await saveDb();
         return sock.sendMessage(from, { text: msg('done.sticker_set', { cmd: arg }) }, { quoted: raw });
     });
-

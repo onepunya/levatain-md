@@ -3,15 +3,15 @@ import { bustGroupMetaCache } from '../wa/index.js';
 import { loadDb } from '../storage/db.js';
 
 const CAPTCHA_TIMEOUT = 120_000;
-const captchaPending  = new Map();
+const captchaPending = new Map();
 
 export const getCaptchaPending = () => captchaPending;
 
 const phoneOf = (jid) => jid.split('@')[0].split(':')[0];
 
 function startCaptcha(sock, groupId, userJid) {
-    const a      = randomInt(1, 10);
-    const b      = randomInt(1, 10);
+    const a = randomInt(1, 10);
+    const b = randomInt(1, 10);
     const number = phoneOf(userJid);
 
     const timer = setTimeout(async () => {
@@ -30,7 +30,7 @@ function startCaptcha(sock, groupId, userJid) {
 }
 
 export function handleCaptchaAnswer(sock, m, body) {
-    const jid     = m.key.participant || m.key.remoteJid;
+    const jid = m.key.participant || m.key.remoteJid;
     const pending = captchaPending.get(jid);
     if (!pending) return false;
 
@@ -57,17 +57,17 @@ function renderLeftText(template, number, metadata) {
 export async function participantsUpdate(sock, { id, participants, action }) {
     bustGroupMetaCache(id);
 
-    const db  = await loadDb();
+    const db = await loadDb();
     const grp = db.groups?.[id];
     if (!grp?.welcome && !grp?.captcha) return;
 
     try {
-        const metadata    = await sock.groupMetadata(id);
+        const metadata = await sock.groupMetadata(id);
         const memberCount = metadata.participants?.length || 0;
 
         for (const entry of participants) {
             const userJid = typeof entry === 'string' ? entry : (entry.id || String(entry));
-            const number  = phoneOf(userJid);
+            const number = phoneOf(userJid);
 
             if (action === 'add') {
                 if (grp.captcha) await startCaptcha(sock, id, userJid);

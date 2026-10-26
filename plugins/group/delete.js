@@ -20,8 +20,8 @@ export default plugin('delete', 'del')
             await sock.sendMessage(from, {
                 delete: {
                     remoteJid: from,
-                    fromMe:    Boolean(message.quoted.fromMe),
-                    id:        message.quoted.stanzaId,
+                    fromMe: Boolean(message.quoted.fromMe),
+                    id: message.quoted.stanzaId,
                     participant: message.quoted.sender,
                 },
             });
@@ -29,4 +29,3 @@ export default plugin('delete', 'del')
             await sock.sendMessage(from, { text: msg('fail.delete', { msg: e.message }) }, { quoted: raw });
         }
     });
-

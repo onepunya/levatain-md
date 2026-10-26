@@ -12,7 +12,7 @@ export default plugin('tourl', 'geturl', 'uploadfile')
         raw,
         from
     }) => {
-        const types  = ['image', 'video', 'audio', 'sticker', 'document'];
+        const types = ['image', 'video', 'audio', 'sticker', 'document'];
         const result = await downloadMedia(raw, message.quoted, types);
 
         if (!result) return sock.sendMessage(from, {
@@ -23,7 +23,7 @@ export default plugin('tourl', 'geturl', 'uploadfile')
         await sock.sendMessage(from, { text: msg('wait.upload') }, { quoted: raw });
 
         try {
-            const url   = await global.api.tourl(result.buffer);
+            const url = await global.api.tourl(result.buffer);
             const label = LABELS[result.type] || '📁 File';
 
             await sock.sendMessage(from, {
@@ -37,10 +37,9 @@ export default plugin('tourl', 'geturl', 'uploadfile')
     });
 
 const LABELS = {
-    image:    '🖼️ Image',
-    video:    '🎬 Video',
-    audio:    '🎵 Audio',
-    sticker:  '🪄 Sticker',
+    image: '🖼️ Image',
+    video: '🎬 Video',
+    audio: '🎵 Audio',
+    sticker: '🪄 Sticker',
     document: '📄 Document',
 };
-

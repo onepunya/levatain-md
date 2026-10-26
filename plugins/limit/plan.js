@@ -1,12 +1,12 @@
 import { plugin } from '../../src/core/plugin.js';
-import { PLANS, getLimitInfo, buildLimitCard } from '../../src/limits/limit.js';
+import { getLimitInfo, buildLimitCard } from '../../src/limits/limit.js';
 import { config } from '../../src/config.js';
 
-export default plugin('plan', 'beli', 'harga')
+export default plugin('plan', 'harga')
     .in('limit')
     .desc('View limit packages & how to buy')
     .prefixOnly()
-    .signal('User asks about limit plans prices or how to buy premium', ['.plan', '.beli', '.harga'])
+    .signal('User asks about limit plans prices or how to buy premium', ['.plan', '.harga'])
     .run(async (sock, {
         raw,
         from,

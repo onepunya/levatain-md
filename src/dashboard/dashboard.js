@@ -41,49 +41,49 @@ export function getStatus() {
     const ipInfo = getCachedIpInfo();
     const load = os.loadavg();
     const totalMem = os.totalmem();
-    const freeMem  = os.freemem();
+    const freeMem = os.freemem();
 
     return {
-        botName:      global.botName || 'Bot',
-        connected:    !!global.botConnected,
-        uptime:       formatUptimeFull(Date.now() - startTime),
-        plugins:      global.plugins?.size || 0,
+        botName: global.botName || 'Bot',
+        connected: !!global.botConnected,
+        uptime: formatUptimeFull(Date.now() - startTime),
+        plugins: global.plugins?.size || 0,
         pluginBreakdown: pluginBreakdown(),
-        owner:        global.owner || '(not set)',
-        memory:       (process.memoryUsage().rss / 1024 / 1024).toFixed(1),
-        memTotalMB:   Number((totalMem / 1024 / 1024).toFixed(0)),
-        memFreeMB:    Number((freeMem / 1024 / 1024).toFixed(0)),
-        memPct:       (((totalMem - freeMem) / totalMem) * 100).toFixed(1),
-        totalUsers:   Object.keys(db.users || {}).length,
-        totalGroups:  Object.keys(db.groups || {}).length,
+        owner: global.owner || '(not set)',
+        memory: (process.memoryUsage().rss / 1024 / 1024).toFixed(1),
+        memTotalMB: Number((totalMem / 1024 / 1024).toFixed(0)),
+        memFreeMB: Number((freeMem / 1024 / 1024).toFixed(0)),
+        memPct: (((totalMem - freeMem) / totalMem) * 100).toFixed(1),
+        totalUsers: Object.keys(db.users || {}).length,
+        totalGroups: Object.keys(db.groups || {}).length,
         totalCommands,
-        topUsers:     topUsers(db),
+        topUsers: topUsers(db),
         recentCommands,
-        recentLogs:   recentLogs.slice(0, 15),
+        recentLogs: recentLogs.slice(0, 15),
         server: {
-            hostname:  getHostname(),
-            localIps:  getLocalIps(),
-            publicIp:  ipInfo.publicIp,
+            hostname: getHostname(),
+            localIps: getLocalIps(),
+            publicIp: ipInfo.publicIp,
             tunnelUrl: getTunnelUrl(),
-            city:      ipInfo.city,
-            country:   ipInfo.country,
-            isp:       ipInfo.isp,
-            platform:  `${os.platform()} ${os.release()}`,
-            arch:      os.arch(),
-            nodeVer:   process.version,
-            pid:       process.pid,
-            cpuModel:  os.cpus()?.[0]?.model || '-',
-            cpuCores:  os.cpus()?.length || 0,
-            loadavg:   load.map(n => n.toFixed(2)),
+            city: ipInfo.city,
+            country: ipInfo.country,
+            isp: ipInfo.isp,
+            platform: `${os.platform()} ${os.release()}`,
+            arch: os.arch(),
+            nodeVer: process.version,
+            pid: process.pid,
+            cpuModel: os.cpus()?.[0]?.model || '-',
+            cpuCores: os.cpus()?.length || 0,
+            loadavg: load.map(n => n.toFixed(2)),
         },
     };
 }
 
 const MIME = {
     '.html': 'text/html; charset=utf-8',
-    '.js':   'text/javascript; charset=utf-8',
-    '.css':  'text/css; charset=utf-8',
-    '.svg':  'image/svg+xml',
+    '.js': 'text/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.svg': 'image/svg+xml',
 };
 
 function serveStatic(req, res) {
@@ -93,7 +93,6 @@ function serveStatic(req, res) {
 
     const rel = urlPath.replace('/dashboard-client/', '');
     const full = path.join(CLIENT_DIR, rel);
-
 
     if (!full.startsWith(CLIENT_DIR)) {
         res.writeHead(403);
@@ -126,7 +125,6 @@ export function startDashboard(port) {
         }
 
         if (serveStatic(req, res)) return;
-
 
         fs.readFile(path.join(CLIENT_DIR, 'index.html'), (err, data) => {
             res.writeHead(err ? 404 : 200, { 'Content-Type': 'text/html; charset=utf-8' });

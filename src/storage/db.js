@@ -4,46 +4,46 @@ import { fetchRemoteDb, pushRemoteDb } from './remoteDb.js';
 
 const DB_PATH = './database/db.json';
 
-let _db    = null;
+let _db = null;
 let _dirty = false;
 let _timer = null;
 let _remoteSha = null;
 let _remoteTimer = null;
 
 const userSchema = (m) => ({
-    jid:         '',
-    lid:         '',
-    name:        m?.pushname || 'User',
-    hit:         0,
-    banned:      false,
+    jid: '',
+    lid: '',
+    name: m?.pushname || 'User',
+    hit: 0,
+    banned: false,
     bannedReason:'',
-    lastChat:    Date.now(),
-    warns:       0,
-    registered:  false,
-    username:    '',
-    age:         0,
-    province:    '',
-    plan:        'free',
-    planExpiry:  0,
-    limitUsed:   0,
+    lastChat: Date.now(),
+    warns: 0,
+    registered: false,
+    username: '',
+    age: 0,
+    province: '',
+    plan: 'free',
+    planExpiry: 0,
+    limitUsed: 0,
     lastLimitReset: 0,
 });
 
 const groupSchema = () => ({
-    welcome:  false,
+    welcome: false,
     antilink: false,
-    mute:     false,
-    captcha:  false,
-    autodl:   false,
-    warns:    {},
-    afk:      {},
+    mute: false,
+    captcha: false,
+    autodl: false,
+    warns: {},
+    afk: {},
     leftText: '',
     lastActivity: Date.now(),
 });
 
 const settingsSchema = () => ({
     maintenance: false,
-    mode:        'public',
+    mode: 'public',
     stickerCmds: {},
 });
 
@@ -114,8 +114,8 @@ export async function initDb() {
     } else {
         await loadDb();
     }
-    if (!_db.users)    _db.users    = {};
-    if (!_db.groups)   _db.groups   = {};
+    if (!_db.users) _db.users = {};
+    if (!_db.groups) _db.groups = {};
     if (!_db.settings) _db.settings = settingsSchema();
     applyDefaults(_db.settings, settingsSchema());
     if (typeof _db.settings.self === 'boolean') {
@@ -153,7 +153,7 @@ export function ensureGroup(db, groupId) {
 }
 
 export function scheduleAutoReset() {
-    const now  = new Date();
+    const now = new Date();
     const next = new Date();
     next.setHours(24, 0, 0, 0);
     const ms = next - now;

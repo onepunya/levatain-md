@@ -169,7 +169,6 @@ export default plugin('cekhodam', 'khodam', 'mykhodam')
 
         const ownerLabel = targetUser.name || targetUser.username || pushname || 'User';
 
-
         if (targetUser.khodam?.name) {
             return sock.sendMessage(from, {
                 text: formatKhodam(ownerLabel, targetUser.khodam, isSelf),
@@ -177,7 +176,6 @@ export default plugin('cekhodam', 'khodam', 'mykhodam')
             }, { quoted: raw });
         }
 
-       
         if (!isSelf) {
             return sock.sendMessage(from, {
                 text: `❌ *${ownerLabel}* has no khodam yet.\nThey must run *.cekhodam* themselves to summon one.`,
@@ -197,7 +195,6 @@ export default plugin('cekhodam', 'khodam', 'mykhodam')
             const generated = await generateUniqueKhodam(taken);
             const key = normalizeName(generated.name);
 
-            
             if (registry[key]) {
                 throw new Error('Khodam name was claimed just now. Try again.');
             }

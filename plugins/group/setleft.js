@@ -21,7 +21,7 @@ export default plugin('setleft')
         gdb
     }) => {
         const text = getArgs(body);
-        const grp  = gdb.groups[from];
+        const grp = gdb.groups[from];
 
         if (!text) {
             return sock.sendMessage(from, {
@@ -39,4 +39,3 @@ export default plugin('setleft')
         await saveDb();
         await sock.sendMessage(from, { text: `✅ Leave message set:\n\n${text}` }, { quoted: raw });
     });
-

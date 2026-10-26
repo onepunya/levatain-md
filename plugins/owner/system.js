@@ -50,4 +50,3 @@ export default plugin('reload', 'maintenance', 'ban', 'unban')
             }, { quoted: raw });
         }
     });
-

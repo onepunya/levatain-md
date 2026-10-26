@@ -38,4 +38,3 @@ export default plugin('add')
             await sock.sendMessage(from, { text: msg('fail.add', { msg: e.message }) }, { quoted: raw });
         }
     });
-

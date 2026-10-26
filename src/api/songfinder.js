@@ -9,26 +9,26 @@ import { config } from '../config.js';
 
 const execFileAsync = promisify(execFile);
 
-const BASE_URL      = config.songFinder.baseUrl;
-const AJAX_URL      = `${BASE_URL}/wp-admin/admin-ajax.php`;
-const SESSION_TTL   = 15 * 60_000;
-const RESULT_TTL    = 10 * 60_000;
-const RESULT_LIMIT  = 50;
-const TOOL_PAGE     = '/instagram/';
+const BASE_URL = config.songFinder.baseUrl;
+const AJAX_URL = `${BASE_URL}/wp-admin/admin-ajax.php`;
+const SESSION_TTL = 15 * 60_000;
+const RESULT_TTL = 10 * 60_000;
+const RESULT_LIMIT = 50;
+const TOOL_PAGE = '/instagram/';
 const FALLBACK_PAGE = '/';
 
 const SONG_URL_PATTERN = /https?:\/\/(?:[\w-]+\.)*(?:tiktok\.com|instagram\.com|instagr\.am)\/[^\s<>"']+/i;
-const PLATFORM_HOSTS   = [
+const PLATFORM_HOSTS = [
     ['instagram', /(?:^|\.)(?:instagram\.com|instagr\.am)$/i],
     ['tiktok', /(?:^|\.)tiktok\.com$/i]
 ];
 
 const BROWSER_HEADERS = {
-    'accept-language':    'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-    'sec-ch-ua':          '"Chromium";v="137", "Not/A)Brand";v="24"',
-    'sec-ch-ua-mobile':   '?1',
+    'accept-language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+    'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
+    'sec-ch-ua-mobile': '?1',
     'sec-ch-ua-platform': '"Android"',
-    'user-agent':         'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'
+    'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'
 };
 
 const NONCE_PATTERNS = [
@@ -40,12 +40,12 @@ const NONCE_PATTERNS = [
 ];
 
 const FIELD_KEYS = {
-    title:  ['title', 'song', 'songtitle', 'track', 'trackname', 'trackTitle', 'name'],
+    title: ['title', 'song', 'songtitle', 'track', 'trackname', 'trackTitle', 'name'],
     artist: ['artist', 'artists', 'artistname', 'subtitle', 'singer', 'author'],
-    album:  ['album', 'albumname', 'albumtitle'],
-    genre:  ['genre', 'genres'],
-    year:   ['released', 'releasedate', 'year', 'releaseyear'],
-    cover:  ['cover', 'coverart', 'artwork', 'artworkurl', 'image', 'thumbnail', 'thumb', 'picture', 'img']
+    album: ['album', 'albumname', 'albumtitle'],
+    genre: ['genre', 'genres'],
+    year: ['released', 'releasedate', 'year', 'releaseyear'],
+    cover: ['cover', 'coverart', 'artwork', 'artworkurl', 'image', 'thumbnail', 'thumb', 'picture', 'img']
 };
 
 const LINK_HOSTS = [
@@ -57,9 +57,9 @@ const LINK_HOSTS = [
     ['SoundCloud', /soundcloud\.com/i]
 ];
 
-let session        = null;
+let session = null;
 let pendingSession = null;
-const resultCache  = new Map();
+const resultCache = new Map();
 
 const normalizeKey = (key) => String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -110,10 +110,10 @@ async function openSession() {
     for (const page of [TOOL_PAGE, FALLBACK_PAGE]) {
         const html = await curl([
             ...headerArgs({
-                'accept':                    'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'sec-fetch-dest':            'document',
-                'sec-fetch-mode':            'navigate',
-                'sec-fetch-site':            'none',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'sec-fetch-dest': 'document',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-site': 'none',
                 'upgrade-insecure-requests': '1'
             }),
             '-c', jar,
@@ -159,13 +159,13 @@ async function callAjax(current, url) {
     return curl([
         '-X', 'POST',
         ...headerArgs({
-            'accept':             '*/*',
-            'origin':             BASE_URL,
-            'referer':            `${BASE_URL}${TOOL_PAGE}`,
-            'sec-fetch-dest':     'empty',
-            'sec-fetch-mode':     'cors',
-            'sec-fetch-site':     'same-origin',
-            'x-requested-with':   'XMLHttpRequest'
+            'accept': '*/*',
+            'origin': BASE_URL,
+            'referer': `${BASE_URL}${TOOL_PAGE}`,
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'x-requested-with': 'XMLHttpRequest'
         }),
         '-b', current.jar,
         '-c', current.jar,
@@ -237,18 +237,18 @@ function parseObject(payload) {
     return {
         title,
         artist: pickField(payload, FIELD_KEYS.artist),
-        album:  pickField(payload, FIELD_KEYS.album),
-        genre:  pickField(payload, FIELD_KEYS.genre),
-        year:   pickField(payload, FIELD_KEYS.year).slice(0, 4),
-        cover:  /^https?:\/\//.test(cover) ? cover : '',
-        links:  linksFromPayload(payload)
+        album: pickField(payload, FIELD_KEYS.album),
+        genre: pickField(payload, FIELD_KEYS.genre),
+        year: pickField(payload, FIELD_KEYS.year).slice(0, 4),
+        cover: /^https?:\/\//.test(cover) ? cover : '',
+        links: linksFromPayload(payload)
     };
 }
 
 async function parseHtml(html) {
     const { load } = await import('cheerio');
-    const $        = load(html);
-    const text     = (selector) => $(selector).first().text().trim();
+    const $ = load(html);
+    const text = (selector) => $(selector).first().text().trim();
 
     const title = text('[class*="title"]') || text('h1, h2, h3, h4') || text('strong');
     if (!title) return null;
@@ -256,11 +256,11 @@ async function parseHtml(html) {
     return {
         title,
         artist: text('[class*="artist"]') || text('[class*="subtitle"]') || text('[class*="singer"]'),
-        album:  text('[class*="album"]'),
-        genre:  text('[class*="genre"]'),
-        year:   '',
-        cover:  $('img').first().attr('src') || '',
-        links:  linksFromText(html)
+        album: text('[class*="album"]'),
+        genre: text('[class*="genre"]'),
+        year: '',
+        cover: $('img').first().attr('src') || '',
+        links: linksFromText(html)
     };
 }
 
@@ -292,7 +292,7 @@ export async function findSongFromUrl(url) {
 
     for (let attempt = 0; attempt < 2; attempt++) {
         const current = await getSession({ force: attempt > 0 });
-        const body    = await callAjax(current, url);
+        const body = await callAjax(current, url);
 
         if (!body.trim()) throw new Error('Situs tidak memberi respons.');
         if (isBlockedPage(body)) throw new Error('Diblokir proteksi anti-bot situs, coba lagi nanti.');

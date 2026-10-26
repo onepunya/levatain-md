@@ -24,7 +24,7 @@ export default plugin('cekplugin', 'checkplugin')
 
         try {
             const report = await checkPlugins({ only, probe: !args.includes('code') });
-            const text   = formatReport(report, { full: args.includes('full') });
+            const text = formatReport(report, { full: args.includes('full') });
             await sock.sendMessage(from, { text: truncate(text, 3800) }, { quoted: raw });
         } catch (e) {
             await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });

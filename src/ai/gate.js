@@ -1,17 +1,17 @@
-const TRIGGER_WORDS   = /\b(lev|levatain|leva)\b/i;
+const TRIGGER_WORDS = /\b(lev|levatain|leva)\b/i;
 const TRIGGER_WORDS_G = /\b(lev|levatain|leva)\b/gi;
 
 const COOLDOWN_MS = 3000;
-const cooldowns   = new Map();
+const cooldowns = new Map();
 
 export function shouldHandleAI(body, ctx) {
     const { isGroup, isMentioned, isQuotedFromBot } = ctx;
 
     if (!isGroup) return true;
 
-    if (TRIGGER_WORDS.test(body.trim()))    return true;
-    if (isMentioned)                         return true;
-    if (isQuotedFromBot)                     return true;
+    if (TRIGGER_WORDS.test(body.trim())) return true;
+    if (isMentioned) return true;
+    if (isQuotedFromBot) return true;
 
     return false;
 }

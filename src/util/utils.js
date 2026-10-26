@@ -105,8 +105,8 @@ export async function sendMess(sock, chatId, content, options = {}) {
     }
 }
 
-export const typing   = (sock, from) => sock.sendPresenceUpdate('composing', from);
-export const getArgs  = (body, slice = 1) => body.split(' ').slice(slice).join(' ').trim();
+export const typing = (sock, from) => sock.sendPresenceUpdate('composing', from);
+export const getArgs = (body, slice = 1) => body.split(' ').slice(slice).join(' ').trim();
 
 const VIDEO_EXT = /\.(mp4|mov|mkv|webm|3gp|m4v)(\?|$)/i;
 const IMAGE_EXT = /\.(jpe?g|png|webp|gif|bmp)(\?|$)/i;
@@ -114,7 +114,7 @@ const AUDIO_EXT = /\.(mp3|ogg|wav|m4a|opus|aac)(\?|$)/i;
 
 export function guessMediaType(url = '', hint = '') {
     const h = String(hint).toLowerCase();
-    if (h.includes('video'))  return 'video';
+    if (h.includes('video')) return 'video';
     if (h.includes('image') || h.includes('photo') || h.includes('picture')) return 'image';
     if (h.includes('audio')) return 'audio';
     if (VIDEO_EXT.test(url)) return 'video';
@@ -146,7 +146,7 @@ async function detectRealMediaType(url) {
 
 export async function sendAnyMedia(sock, jid, item, options = {}) {
     const { caption = '', quoted } = options;
-    const url  = typeof item === 'string' ? item : (item.url || item.media);
+    const url = typeof item === 'string' ? item : (item.url || item.media);
     if (!url) throw new Error('sendAnyMedia: URL media kosong.');
 
     const hint = typeof item === 'string' ? '' : item.type;
@@ -164,10 +164,10 @@ export async function sendMediaBatch(sock, jid, items, options = {}) {
 }
 
 export function getMediaMessage(raw, quoted, types = ['image', 'video', 'audio', 'sticker']) {
-    const msg  = raw?.message;
+    const msg = raw?.message;
     const qMsg = msg?.extendedTextMessage?.contextInfo?.quotedMessage || quoted?.raw?.message;
     for (const type of types) {
-        const key   = `${type}Message`;
+        const key = `${type}Message`;
         const found = msg?.[key]
             || msg?.viewOnceMessage?.message?.[key]
             || msg?.viewOnceMessageV2?.message?.[key]
@@ -235,10 +235,10 @@ const _litterbox = async (buffer, mime) => {
 };
 
 const _tmpfiles = async (buffer, mime) => {
-    const ext  = _getExt(mime);
+    const ext = _getExt(mime);
     const form = new FormData();
     form.append('file', new Blob([buffer], { type: mime }), `${Date.now()}.${ext}`);
-    const res  = await _withTimeout(fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: form }), 20000);
+    const res = await _withTimeout(fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: form }), 20000);
     const json = await res.json();
     if (!json?.data?.url) throw new Error('tmpfiles: no url');
     return json.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
@@ -259,10 +259,10 @@ const _0x0st = async (buffer, mime) => {
 
 export const uploadToUrl = async (buffer, mimetype = 'image/jpeg') => {
     const services = [
-        { name: 'catbox',    fn: () => _catbox(buffer, mimetype)    },
-        { name: '0x0.st',    fn: () => _0x0st(buffer, mimetype)     },
+        { name: 'catbox', fn: () => _catbox(buffer, mimetype) },
+        { name: '0x0.st', fn: () => _0x0st(buffer, mimetype) },
         { name: 'litterbox', fn: () => _litterbox(buffer, mimetype) },
-        { name: 'tmpfiles',  fn: () => _tmpfiles(buffer, mimetype)  },
+        { name: 'tmpfiles', fn: () => _tmpfiles(buffer, mimetype) },
     ];
     const errors = [];
     for (const svc of services) {
@@ -297,7 +297,6 @@ export function cleanTempFiles(maxAgeMs = 10 * 60 * 1000) {
 
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-
 export const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 export const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -320,10 +319,10 @@ export function truncate(text = '', max = 3500) {
 
 export function msToTime(ms) {
     const totalSec = Math.floor(ms / 1000);
-    const days     = Math.floor(totalSec / 86400);
-    const hours    = Math.floor((totalSec % 86400) / 3600);
-    const minutes  = Math.floor((totalSec % 3600) / 60);
-    const seconds  = totalSec % 60;
+    const days = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const minutes = Math.floor((totalSec % 3600) / 60);
+    const seconds = totalSec % 60;
     return { days, hours, minutes, seconds };
 }
 

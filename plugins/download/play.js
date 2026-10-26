@@ -108,4 +108,3 @@ export default plugin('play')
             cleanupTempFile(filePath);
         }
     });
-

@@ -1,13 +1,13 @@
 import fs from 'fs/promises';
 import { logger } from '../util/index.js';
 
-const AI_DB_PATH  = './database/ai_db.json';
+const AI_DB_PATH = './database/ai_db.json';
 const MAX_HISTORY = 30;
-const MEMORY_TTL  = 7 * 24 * 60 * 60 * 1000;
+const MEMORY_TTL = 7 * 24 * 60 * 60 * 1000;
 
-let _db     = null;
-let _dirty  = false;
-let _timer  = null;
+let _db = null;
+let _dirty = false;
+let _timer = null;
 
 const load = async () => {
     if (_db) return _db;
@@ -38,7 +38,7 @@ const save = () => {
 };
 
 export const getHistory = async (userId) => {
-    const db    = await load();
+    const db = await load();
     const entry = db.users[userId];
     if (!entry) return [];
     if (entry.lastActive && entry.lastActive < Date.now() - MEMORY_TTL) {
@@ -62,7 +62,7 @@ export const addHistory = async (userId, role, content) => {
 export const clearHistory = async (userId) => {
     const db = await load();
     if (db.users[userId]) {
-        db.users[userId].history    = [];
+        db.users[userId].history = [];
         db.users[userId].lastActive = Date.now();
         save();
     }

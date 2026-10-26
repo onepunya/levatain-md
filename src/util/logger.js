@@ -6,7 +6,7 @@ try { fs.mkdirSync('./logs', { recursive: true }); } catch {}
 
 const RING_LIMIT = 30;
 export const recentCommands = [];
-export const recentLogs     = [];
+export const recentLogs = [];
 
 const time = () => new Date().toLocaleString('id-ID', {
     hour12: false,
@@ -26,11 +26,11 @@ const writeLog = (level, msg) => {
 };
 
 const LEVEL_STYLE = {
-    INFO:    { label: 'INFO   ', color: chalk.blue },
+    INFO: { label: 'INFO   ', color: chalk.blue },
     SUCCESS: { label: 'SUCCESS', color: chalk.green },
-    WARN:    { label: 'WARN   ', color: chalk.yellow },
-    ERROR:   { label: 'ERROR  ', color: chalk.red },
-    DEBUG:   { label: 'DEBUG  ', color: chalk.gray },
+    WARN: { label: 'WARN   ', color: chalk.yellow },
+    ERROR: { label: 'ERROR  ', color: chalk.red },
+    DEBUG: { label: 'DEBUG  ', color: chalk.gray },
 };
 
 const log = (level, msg) => {
@@ -43,11 +43,11 @@ const log = (level, msg) => {
 const shortId = (id) => id.replace(/@.+/, '').slice(0, 15);
 
 export const logger = {
-    info:    (msg) => log('INFO', msg),
+    info: (msg) => log('INFO', msg),
     success: (msg) => log('SUCCESS', msg),
-    warn:    (msg) => log('WARN', msg),
-    error:   (msg) => log('ERROR', msg),
-    debug:   (msg) => { if (config.debug) log('DEBUG', msg); },
+    warn: (msg) => log('WARN', msg),
+    error: (msg) => log('ERROR', msg),
+    debug: (msg) => { if (config.debug) log('DEBUG', msg); },
 
     cmd: (sender, cmd) => {
         const short = shortId(sender);
@@ -58,9 +58,9 @@ export const logger = {
     },
 
     chat: (sender, text, { isGroup = false, groupName = '' } = {}) => {
-        const short   = shortId(sender);
+        const short = shortId(sender);
         const snippet = (text || '').replace(/\s+/g, ' ').trim().slice(0, 80);
-        const where   = isGroup ? ` @ ${groupName || 'group'}` : '';
+        const where = isGroup ? ` @ ${groupName || 'group'}` : '';
         console.log(`${chalk.cyan(`[${time()}]`)} ${chalk.blueBright('CHAT   ')} => ${chalk.yellow(short)}${chalk.gray(where)}: ${snippet}`);
         writeLog('CHAT', `${short}${where}: ${snippet}`);
         pushRing(recentLogs, { level: 'CHAT', msg: `${short}${where}: ${snippet}`, time: time() });

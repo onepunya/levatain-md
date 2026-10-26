@@ -34,4 +34,3 @@ export default plugin('infobot')
 
         await sendInlineWebUI(sock, from, html, `${s.botName} — Info`);
     });
-

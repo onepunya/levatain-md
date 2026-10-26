@@ -30,7 +30,7 @@ export default plugin('impostor', 'wordwolf')
         isGroup
     }) => {
         const args = body.trim().split(/\s+/);
-        const sub  = (args[1] || '').toLowerCase();
+        const sub = (args[1] || '').toLowerCase();
 
         const myName = pushname || nameOf(gdb, primaryId);
 
@@ -100,11 +100,11 @@ export default plugin('impostor', 'wordwolf')
             if (game) return sock.sendMessage(from, { text: msg('impostor.exists_status', { status: game.status }) }, { quoted: raw });
 
             games.set(from, {
-                status:  'lobby',
-                hostId:  primaryId,
+                status: 'lobby',
+                hostId: primaryId,
                 players: [{ id: primaryId, name: myName }],
-                votes:   {},
-                timer:   null,
+                votes: {},
+                timer: null,
             });
 
             return sock.sendMessage(from, {
@@ -135,7 +135,7 @@ export default plugin('impostor', 'wordwolf')
             if (game.players.length < 3) return sock.sendMessage(from, { text: msg('impostor.min3_n', { n: game.players.length }) }, { quoted: raw });
 
             const [majorityWord, impostorWord] = pick(WORD_PAIRS);
-            const shuffled   = shuffle(game.players);
+            const shuffled = shuffle(game.players);
             const impostorId = shuffled[0].id;
 
             game.majorityWord = majorityWord;
@@ -148,7 +148,7 @@ export default plugin('impostor', 'wordwolf')
             const dmFailed = [];
 
             game.status = 'discussion';
-            game.timer  = setTimeout(() => startVotingPhase(sock, from), DISKUSI_MS);
+            game.timer = setTimeout(() => startVotingPhase(sock, from), DISKUSI_MS);
 
             const text =
                 `🎮 *Game started!* (${game.players.length} players)\n` +
@@ -166,7 +166,7 @@ export default plugin('impostor', 'wordwolf')
             if (!targetJid) return sock.sendMessage(from, { text: msg('impostor.vote_tag') }, { quoted: raw });
 
             const cleanTarget = targetJid.includes('@') ? targetJid.split(':')[0] : `${targetJid.split(':')[0]}@s.whatsapp.net`;
-            const targetNum   = cleanTarget.split('@')[0];
+            const targetNum = cleanTarget.split('@')[0];
             const targetPlayer = game.players.find(p => p.id.split('@')[0] === targetNum);
 
             if (!targetPlayer) return sock.sendMessage(from, { text: msg('impostor.not_target') }, { quoted: raw });
@@ -216,7 +216,7 @@ const WORD_PAIRS = [
 ];
 
 const DISKUSI_MS = 3 * 60_000;
-const VOTE_MS    = 2 * 60_000;
+const VOTE_MS = 2 * 60_000;
 
 const games = new Map();
 
@@ -264,7 +264,7 @@ async function startVotingPhase(sock, from) {
     if (!game || game.status !== 'discussion') return;
 
     game.status = 'voting';
-    game.votes  = {};
+    game.votes = {};
     clearTimers(game);
 
     await sock.sendMessage(from, {
@@ -301,7 +301,7 @@ async function finalizeVote(sock, from) {
     }
 
     const eliminatedId = topTargets[0];
-    const eliminated   = game.players.find(p => p.id === eliminatedId);
+    const eliminated = game.players.find(p => p.id === eliminatedId);
 
     if (eliminated?.isImpostor) {
         return revealAndEnd(sock, from, game, `🎉 *${eliminated.name}* got voted out and turned out to be the IMPOSTOR!\n\n*Villagers win!* 👏`);
@@ -309,4 +309,3 @@ async function finalizeVote(sock, from) {
         return revealAndEnd(sock, from, game, `😈 *${eliminated?.name || '???'}* got voted out, but was NOT the impostor!\n\n*Impostor wins!*`);
     }
 }
-

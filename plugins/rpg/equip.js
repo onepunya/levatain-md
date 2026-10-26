@@ -4,7 +4,6 @@ import {
     persist,
     t,
     equipItem,
-    getItem,
 } from '../../src/rpg/index.js';
 
 export default plugin('equip', 'pakai', 'wear')

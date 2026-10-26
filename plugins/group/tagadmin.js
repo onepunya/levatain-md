@@ -29,4 +29,3 @@ export default plugin('tagadmin')
             mentions: admins,
         }, { quoted: raw });
     });
-

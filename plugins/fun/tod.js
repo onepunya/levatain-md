@@ -63,4 +63,3 @@ async function generateWithAI(type, pushname) {
     if (!cleaned || cleaned.length > 300) throw new Error('Invalid AI response');
     return cleaned;
 }
-

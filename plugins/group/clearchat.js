@@ -20,4 +20,3 @@ export default plugin('clearchat', 'cleargc')
             await sock.sendMessage(from, { text: msg('fail.clearchat', { msg: e.message }) }, { quoted: raw });
         }
     });
-

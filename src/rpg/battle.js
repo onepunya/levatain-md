@@ -3,7 +3,7 @@ import { addExp } from './exp.js';
 import { trackQuest } from './quests.js';
 import { getParty, partyExpBonus } from './party.js';
 import { getEffectiveStats } from './inventory.js';
-import { rollDrops, getItem } from './items.js';
+import { rollDrops } from './items.js';
 import { addItem } from './inventory.js';
 
 const HUNT_COOLDOWN_MS = 45_000;

@@ -44,7 +44,7 @@ function registerMeta(meta) {
 async function importPlugins({ bustCache = false } = {}) {
     plugins.clear();
     const counters = { ok: 0, fail: 0 };
-    const version  = bustCache ? `?v=${Date.now()}` : '';
+    const version = bustCache ? `?v=${Date.now()}` : '';
 
     for (const file of getAllFiles(PLUGIN_DIR)) {
         try {

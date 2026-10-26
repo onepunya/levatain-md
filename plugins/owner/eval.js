@@ -87,4 +87,3 @@ export default plugin('exec', 'sh', 'term')
             clearInterval(spin);
         }
     });
-

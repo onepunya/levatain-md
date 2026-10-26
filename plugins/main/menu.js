@@ -55,4 +55,3 @@ export default plugin('menu', 'allmenu')
             thumbUrl: global.thumb,
         });
     });
-

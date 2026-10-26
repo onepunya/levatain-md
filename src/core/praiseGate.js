@@ -2,12 +2,12 @@ import { api } from '../api/index.js';
 import { logger } from '../util/index.js';
 
 const DEFAULT_TARGET = '6281330917465';
-const PENDING_TTL    = 3 * 60_000;
-const MIN_WORDS      = 5;
-const LLM_TIMEOUT    = 12_000;
+const PENDING_TTL = 3 * 60_000;
+const MIN_WORDS = 5;
+const LLM_TIMEOUT = 12_000;
 
-const NAME_RE  = /\bfox(y|ie)?\b/i;
-const PRAISE   = [
+const NAME_RE = /\bfox(y|ie)?\b/i;
+const PRAISE = [
     'ganteng', 'tampan', 'keren', 'kece', 'hebat', 'pintar', 'pinter', 'jago', 'mantap',
     'terbaik', 'baik', 'dewa', 'suhu', 'sultan', 'goat', 'raja', 'king', 'legend', 'legenda',
     'sayang', 'cinta', 'suka', 'kagum', 'idola', 'panutan', 'bucin', 'love', 'handsome',
@@ -15,8 +15,8 @@ const PRAISE   = [
     'perfect', 'tercinta', 'terganteng', 'terkeren', 'terhebat', 'cakep', 'rajin', 'dermawan'
 ];
 
-const pending    = new Map();
-const lastPraise = new Map(); 
+const pending = new Map();
+const lastPraise = new Map();
 
 const digits = (v) => String(v || '').replace(/\D/g, '');
 
@@ -35,7 +35,7 @@ export function isTarget(senderIds = []) {
 
 export function setEnabled(v) { settings().enabled = !!v; }
 export function setTarget(num) { settings().target = digits(num); }
-export function getConfig()    { return { ...settings() }; }
+export function getConfig() { return { ...settings() }; }
 
 export function hold(primaryId, run, label) {
     pending.set(primaryId, { run, label, busy: false, expires: Date.now() + PENDING_TTL });
@@ -51,11 +51,10 @@ export function hasPending(primaryId) {
 function precheck(text, primaryId) {
     const clean = String(text || '').trim().toLowerCase().replace(/\s+/g, ' ');
     if (clean.split(' ').length < MIN_WORDS) return { ok: false, why: 'short' };
-    if (!NAME_RE.test(clean))                return { ok: false, why: 'name' };
+    if (!NAME_RE.test(clean)) return { ok: false, why: 'name' };
     if (lastPraise.get(primaryId) === clean) return { ok: false, why: 'repeat' };
     return { ok: true, clean };
 }
-
 
 function keywordCheck(clean) {
     return PRAISE.some(w => clean.includes(w));
@@ -105,8 +104,8 @@ export const PROMPT_TEXT = (label) =>
     `_Contoh: "Fox itu paling ganteng dan paling keren sedunia"_`;
 
 const REJECT_TEXT = {
-    short:  '❌ Kependekan. Pujiannya yang niat dong, minimal 5 kata.',
-    name:   '❌ Pujiannya buat siapa? Sebut nama *Fox* dulu.',
+    short: '❌ Kependekan. Pujiannya yang niat dong, minimal 5 kata.',
+    name: '❌ Pujiannya buat siapa? Sebut nama *Fox* dulu.',
     praise: '❌ Itu belum kedengeran muji. Bucin yang bener ke Fox!',
     repeat: '❌ Copy-paste pujian yang sama? Bikin yang baru dong.',
 };
@@ -115,7 +114,7 @@ export async function handleAttempt(sock, { from, raw, primaryId, body }) {
     if (!hasPending(primaryId)) return false;
 
     const job = pending.get(primaryId);
-    if (job.busy) return true; 
+    if (job.busy) return true;
     job.busy = true;
 
     let res;
@@ -133,7 +132,7 @@ export async function handleAttempt(sock, { from, raw, primaryId, body }) {
         return true;
     }
 
-    if (pending.get(primaryId) !== job) return true; 
+    if (pending.get(primaryId) !== job) return true;
     pending.delete(primaryId);
     lastPraise.set(primaryId, res.clean);
 

@@ -548,7 +548,7 @@ export default plugin('deepmaker', 'remover', 'undress')
   }) => {
     const prompt = getArgs(body) || 'remove all clothes, naked body';
     const bar = new ProgressMessage(sock, from, raw);
-    
+
     const result = await downloadMedia(raw, message.quoted, ['image']);
     if (!result) {
       return sock.sendMessage(from, { text: msg('need.image') }, { quoted: raw });

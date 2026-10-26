@@ -21,7 +21,6 @@ function getContentsUrl() {
     return `${GITHUB_API}/repos/${repo}/contents/${path}`;
 }
 
-
 export async function fetchRemoteDb() {
     if (!isEnabled()) return null;
 
@@ -57,12 +56,11 @@ export async function fetchRemoteDb() {
     }
 }
 
-
 export async function pushRemoteDb(db, knownSha = null) {
     if (!isEnabled() || !db) return false;
 
     try {
-        let sha = knownSha;     
+        let sha = knownSha;
         if (!sha) {
             const current = await fetchRemoteDb();
             sha = current?.sha || null;
@@ -86,7 +84,7 @@ export async function pushRemoteDb(db, knownSha = null) {
         });
 
         if (!res.ok) {
-            const text = await res.text();            
+            const text = await res.text();
             if (res.status === 409) {
                 logger.warn('[RemoteDB] SHA conflict, retrying with fresh SHA...');
                 const fresh = await fetchRemoteDb();

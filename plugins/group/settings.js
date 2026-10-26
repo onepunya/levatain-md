@@ -23,10 +23,10 @@ export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'set
         const feature = featureMap[command];
         if (!feature) return;
 
-        const grp  = gdb.groups[from];
-        if (!grp)  return sock.sendMessage(from, { text: msg('fail.group_data') }, { quoted: raw });
+        const grp = gdb.groups[from];
+        if (!grp) return sock.sendMessage(from, { text: msg('fail.group_data') }, { quoted: raw });
 
-        const args   = body.split(' ').slice(1).join(' ').trim().toLowerCase();
+        const args = body.split(' ').slice(1).join(' ').trim().toLowerCase();
         const turnOn = ['on', 'aktif', 'nyala', '1', 'enable', 'true'].includes(args);
         const turnOff = ['off', 'nonaktif', 'mati', '0', 'disable', 'false'].includes(args);
 
@@ -42,10 +42,9 @@ export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'set
     });
 
 const featureMap = {
-    setwelcome:  { key: 'welcome',  label: 'Welcome message' },
+    setwelcome: { key: 'welcome', label: 'Welcome message' },
     setantilink: { key: 'antilink', label: 'Anti-link' },
-    setmute:     { key: 'mute',     label: 'Mute group' },
-    setcaptcha:  { key: 'captcha',  label: 'Captcha join' },
-    setautodl:   { key: 'autodl',   label: 'Auto download' },
+    setmute: { key: 'mute', label: 'Mute group' },
+    setcaptcha: { key: 'captcha', label: 'Captcha join' },
+    setautodl: { key: 'autodl', label: 'Auto download' },
 };
-

@@ -14,9 +14,9 @@ const LIMIT_EXEMPT = new Set([
 ]);
 
 function cooldownLeft(primaryId, command, iface) {
-    const key   = `${primaryId}:${command}`;
+    const key = `${primaryId}:${command}`;
     const limit = iface?.cooldown ?? DEFAULT_COOLDOWN;
-    const left  = limit - Math.floor((Date.now() - (cooldowns.get(key) || 0)) / 1000);
+    const left = limit - Math.floor((Date.now() - (cooldowns.get(key) || 0)) / 1000);
     if (left > 0) return left;
     cooldowns.set(key, Date.now());
     return 0;
@@ -39,9 +39,9 @@ export async function executeCommand(sock, {
     skipGate = false
 }) {
     const { from, raw, isOwner, isAdmin, isGroup } = baseCtx;
-    const iface  = plugin.meta?.interface;
-    const user   = db.users[primaryId];
-    const reply  = (content, quoted) => sock.sendMessage(from, content, quoted ? { quoted: raw } : undefined);
+    const iface = plugin.meta?.interface;
+    const user = db.users[primaryId];
+    const reply = (content, quoted) => sock.sendMessage(from, content, quoted ? { quoted: raw } : undefined);
 
     if (!skipGate && !isOwner && isTarget(baseCtx.senderIds)) {
         hold(primaryId, () => executeCommand(sock, {

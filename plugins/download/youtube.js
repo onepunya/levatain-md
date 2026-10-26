@@ -64,4 +64,3 @@ export default plugin('ytmp3', 'ytmp4', 'ytv', 'ytvideo')
             cleanupTempFile(filePath);
         }
     });
-

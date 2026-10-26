@@ -3,10 +3,10 @@ import axios from 'axios';
 import { logger } from '../util/logger.js';
 
 let cache = {
-    publicIp:  null,
-    isp:       null,
-    city:      null,
-    country:   null,
+    publicIp: null,
+    isp: null,
+    city: null,
+    country: null,
     fetchedAt: 0,
 };
 
@@ -38,10 +38,10 @@ export async function lookupPublicIp({ force = false } = {}) {
         const { data } = await axios.get('http://ip-api.com/json/?fields=status,message,country,city,isp,query', { timeout: 5000 });
         if (data?.status === 'success') {
             cache = {
-                publicIp:  data.query,
-                isp:       data.isp || null,
-                city:      data.city || null,
-                country:   data.country || null,
+                publicIp: data.query,
+                isp: data.isp || null,
+                city: data.city || null,
+                country: data.country || null,
                 fetchedAt: Date.now(),
             };
             return cache;
@@ -66,9 +66,9 @@ export function getCachedIpInfo() {
 
 export function startIpWatcher(port) {
     const announce = async (force) => {
-        const info  = await lookupPublicIp({ force });
+        const info = await lookupPublicIp({ force });
         const local = getLocalIps();
-        const host  = getHostname();
+        const host = getHostname();
 
         const localStr = local.length
             ? local.map(l => `${l.address}:${port}`).join(', ')

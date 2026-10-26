@@ -14,4 +14,3 @@ export default plugin('ping')
         const latency = Date.now() - start;
         await sock.sendMessage(from, { text: msg('ping.latency', { ms: latency }) }, { quoted: raw });
     });
-

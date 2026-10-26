@@ -32,10 +32,9 @@ export default plugin('mode')
         return sock.sendMessage(from, { text: msg('done.mode_set', { mode: LABELS[arg] }) }, { quoted: raw });
     });
 
-const VALID  = ['public', 'group', 'private'];
+const VALID = ['public', 'group', 'private'];
 const LABELS = {
-    public:  '🌐 *Public* — bot responds to all chats (DM & group)',
-    group:   '👥 *Group Only* — bot only responds in groups',
+    public: '🌐 *Public* — bot responds to all chats (DM & group)',
+    group: '👥 *Group Only* — bot only responds in groups',
     private: '🔒 *Private* — bot only responds to the owner',
 };
-

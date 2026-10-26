@@ -35,4 +35,3 @@ export default plugin('capcut')
             await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
-

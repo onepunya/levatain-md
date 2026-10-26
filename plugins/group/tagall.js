@@ -18,7 +18,7 @@ export default plugin('tagall', 'hidetag')
         command,
         participants
     }) => {
-        const text     = body.split(' ').slice(1).join(' ') || '📢 Attention!';
+        const text = body.split(' ').slice(1).join(' ') || '📢 Attention!';
         const mentions = participants.map(p => p.id);
 
         if (command === 'tagall') {
@@ -28,4 +28,3 @@ export default plugin('tagall', 'hidetag')
             await sock.sendMessage(from, { text, mentions }, { quoted: raw });
         }
     });
-

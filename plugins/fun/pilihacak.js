@@ -81,4 +81,3 @@ export default plugin('pilihnama', 'spinnama')
             mentions: winner.jid ? [winner.jid] : [],
         }, { quoted: raw });
     });
-

@@ -15,9 +15,9 @@ async function sendMoodSticker(sock, from, mood, raw) {
         if (!buffer) return;
 
         const sticker = new Sticker(buffer, {
-            pack:    global.botName || 'Levatain',
-            author:  'Levatain',
-            type:    StickerTypes.FULL,
+            pack: global.botName || 'Levatain',
+            author: 'Levatain',
+            type: StickerTypes.FULL,
             quality: 70,
         });
         await sock.sendMessage(from, { sticker: await sticker.toBuffer() }, { quoted: raw });
@@ -61,13 +61,13 @@ export async function handleAI(sock, m, ctx) {
     try {
         await sock.sendPresenceUpdate('composing', from);
 
-        const history  = await getHistory(primaryId);
-        const memory   = await getUserMemory(primaryId);
+        const history = await getHistory(primaryId);
+        const memory = await getUserMemory(primaryId);
         const memoryStr = Object.keys(memory).length > 0
             ? Object.entries(memory).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
 
         const asksAboutOthers = /\b(siapa (dia|itu|si)|who is|cari user|data user|info user lain|user lain)\b/i.test(cleanText);
-        const allUsersContext  = asksAboutOthers ? await getAllUsersContext(primaryId) : '';
+        const allUsersContext = asksAboutOthers ? await getAllUsersContext(primaryId) : '';
 
         const userLang = (db?.lang === 'id') ? 'id' : 'en';
         const result = await intentEngine(cleanText || body, history, {
@@ -78,7 +78,6 @@ export async function handleAI(sock, m, ctx) {
             hasSongMedia,
             lang: userLang,
         });
-
 
         const { command: aiCmd, args, message: aiMessage, remember, mood, voice: wantsVoice, preReply } = result;
 
@@ -152,7 +151,6 @@ export async function handleAI(sock, m, ctx) {
 
         db.hit = (db.hit || 0) + 1;
         await saveDb();
-
 
     } catch (e) {
         logger.error(`[AI] ${e.message}`);

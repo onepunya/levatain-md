@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import { checkPlugins, formatReport } from '../src/tools/pluginCheck.js';
 
-const args  = process.argv.slice(2);
+const args = process.argv.slice(2);
 const flags = new Set(args.filter(arg => arg.startsWith('--')));
-const only  = args.find(arg => !arg.startsWith('--')) || null;
+const only = args.find(arg => !arg.startsWith('--')) || null;
 
 const report = await checkPlugins({ only, probe: !flags.has('--no-probe') });
 

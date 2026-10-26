@@ -19,7 +19,7 @@ export default plugin('testhtml', 'sendhtml')
         db,
         primaryId
     }) => {
-        const _i18n = { db, primaryId };         
+        const _i18n = { db, primaryId };
         let html = body.replace(/^\S+\s*/, '');
 
         if (!html.trim() && message.quoted?.text) {
@@ -46,4 +46,3 @@ export default plugin('testhtml', 'sendhtml')
             await sock.sendMessage(from, { text: msg('fail.send', { msg: e.message }) }, { quoted: raw });
         }
     });
-

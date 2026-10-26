@@ -9,7 +9,6 @@ function required(name) {
     return val;
 }
 
-
 function resolveDashboardPort() {
     const candidates = [
         ['DASHBOARD_PORT', process.env.DASHBOARD_PORT],
@@ -48,14 +47,8 @@ export const config = {
         },
     },
 
-    /** Naga API key — dipakai HANYA untuk TTS voice note (bukan LLM) */
     tts: {
         nagaApiKey: process.env.NAGA_API_KEY || '',
-    },
-
-    onepunya: {
-        apiKey: process.env.ONEPUNYA_API_KEY || '',
-        baseUrl: (process.env.ONEPUNYA_BASE_URL || 'https://onepunya.qzz.io') + '/api',
     },
 
     giphy: {
@@ -79,7 +72,6 @@ export const config = {
         ].filter(Boolean),
     },
 
-    /** Crun.ai API — used for .musicgen / .songgen (Suno) */
     crun: {
         apiKey: process.env.CRUN_API_KEY || '',
     },
@@ -95,21 +87,19 @@ export const config = {
 
     github: {
         token: process.env.GITHUB_TOKEN || '',
-        repo:  process.env.GITHUB_REPO  || '',    
-        path:  process.env.GITHUB_DB_PATH || 'database/db.json',
+        repo: process.env.GITHUB_REPO || '',
+        path: process.env.GITHUB_DB_PATH || 'database/db.json',
     },
 
     githubSync: {
-        token:  process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || '',
-        repo:   process.env.GITHUB_SYNC_REPO  || '',
+        token: process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || '',
+        repo: process.env.GITHUB_SYNC_REPO || '',
         branch: process.env.GITHUB_SYNC_BRANCH || 'main',
     },
 };
-
 
 config.dashboardPortSource = resolveDashboardPort._source || 'default';
 
 if (!config.ai.gemini.cookie) {
     console.warn('[config] Warning: GEMINI_COOKIE is empty, the AI chat feature will not work.');
 }
-

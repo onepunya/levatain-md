@@ -3,28 +3,28 @@ import { formatUptime, pick } from '../util/utils.js';
 import { registerSlots, pickText } from './menuText.js';
 
 export const TAG_META = {
-    ai:           { emoji: '🤖', label: 'AI & Assistant' },
-    tools:        { emoji: '🛠️', label: 'Tools' },
-    fun:          { emoji: '💌', label: 'Fun & Games' },
+    ai: { emoji: '🤖', label: 'AI & Assistant' },
+    tools: { emoji: '🛠️', label: 'Tools' },
+    fun: { emoji: '💌', label: 'Fun & Games' },
     audiochanger: { emoji: '🎚️', label: 'Audio Changer' },
-    download:     { emoji: '📥', label: 'Download' },
-    group:        { emoji: '👥', label: 'Group' },
-    limit:        { emoji: '⚡', label: 'Limit & Plan' },
-    owner:        { emoji: '👑', label: 'Owner' },
-    main:         { emoji: '⚙️', label: 'Main' },
-    general:      { emoji: '📋', label: 'Other' },
+    download: { emoji: '📥', label: 'Download' },
+    group: { emoji: '👥', label: 'Group' },
+    limit: { emoji: '⚡', label: 'Limit & Plan' },
+    owner: { emoji: '👑', label: 'Owner' },
+    main: { emoji: '⚙️', label: 'Main' },
+    general: { emoji: '📋', label: 'Other' },
 };
 
 const dayDesc = (w) => `Short greeting/encouragement for ${w}, shown after "Good ${w.split(' ')[0]}, <name>". Do not include the user name.`;
 registerSlots({
-    greet_pagi:  { desc: dayDesc('morning (04-11)'),  max: 60 },
+    greet_pagi: { desc: dayDesc('morning (04-11)'), max: 60 },
     greet_siang: { desc: dayDesc('afternoon (11-15)'), max: 60 },
-    greet_sore:  { desc: dayDesc('evening (15-18)'),  max: 60 },
+    greet_sore: { desc: dayDesc('evening (15-18)'), max: 60 },
     greet_malam: { desc: dayDesc('night (18-04)'), max: 60 },
-    teaser:      { desc: 'One short line inviting the user to type a command or chat with the bot.', max: 70 },
-    hint_home:   { desc: 'Invite the user to open the category list below or type *.allmenu* (write exactly *.allmenu* with asterisks).', max: 90, must: /\*\.allmenu\*/ },
-    hint_back:   { desc: 'Invite going back to the main menu with *.menu* or viewing all commands with *.allmenu* (write exactly with asterisks).', max: 90, must: s => /\*\.menu\*/.test(s) && /\*\.allmenu\*/.test(s) },
-    hint_end:    { desc: 'Invite picking a category by typing *.menu* (write exactly with asterisks).', max: 70, must: /\*\.menu\*/ },
+    teaser: { desc: 'One short line inviting the user to type a command or chat with the bot.', max: 70 },
+    hint_home: { desc: 'Invite the user to open the category list below or type *.allmenu* (write exactly *.allmenu* with asterisks).', max: 90, must: /\*\.allmenu\*/ },
+    hint_back: { desc: 'Invite going back to the main menu with *.menu* or viewing all commands with *.allmenu* (write exactly with asterisks).', max: 90, must: s => /\*\.menu\*/.test(s) && /\*\.allmenu\*/.test(s) },
+    hint_end: { desc: 'Invite picking a category by typing *.menu* (write exactly with asterisks).', max: 70, must: /\*\.menu\*/ },
     ...Object.fromEntries(Object.entries(TAG_META).map(([tag, { label }]) => [
         `cat_${tag}`,
         { desc: `Short blurb for the "${label}" category in a WhatsApp bot (do not name the category).`, count: 5, max: 38 },
@@ -105,16 +105,16 @@ export function greeting() {
         hour12: false,
     }).formatToParts(new Date()).find(p => p.type === 'hour').value;
     const h = parseInt(hourPart, 10) % 24;
-    if (h >= 4 && h < 11)  return 'Good morning';
+    if (h >= 4 && h < 11) return 'Good morning';
     if (h >= 11 && h < 15) return 'Good afternoon';
     if (h >= 15 && h < 18) return 'Good evening';
     return 'Good night';
 }
 
 const GREETING_PHRASES = {
-    pagi:  ['Ready to start the day! ☀️', 'Let\'s make today count 💪', 'Don\'t skip breakfast 🍳'],
+    pagi: ['Ready to start the day! ☀️', 'Let\'s make today count 💪', 'Don\'t skip breakfast 🍳'],
     siang: ['Remember to rest & grab lunch 🍽️', 'Hope your day is going well! ✨', 'Had lunch yet? 😄'],
-    sore:  ['How\'s your day going so far? 🌇', 'Time for a short break ☕', 'Evening vibes, take it easy 😌'],
+    sore: ['How\'s your day going so far? 🌇', 'Time for a short break ☕', 'Evening vibes, take it easy 😌'],
     malam: ['Time to wind down, but explore a bit first 🌙', 'Don\'t stay up too late 😴', 'A calm night to relax ✨'],
 };
 
@@ -127,7 +127,7 @@ export function greetingPhrase() {
     const h = parseInt(hourPart, 10) % 24;
 
     let key = 'malam';
-    if (h >= 4 && h < 11)  key = 'pagi';
+    if (h >= 4 && h < 11) key = 'pagi';
     else if (h >= 11 && h < 15) key = 'siang';
     else if (h >= 15 && h < 18) key = 'sore';
 
@@ -149,10 +149,10 @@ export function buildCategoryText(tag, items) {
 
 export function buildAllMenuText(pushname, isOwner) {
     const { grouped, orderedTags, totalShown } = collectGrouped(isOwner);
-    let teaser  = `✦ *${global.botName}* ✦\n\n`;
-    teaser     += `${greeting()}, *${pushname || 'there'}* 👋\n`;
-    teaser     += `_${greetingPhrase()}_\n`;
-    teaser     += pickText('teaser', 'Type a command, or just chat naturally.');
+    let teaser = `✦ *${global.botName}* ✦\n\n`;
+    teaser += `${greeting()}, *${pushname || 'there'}* 👋\n`;
+    teaser += `_${greetingPhrase()}_\n`;
+    teaser += pickText('teaser', 'Type a command, or just chat naturally.');
 
     let body = '';
     for (const tag of orderedTags) {

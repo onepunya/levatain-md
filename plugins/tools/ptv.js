@@ -2,7 +2,7 @@ import { typing, downloadMedia, runFfmpegTempFile } from '../../src/util/index.j
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
-const PTV_SIZE = 480;          
+const PTV_SIZE = 480;
 const PTV_MAX_SECONDS = 60;
 
 export default plugin('ptv', 'toptv', 'videotoptv')

@@ -114,4 +114,3 @@ export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
         await saveDb();
         return sock.sendMessage(from, { text: msg('done.gempa_off') }, { quoted: raw });
     });
-

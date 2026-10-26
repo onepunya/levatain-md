@@ -2,9 +2,9 @@ const stripDevice = (id, server) => id ? `${id.split(':')[0].replace(/@.+/, '')}
 
 export function resolveIdentity(sock, m) {
     const { raw, sender } = m;
-    const rawParticipant  = raw.key.participant || raw.key.remoteJid || sender.id;
-    const altParticipant  = raw.key.participantAlt || raw.key.participantPn;
-    const candidates      = [rawParticipant, altParticipant, sender.id].filter(Boolean);
+    const rawParticipant = raw.key.participant || raw.key.remoteJid || sender.id;
+    const altParticipant = raw.key.participantAlt || raw.key.participantPn;
+    const candidates = [rawParticipant, altParticipant, sender.id].filter(Boolean);
 
     const lid = stripDevice(candidates.find(v => v.includes('@lid')), '@lid');
     const jid = stripDevice(candidates.find(v => v.includes('@s.whatsapp.net')), '@s.whatsapp.net');
@@ -13,7 +13,7 @@ export function resolveIdentity(sock, m) {
         lid,
         jid,
         primaryId: lid || jid,
-        altId:     lid ? jid : lid,
+        altId: lid ? jid : lid,
         senderIds: [lid, jid, sender.id].filter(v => v && !v.includes('undefined')),
         botNumber: `${sock.user?.id?.split(':')[0].replace(/@.+/, '')}@s.whatsapp.net`
     };
@@ -23,20 +23,20 @@ export function buildQuoted(ctx, from, botSelfIds) {
     const quotedMsg = ctx?.quotedMessage;
     if (!quotedMsg) return null;
 
-    const sender    = ctx.participant || ctx.remoteJid || from;
+    const sender = ctx.participant || ctx.remoteJid || from;
     const senderAlt = ctx.participantAlt || ctx.participantPn;
 
     return {
-        type:     Object.keys(quotedMsg)[0],
+        type: Object.keys(quotedMsg)[0],
         sender,
-        text:     quotedMsg.conversation
+        text: quotedMsg.conversation
                   || quotedMsg.extendedTextMessage?.text
                   || quotedMsg.imageMessage?.caption
                   || quotedMsg.videoMessage?.caption
                   || '',
-        fromMe:   botSelfIds.includes(sender) || botSelfIds.includes(senderAlt),
+        fromMe: botSelfIds.includes(sender) || botSelfIds.includes(senderAlt),
         stanzaId: ctx.stanzaId,
-        raw:      { message: quotedMsg, contextInfo: ctx }
+        raw: { message: quotedMsg, contextInfo: ctx }
     };
 }
 
@@ -48,10 +48,10 @@ export function mergeAlternateUser(db, primaryId, altId) {
     if (!main) {
         db.users[primaryId] = alt;
     } else {
-        main.hit          = (main.hit || 0) + (alt.hit || 0);
-        main.banned       = Boolean(main.banned || alt.banned);
+        main.hit = (main.hit || 0) + (alt.hit || 0);
+        main.banned = Boolean(main.banned || alt.banned);
         main.bannedReason = main.bannedReason || alt.bannedReason || '';
-        main.warns        = Math.max(main.warns || 0, alt.warns || 0);
+        main.warns = Math.max(main.warns || 0, alt.warns || 0);
     }
     delete db.users[altId];
 }
@@ -68,8 +68,8 @@ export function resolvePermissions({ senderIds, botNumber, adminEntries, isGroup
     };
 
     return {
-        isOwner:    matchesNumbers([global.owner, botNumber]) || Boolean(global.ownerLid && senderIds.includes(global.ownerLid)),
-        isAdmin:    isGroup && adminEntries.some(p => matchesParticipant(p, senderIds)),
+        isOwner: matchesNumbers([global.owner, botNumber]) || Boolean(global.ownerLid && senderIds.includes(global.ownerLid)),
+        isAdmin: isGroup && adminEntries.some(p => matchesParticipant(p, senderIds)),
         isBotAdmin: isGroup && adminEntries.some(p => matchesParticipant(p, [botNumber]))
     };
 }

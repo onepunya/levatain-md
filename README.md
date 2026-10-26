@@ -83,7 +83,6 @@ All the keys below go in the `.env` file (not `.env.example`), one line per vari
 |---|---|---|
 | AI chat & intent engine (Gemini, the only LLM) | `GEMINI_COOKIE` | Open gemini.google.com in a browser → DevTools → Network → any request → copy the `cookie` header. |
 | Voice note TTS (optional) | `NAGA_API_KEY` | Join the [NagaAI](https://naga.ac/) Discord server → in the bot channel, type `/account key get`. Only used for text-to-speech, not for chat. |
-| Certain download/tools features | `ONEPUNYA_API_KEY` | OnePunya isn't a public self-signup service — it's a private/community API owned by an independent developer. Contact the owner directly via [GitHub](https://github.com/onepunya) or the contact listed there to request key access. |
 | Mood/AI stickers (Giphy) | `GIPHY_API_KEY` | Open [developers.giphy.com](https://developers.giphy.com/) → **Create an App** → choose **API** (not SDK) → copy the API Key shown. |
 | `.editimage` / `.aiedit` (Magic Hour) | `MAGICHOUR_KEY_1` through `MAGICHOUR_KEY_3` | Sign up at [magichour.ai](https://magichour.ai/) → go to **Dashboard** → **API Keys** menu → generate a new key. You can fill in more than one for auto-rotation. |
 | `.play` song recognition (fallback) | `AUDD_API_KEY` | Sign up for free at [dashboard.audd.io](https://dashboard.audd.io/). |

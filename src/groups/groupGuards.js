@@ -4,7 +4,7 @@ const INVITE_LINK = /chat\.whatsapp\.com\/(?:invite\/)?[0-9A-Za-z]{20,24}/i;
 const AFK_COMMAND = /^\S?afk(\s|$)/i;
 
 const numberOf = (jid) => jid.split('@')[0].split(':')[0];
-const tag      = (jid) => `@${jid.split('@')[0]}`;
+const tag = (jid) => `@${jid.split('@')[0]}`;
 
 export async function enforceAntilink(sock, { from, raw, body, primaryId }) {
     if (!INVITE_LINK.test(body)) return false;

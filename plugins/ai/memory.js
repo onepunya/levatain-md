@@ -22,7 +22,7 @@ export default plugin('memory', 'aiclear')
         }
 
         const history = await getHistory(primaryId);
-        const mem     = await getUserMemory(primaryId);
+        const mem = await getUserMemory(primaryId);
         let text = `🧠 *AI MEMORY — ${pushname}*\n\n`;
         text += `📜 *History:* ${history.length} messages
 `;
@@ -41,4 +41,3 @@ export default plugin('memory', 'aiclear')
 
         await sock.sendMessage(from, { text }, { quoted: raw });
     });
-

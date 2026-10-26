@@ -20,4 +20,3 @@ export default plugin('script', 'sc')
     Requires Node.js 20+`;
         await sock.sendMessage(from, { text: txt }, { quoted: raw });
     });
-

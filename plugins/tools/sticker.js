@@ -20,9 +20,9 @@ export default plugin('sticker', 's')
         await typing(sock, from);
         try {
             const sticker = new Sticker(result.buffer, {
-                pack:    global.botName,
-                author:  pushname || 'Levatain',
-                type:    StickerTypes.FULL,
+                pack: global.botName,
+                author: pushname || 'Levatain',
+                type: StickerTypes.FULL,
                 quality: 70,
             });
             await sock.sendMessage(from, { sticker: await sticker.toBuffer() }, { quoted: raw });
@@ -30,4 +30,3 @@ export default plugin('sticker', 's')
             await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
         }
     });
-

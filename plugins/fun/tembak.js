@@ -32,10 +32,10 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
             clearTimeout(entry.timer);
             pending.delete(key);
 
-            const accepted   = command === 'terima';
-            const quote      = pick(accepted ? DITERIMA : DITOLAK);
+            const accepted = command === 'terima';
+            const quote = pick(accepted ? DITERIMA : DITOLAK);
             const targetName = nameOf(primaryId, pushname);
-            const fromName   = nameOf(entry.fromId);
+            const fromName = nameOf(entry.fromId);
 
             return sock.sendMessage(from, {
                 text: `${accepted ? '💌' : '💔'} *${targetName}* ${accepted ? 'accepted' : 'rejected'} proposal from *${fromName}*!\n\n_${quote}_`,
@@ -60,7 +60,7 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
         }
 
         const targetName = nameOf(target);
-        const fromName   = pushname || 'Someone';
+        const fromName = pushname || 'Someone';
 
         const timer = setTimeout(async () => {
             if (!pending.has(key)) return;
@@ -116,4 +116,3 @@ function resolveTarget(message, mentionedJid) {
     if (mentionedJid?.[0]) return mentionedJid[0].split(':')[0] + '@s.whatsapp.net';
     return null;
 }
-

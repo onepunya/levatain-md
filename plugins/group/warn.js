@@ -30,7 +30,7 @@ export default plugin('warn', 'unwarn', 'warnlist')
         let target;
         if (message.quoted) {
             const s = message.quoted.sender.replace(/@.*/, '').split(':')[0];
-            target  = message.quoted.sender.includes('@lid') ? `${s}@lid` : `${s}@s.whatsapp.net`;
+            target = message.quoted.sender.includes('@lid') ? `${s}@lid` : `${s}@s.whatsapp.net`;
         } else if (mentionedJid?.[0]) {
             target = mentionedJid[0].split(':')[0] + '@s.whatsapp.net';
         }
@@ -61,4 +61,3 @@ export default plugin('warn', 'unwarn', 'warnlist')
     });
 
 const MAX_WARN = 3;
-

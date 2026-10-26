@@ -4,12 +4,12 @@ import { pathToFileURL } from 'url';
 import { config } from '../config.js';
 import { getAllFiles, collectMetas } from '../core/loader.js';
 
-const PLUGIN_DIR        = './plugins';
-const API_DIR           = './src/api';
-const SCAN_ROOTS        = ['src/api', 'src/media', 'src/util/utils.js', 'src/storage/githubSync.js'];
-const PROBE_TIMEOUT     = 8000;
+const PLUGIN_DIR = './plugins';
+const API_DIR = './src/api';
+const SCAN_ROOTS = ['src/api', 'src/media', 'src/util/utils.js', 'src/storage/githubSync.js'];
+const PROBE_TIMEOUT = 8000;
 const PROBE_CONCURRENCY = 8;
-const PROBE_AGENT       = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
+const PROBE_AGENT = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
 
 const IGNORED_HOSTS = new Set([
     'chat.whatsapp.com',
@@ -26,19 +26,19 @@ const IGNORED_HOSTS = new Set([
 
 const OPTIONAL_CONFIG = new Set(['translateEmail']);
 
-const URL_PATTERN    = /(https?):\/\/([a-z0-9][a-z0-9.-]*\.[a-z]{2,})/gi;
+const URL_PATTERN = /(https?):\/\/([a-z0-9][a-z0-9.-]*\.[a-z]{2,})/gi;
 const CONFIG_PATTERN = /\bconfig\.([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)/g;
-const IDENT_PATTERN  = /[A-Za-z_$][\w$]*/g;
-const DECL_PATTERN   = /^(?:export\s+)?(?:async\s+)?(?:const|let|var|function\*?)\s+([A-Za-z_$][\w$]*)/;
-const API_OBJECT     = /^export const \w+Api = \{/;
+const IDENT_PATTERN = /[A-Za-z_$][\w$]*/g;
+const DECL_PATTERN = /^(?:export\s+)?(?:async\s+)?(?:const|let|var|function\*?)\s+([A-Za-z_$][\w$]*)/;
+const API_OBJECT = /^export const \w+Api = \{/;
 
 const STATE_LABEL = { ok: 'ok', restricted: 'dibatasi', down: 'mati', skipped: 'dilewati' };
 
-let infoCache   = new Map();
+let infoCache = new Map();
 let exportCache = null;
 let memberCache = null;
 
-const toPosix  = (path) => path.split('\\').join('/');
+const toPosix = (path) => path.split('\\').join('/');
 const relative_ = (path) => toPosix(relative(process.cwd(), path));
 
 function isScannable(path) {
@@ -60,7 +60,7 @@ function stripNoise(text) {
 
 function splitChunks(text) {
     const chunks = new Map();
-    let name   = null;
+    let name = null;
     let buffer = [];
 
     const flush = () => {
@@ -71,7 +71,7 @@ function splitChunks(text) {
         const decl = DECL_PATTERN.exec(line);
         if (decl) {
             flush();
-            name   = decl[1];
+            name = decl[1];
             buffer = [line];
         } else if (name) {
             buffer.push(line);
@@ -106,7 +106,7 @@ function parseImports(text, filePath) {
     const imports = new Map();
 
     for (const m of text.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"](\.[^'"]+)['"]/g)) {
-        const target   = resolve(dirname(filePath), m[2]);
+        const target = resolve(dirname(filePath), m[2]);
         const isBarrel = /\/src\/[^/]+\/index\.js$/.test(toPosix(target));
 
         for (const part of m[1].split(',')) {
@@ -122,14 +122,14 @@ function parseImports(text, filePath) {
 
 function parseMembers(text) {
     const members = new Map();
-    const lines   = text.split('\n');
-    const start   = lines.findIndex(line => /^export const \w+Api = \{\s*$/.test(line));
+    const lines = text.split('\n');
+    const start = lines.findIndex(line => /^export const \w+Api = \{\s*$/.test(line));
     if (start < 0) return members;
 
-    const body   = lines.slice(start + 1);
+    const body = lines.slice(start + 1);
     const indent = body.find(line => line.trim())?.match(/^\s*/)[0] ?? '';
     const header = new RegExp(`^${indent}(?:async\\s+)?([A-Za-z_$][\\w$]*)\\s*[:(]`);
-    let current  = null;
+    let current = null;
 
     for (const line of body) {
         if (line.startsWith('}')) break;
@@ -152,9 +152,9 @@ function loadInfo(path) {
     if (existsSync(key)) {
         const text = stripNoise(readFileSync(key, 'utf8'));
         info = {
-            path:    key,
+            path: key,
             text,
-            chunks:  splitChunks(text),
+            chunks: splitChunks(text),
             imports: parseImports(text, key),
             members: parseMembers(text)
         };
@@ -194,8 +194,8 @@ function collect(info, seed, state) {
             }
 
             const imported = info.imports.get(id);
-            const target   = imported && loadInfo(imported.path);
-            const remote   = target?.chunks.get(imported.name);
+            const target = imported && loadInfo(imported.path);
+            const remote = target?.chunks.get(imported.name);
             if (remote && !API_OBJECT.test(remote)) collect(target, remote, state);
         }
     }
@@ -215,7 +215,7 @@ function readConfigPath(path) {
 }
 
 function extractConfig(text) {
-    const paths   = new Set([...text.matchAll(CONFIG_PATTERN)].map(m => m[1]));
+    const paths = new Set([...text.matchAll(CONFIG_PATTERN)].map(m => m[1]));
     const origins = new Map();
     const missing = [];
 
@@ -242,7 +242,7 @@ function extractConfig(text) {
 }
 
 function analyzeFile(file) {
-    const info  = loadInfo(file);
+    const info = loadInfo(file);
     const state = { seen: new Set(), texts: [] };
 
     collect(info, info.text, state);
@@ -252,19 +252,19 @@ function analyzeFile(file) {
         if (member) collect(member.info, member.text, state);
     }
 
-    const text     = state.texts.join('\n');
+    const text = state.texts.join('\n');
     const fromText = extractOrigins(text);
-    const fromEnv  = extractConfig(text);
+    const fromEnv = extractConfig(text);
 
     return {
-        origins:    [...new Map([...fromText, ...fromEnv.origins]).values()].sort(),
+        origins: [...new Map([...fromText, ...fromEnv.origins]).values()].sort(),
         missingEnv: fromEnv.missing.sort()
     };
 }
 
 async function loadPluginFile(file) {
     try {
-        const mod   = await import(pathToFileURL(resolve(file)).href);
+        const mod = await import(pathToFileURL(resolve(file)).href);
         const metas = collectMetas(mod);
         if (!metas.length) return { cmds: [], error: 'tidak ada plugin valid (meta.interface.run tidak ditemukan)' };
         return { cmds: metas.flatMap(meta => [meta.interface.cmd].flat().filter(Boolean)), error: null };
@@ -290,10 +290,10 @@ export async function probeOrigin(origin) {
     const started = Date.now();
     try {
         const res = await fetch(origin, {
-            method:   'GET',
+            method: 'GET',
             redirect: 'follow',
-            headers:  { 'user-agent': PROBE_AGENT, accept: '*/*' },
-            signal:   AbortSignal.timeout(PROBE_TIMEOUT)
+            headers: { 'user-agent': PROBE_AGENT, accept: '*/*' },
+            signal: AbortSignal.timeout(PROBE_TIMEOUT)
         });
         try { await res.body?.cancel(); } catch {}
         return { ...classifyResponse(res), ms: Date.now() - started };
@@ -304,7 +304,7 @@ export async function probeOrigin(origin) {
 
 async function probeAll(origins) {
     const results = new Map();
-    const queue   = [...origins];
+    const queue = [...origins];
 
     const worker = async () => {
         while (queue.length) {
@@ -341,11 +341,11 @@ function findCollisions(entries) {
 }
 
 export async function checkPlugins({ only = null, probe = true } = {}) {
-    infoCache   = new Map();
+    infoCache = new Map();
     exportCache = null;
     memberCache = null;
 
-    const needle  = only ? only.toLowerCase() : null;
+    const needle = only ? only.toLowerCase() : null;
     const entries = [];
 
     for (const file of getAllFiles(PLUGIN_DIR).sort()) {
@@ -358,12 +358,12 @@ export async function checkPlugins({ only = null, probe = true } = {}) {
     }
 
     const collisions = findCollisions(entries);
-    const selected   = needle
+    const selected = needle
         ? entries.filter(entry => entry.file.toLowerCase().includes(needle) || entry.cmds.includes(needle))
         : entries;
 
     const origins = [...new Set(selected.flatMap(entry => entry.origins))];
-    const probes  = probe ? await probeAll(origins) : new Map(origins.map(origin => [origin, { state: 'skipped', detail: 'tidak dicek' }]));
+    const probes = probe ? await probeAll(origins) : new Map(origins.map(origin => [origin, { state: 'skipped', detail: 'tidak dicek' }]));
 
     for (const entry of selected) entry.level = resolveLevel(entry, probes);
 
@@ -371,7 +371,7 @@ export async function checkPlugins({ only = null, probe = true } = {}) {
 }
 
 function describeEntry(entry, report) {
-    const cmds  = entry.cmds.length ? ` (${entry.cmds.join(', ')})` : '';
+    const cmds = entry.cmds.length ? ` (${entry.cmds.join(', ')})` : '';
     const lines = [`• ${entry.file}${cmds}`];
 
     if (entry.error) lines.push(`  ↳ ${entry.error}`);

@@ -3,7 +3,6 @@ import { plugins } from './loader.js';
 import { api } from '../api/index.js';
 import { msg, MSG } from '../wa/index.js';
 
-
 export function initGlobals() {
     global.botName = config.bot.name;
     global.owner = config.owner.number;

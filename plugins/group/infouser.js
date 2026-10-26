@@ -35,13 +35,13 @@ export default plugin('infouser', 'whois', 'userinfo')
 
         const p = isGroup
             ? participants.find(x =>
-                (x.id          && x.id.replace(/\D/g, '') === targetNum) ||
-                (x.lid         && x.lid.replace(/\D/g, '') === targetNum) ||
+                (x.id && x.id.replace(/\D/g, '') === targetNum) ||
+                (x.lid && x.lid.replace(/\D/g, '') === targetNum) ||
                 (x.phoneNumber && x.phoneNumber.replace(/\D/g, '') === targetNum))
             : null;
 
         const lookupId = p?.phoneNumber || (targetId.includes('@s.whatsapp.net') ? targetId : null) || targetId;
-        const userDb   = gdb.users?.[targetId] || gdb.users?.[lookupId] || {};
+        const userDb = gdb.users?.[targetId] || gdb.users?.[lookupId] || {};
 
         let about = '-';
         try {
@@ -78,4 +78,3 @@ export default plugin('infouser', 'whois', 'userinfo')
 
         await sendInlineWebUI(sock, from, html, 'User Info');
     });
-

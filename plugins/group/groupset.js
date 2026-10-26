@@ -46,4 +46,3 @@ export default plugin('setgname', 'setgdesc', 'linkgroup', 'revoklink')
             return sock.sendMessage(from, { text: msg('done.link_reset', { code }) }, { quoted: raw });
         }
     });
-

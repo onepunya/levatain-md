@@ -14,10 +14,10 @@ export { participantsUpdate, getCaptchaPending } from '../groups/groupEvents.js'
 
 const execPromise = promisify(exec);
 
-const PREFIX_PATTERN     = /^[°•π÷×¶∆£¢€¥®™+✓_=|~!?@#$%^&.©^<>:;\\/(){}\[\]\-,]/;
-const BAN_NOTICE_TTL     = 10 * 60_000;
-const banNoticeCooldown  = new Map();
-const LANG_CHOICES       = { lang_en: 'en', lang_id: 'id' };
+const PREFIX_PATTERN = /^[°•π÷×¶∆£¢€¥®™+✓_=|~!?@#$%^&.©^<>:;\\/(){}\[\]\-,]/;
+const BAN_NOTICE_TTL = 10 * 60_000;
+const banNoticeCooldown = new Map();
+const LANG_CHOICES = { lang_en: 'en', lang_id: 'id' };
 
 function extractText(m, waMsg) {
     return m.body
@@ -39,8 +39,8 @@ function parseCommand(body) {
 async function loadGroupState(sock, from, isGroup) {
     if (!isGroup) return { groupMetadata: null, participants: [], adminEntries: [], admins: [] };
     const groupMetadata = await getGroupMeta(sock, from);
-    const participants  = groupMetadata?.participants || [];
-    const adminEntries  = participants.filter(v => v.admin !== null);
+    const participants = groupMetadata?.participants || [];
+    const adminEntries = participants.filter(v => v.admin !== null);
     return { groupMetadata, participants, adminEntries, admins: adminEntries.map(v => v.id) };
 }
 
@@ -115,9 +115,9 @@ async function handleStickerCommand(sock, ctx) {
     const { waMsg, db, m, baseCtx, primaryId, pushname } = ctx;
     if (!waMsg?.stickerMessage) return false;
 
-    const hash    = Buffer.from(waMsg.stickerMessage.fileSha256 || []).toString('hex');
+    const hash = Buffer.from(waMsg.stickerMessage.fileSha256 || []).toString('hex');
     const command = db.settings?.stickerCmds?.[hash];
-    const plugin  = command && plugins.get(command);
+    const plugin = command && plugins.get(command);
     if (!plugin) return false;
 
     await executeCommand(sock, {
@@ -129,13 +129,13 @@ async function handleStickerCommand(sock, ctx) {
 export async function handler(sock, m) {
     const { from, sender, pushname, raw } = m;
     const waMsg = raw.message;
-    const body  = extractText(m, waMsg);
+    const body = extractText(m, waMsg);
 
     if (!body && !waMsg?.imageMessage && !waMsg?.videoMessage && !waMsg?.stickerMessage) return;
 
     const isGroup = from.endsWith('@g.us');
-    const type    = Object.keys(waMsg || {})[0];
-    const ctx     = waMsg?.[type]?.contextInfo || waMsg?.extendedTextMessage?.contextInfo;
+    const type = Object.keys(waMsg || {})[0];
+    const ctx = waMsg?.[type]?.contextInfo || waMsg?.extendedTextMessage?.contextInfo;
 
     const { isCmd, command } = parseCommand(body);
 
@@ -146,7 +146,7 @@ export async function handler(sock, m) {
     m.quoted = buildQuoted(ctx, from, [sock.user?.id, sock.user?.lid].filter(Boolean));
 
     const mentionedJid = ctx?.mentionedJid || [];
-    const isMentioned  = mentionedJid.some(j => j.includes(botNumber.split('@')[0]));
+    const isMentioned = mentionedJid.some(j => j.includes(botNumber.split('@')[0]));
 
     const db = await loadDb();
     for (const bad of ['null', 'undefined']) {
@@ -199,7 +199,7 @@ export async function handler(sock, m) {
 
     const baseCtx = {
         body, raw, from,
-        db:  db.users[primaryId],
+        db: db.users[primaryId],
         gdb: db,
         isOwner, isAdmin, isBotAdmin, isGroup, isMentioned,
         participants, admins, groupMetadata,

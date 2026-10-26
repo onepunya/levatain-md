@@ -23,7 +23,7 @@ export default plugin('afk')
         if (!isGroup) return sock.sendMessage(from, { text: msg('sys.group_only_short') }, { quoted: raw });
 
         const reason = getArgs(body) || '';
-        const grp    = gdb.groups[from];
+        const grp = gdb.groups[from];
         grp.afk[primaryId] = { since: Date.now(), reason };
         await saveDb();
 
@@ -33,4 +33,3 @@ export default plugin('afk')
             mentions: [primaryId],
         }, { quoted: raw });
     });
-

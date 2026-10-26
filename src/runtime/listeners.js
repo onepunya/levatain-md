@@ -16,13 +16,13 @@ async function onMessages(sock, msgs) {
             if (handleCaptchaAnswer(sock, m, body)) continue;
 
             await handler(sock, {
-                from:     m.key.remoteJid,
+                from: m.key.remoteJid,
                 body,
-                sender:   { id: m.key.participant || m.key.remoteJid },
+                sender: { id: m.key.participant || m.key.remoteJid },
                 pushname: m.pushName || 'User',
-                isGroup:  m.key.remoteJid.endsWith('@g.us'),
-                raw:      m,
-                device:   detectDevice(m)
+                isGroup: m.key.remoteJid.endsWith('@g.us'),
+                raw: m,
+                device: detectDevice(m)
             });
         } catch (e) {
             logger.error(`[upsert] ${e.message}`);
@@ -40,7 +40,6 @@ async function refreshGroupCache(sock, updates) {
         }
     }
 }
-
 
 export function bindSocketEvents(sock, { saveCreds, onOpen, onClose }) {
     sock.ev.on('creds.update', saveCreds);

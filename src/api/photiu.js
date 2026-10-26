@@ -18,7 +18,7 @@ async function getPhotiuCookies() {
     const jar = {};
     for (const c of rawCookies) {
         const pair = c.split(';')[0];
-        const idx  = pair.indexOf('=');
+        const idx = pair.indexOf('=');
         if (idx === -1) continue;
         jar[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
     }

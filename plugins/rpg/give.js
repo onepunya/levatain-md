@@ -6,7 +6,6 @@ import {
     transferItem,
     resolveTargetId,
     findUserInDb,
-    getItem,
 } from '../../src/rpg/index.js';
 
 export default plugin('give', 'kasih', 'beri')

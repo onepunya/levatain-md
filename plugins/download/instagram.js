@@ -89,4 +89,3 @@ function normalizeDownloadgramMedia(text) {
 
     return Array.from(itemsMap.values());
 }
-

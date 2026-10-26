@@ -179,9 +179,9 @@ async function pinterestSearch(query) {
     });
 
     const rawCookies = home.headers['set-cookie'] || [];
-    const cookies    = rawCookies.map(c => c.split(';')[0]).join('; ');
-    const csrfMatch  = rawCookies.find(c => c.startsWith('csrftoken=')) || '';
-    const csrf       = csrfMatch.split('=')[1]?.split(';')[0] || '4b99c664d3befbbc8e8a86c367936b38';
+    const cookies = rawCookies.map(c => c.split(';')[0]).join('; ');
+    const csrfMatch = rawCookies.find(c => c.startsWith('csrftoken=')) || '';
+    const csrf = csrfMatch.split('=')[1]?.split(';')[0] || '4b99c664d3befbbc8e8a86c367936b38';
 
     const source_url = `/search/pins/?q=${encodeURIComponent(query)}&rs=rs`;
     const postData = {
@@ -227,4 +227,3 @@ const bestImageUrl = (images = {}) =>
     images.orig?.url || images['736x']?.url || images['474x']?.url || images['236x']?.url || null;
 
 const pinUrl = (id) => `https://www.pinterest.com/pin/${id}/`;
-

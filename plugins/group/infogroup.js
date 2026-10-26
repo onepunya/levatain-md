@@ -44,4 +44,3 @@ export default plugin('infogroup', 'ginfo')
 
         await sendInlineWebUI(sock, from, html, 'Group Info');
     });
-

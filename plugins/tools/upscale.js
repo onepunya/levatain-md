@@ -22,10 +22,9 @@ export default plugin('upscale', 'hd', 'enhance')
 
         try {
             const output = await upscaleImage(result.buffer, result.mimetype || 'image/jpeg');
-            const media  = Buffer.isBuffer(output) ? { image: output } : { image: { url: output } };
+            const media = Buffer.isBuffer(output) ? { image: output } : { image: { url: output } };
             await sock.sendMessage(from, { ...media, caption: '✅ Image upscaled successfully!' }, { quoted: raw });
         } catch (e) {
             await sock.sendMessage(from, { text: msg('fail.upscale_hint', { msg: e.message }) }, { quoted: raw });
         }
     });
-

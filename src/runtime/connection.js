@@ -15,8 +15,8 @@ import { loadPlugins, plugins } from '../core/loader.js';
 import { bindSocketEvents } from './listeners.js';
 
 const FALLBACK_WA_VERSION = [2, 3000, 1015901307];
-const MAX_FAST_RETRIES    = 5;
-const silentLogger        = pino({ level: 'silent' });
+const MAX_FAST_RETRIES = 5;
+const silentLogger = pino({ level: 'silent' });
 
 let retryCount = 0;
 
@@ -118,19 +118,19 @@ export async function start() {
 
     const sock = makeWASocket({
         version,
-        logger:              silentLogger,
-        printQRInTerminal:   false,
+        logger: silentLogger,
+        printQRInTerminal: false,
         auth: {
             creds: state.creds,
-            keys:  makeCacheableSignalKeyStore(state.keys, silentLogger)
+            keys: makeCacheableSignalKeyStore(state.keys, silentLogger)
         },
-        browser:             Browsers.ubuntu('Chrome'),
-        connectTimeoutMs:    60_000,
+        browser: Browsers.ubuntu('Chrome'),
+        connectTimeoutMs: 60_000,
         keepAliveIntervalMs: 30_000,
-        syncFullHistory:     false,
+        syncFullHistory: false,
         markOnlineOnConnect: false,
         cachedGroupMetadata: async (jid) => readGroupMetaCache(jid),
-        getMessage:          async (key) => getCachedMessage(key)
+        getMessage: async (key) => getCachedMessage(key)
     });
 
     global.sock = sock;
