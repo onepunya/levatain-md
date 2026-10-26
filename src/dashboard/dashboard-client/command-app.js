@@ -25,6 +25,18 @@ function CommandApp() {
     if (reduced || seen) setPhase("deck");
   }, [reduced]);
 
+  useEffect(() => {
+    const move = (ev) => {
+      const t = ev.target.closest ? ev.target.closest(".card,.panel") : null;
+      if (!t) return;
+      const r = t.getBoundingClientRect();
+      t.style.setProperty("--mx", ev.clientX - r.left + "px");
+      t.style.setProperty("--my", ev.clientY - r.top + "px");
+    };
+    document.addEventListener("pointermove", move, { passive: true });
+    return () => document.removeEventListener("pointermove", move);
+  }, []);
+
   const finishBoot = useCallback(() => {
     sessionStorage.setItem(SEEN_KEY, "1");
     setPhase("deck");

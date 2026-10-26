@@ -128,6 +128,13 @@ export function CommandDeck({ status, onReplay, showReplay = true }) {
           " · PID ",
           s.pid,
         ),
+        e(
+          "p",
+          { className: "prompt" },
+          e("span", { className: "u" }, "root@" + String(status.botName || "levatain").toLowerCase() + ":~$ "),
+          e("span", { className: "typed" }, "monitor --live --interval 3s"),
+          e("span", { className: "caret" }),
+        ),
       ),
       e(
         "div",

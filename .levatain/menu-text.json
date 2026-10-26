@@ -1,7 +1,13 @@
 {
-  "updatedAt": 1792999605980,
+  "updatedAt": 1793012851325,
   "pool": {
     "greet_pagi": [
+      "Rise and shine, let's crush today! ☀️",
+      "Ready to make today amazing? ✨",
+      "Hope your coffee is strong and morning is sweet! ☕",
+      "Let's start this day with a big smile! 😊",
+      "Sending you good vibes for a productive morning! 🌱",
+      "Make today count, you've got this! 💪",
       "Rise and shine! Make today amazing! ☀️",
       "Hope you slept well, let's crush today! ☕",
       "Good morning! Ready for a fresh start? 🌱",
@@ -19,15 +25,15 @@
       "Make it a great day! ✨",
       "Hope you slept well! ☕",
       "Let's get things done! 🚀",
-      "Smile, it's a new day! 😊",
-      "rise and shine today is going to be amazing ☀️",
-      "hope you slept well time to crush those goals 💪",
-      "wishing you a bright and energetic morning ✨",
-      "let us make today count grab that coffee ☕",
-      "start your day with a big smile and high hopes 🌅",
-      "early bird gets the worm let us get to work 🚀"
+      "Smile, it's a new day! 😊"
     ],
     "greet_siang": [
+      "Hope your day is going wonderfully! 🌤️",
+      "Keep up the great energy this afternoon! ⚡",
+      "Take a quick breather and smile! 😊",
+      "You're doing great, keep going! 👍",
+      "Hope your afternoon is smooth sailing! ⛵",
+      "Time for a quick recharge to finish strong! 🔋",
       "Hope your day is going great so far! 🌟",
       "Time for a quick break and a stretch! 🧘",
       "Keep up the awesome energy this afternoon! 🔥",
@@ -45,15 +51,15 @@
       "Time for a quick break? ☕",
       "Stay awesome this afternoon! 😎",
       "Keep pushing through! 🔥",
-      "hope your day is going smoothly keep it up 🌟",
-      "taking a nice midday break fuels the productivity 🥪",
-      "stay hydrated and keep pushing through the day 💧",
-      "hope you are having a wonderful afternoon so far 🌤️",
-      "sending you a little afternoon boost of energy ⚡",
-      "keep up the fantastic work afternoon vibes only 🍃",
-      "Hope your day is going wonderfully! 🌤️"
+      "hope your day is going smoothly keep it up 🌟"
     ],
     "greet_sore": [
+      "Hope your afternoon is going great! 🌅",
+      "Keep up the amazing work today! 💪",
+      "Take a relaxing break soon. ☕",
+      "Almost time to wrap things up! 🌇",
+      "Stay energized as the day winds down. ✨",
+      "Hope you had a productive afternoon! 🌟",
       "Hope your evening is going well! 🌅",
       "Time to unwind and relax now. ☕",
       "Keep up the great work today! 💪",
@@ -71,20 +77,18 @@
       "Enjoy the peaceful golden hour ahead. 🌇",
       "Let's wrap up this day with a smile. 😊",
       "Take a deep breath and enjoy the evening. 🍃",
-      "Hope your evening is going wonderfully! 😊",
-      "Time to unwind and relax a bit now! ☕",
-      "You did great today, keep shining! ✨",
-      "Wishing you a peaceful and cozy evening! 🌇",
-      "Almost done with the day, stay awesome! 👍",
-      "Take a deep breath and enjoy the sunset! 🌅",
-      "Hope your day went well! 🌇"
+      "Hope your evening is going wonderfully! 😊"
     ],
     "greet_malam": [
+      "Time to unwind and relax now. 🌙",
+      "Hope you had a wonderful day! ✨",
+      "Get some well-deserved rest tonight. 🌌",
+      "Sweet dreams and sleep tight! 💤",
+      "Time to recharge for tomorrow. 🌃",
+      "Relax and enjoy a peaceful night. 🌠",
       "Time to get some well-deserved rest. 🌙",
       "Wishing you a cozy and calm night. 🛌",
-      "Sweet dreams and sleep tight! 💤",
       "Hope you had an amazing day today. ⭐",
-      "Time to recharge for tomorrow. 🌃",
       "Sleep well and see you soon! 🦉",
       "Time to relax and unwind now! 🌙",
       "Wishing you a calm and restful night. 🌌",
@@ -99,13 +103,15 @@
       "Hope you have a wonderfully restful sleep. 💤",
       "Stars are out, time to get some rest. ⭐",
       "Time to rest and recharge for tomorrow! 🌙",
-      "Wishing you a deeply peaceful sleep tonight! 😴",
-      "Sweet dreams and sleep tight, friend! 🌌",
-      "Wrap up your day and drift off nicely! ⭐",
-      "Rest well so you wake up refreshed! 🛌",
-      "Night is here, time to let go of stress! 🌠"
+      "Wishing you a deeply peaceful sleep tonight! 😴"
     ],
     "teaser": [
+      "Type a command or just chat with me! 👋",
+      "Say hello or pick a command to get started! ✨",
+      "Ready when you are, send a command or chat! 💬",
+      "Drop a message or type a command to begin. 🚀",
+      "Let's chat or type a command to explore! 😊",
+      "Send a command or say hi to start chatting! 🎉",
       "Type a menu command to start! 🤖",
       "Explore features by typing a command ✨",
       "Ready to chat? Drop a command below 💬",
@@ -123,15 +129,15 @@
       "Ready when you are! 🚀",
       "Say something to begin! 👋",
       "Let's chat right now! 💡",
-      "Send a message to play! 🎮",
-      "Type a command or chat with me anytime! 👋",
-      "Got a question? Just type a command to start! 💬",
-      "Say hello or drop a command below! ✨",
-      "Ready when you are, send a command or chat! 🚀",
-      "Let's chat or type a command to begin! 😊",
-      "Drop a command or say hi to get started! 🤖"
+      "Send a message to play! 🎮"
     ],
     "hint_home": [
+      "Check out the category list below or type *.allmenu* to see everything! 👇",
+      "Explore the categories below or simply type *.allmenu* for all features. 📂",
+      "Browse categories below or type *.allmenu* to view the full menu. ✨",
+      "Open the category list below or type *.allmenu* to see all options. 🌟",
+      "Look at the categories below or type *.allmenu* for the complete list. 📋",
+      "Pick from the category list below or type *.allmenu* to view commands. 💡",
       "Tap the categories below or type *.allmenu* to see everything 📋",
       "Explore the menu below or type *.allmenu* to view all commands 🔍",
       "Check out the category list below or type *.allmenu* for full details 📖",
@@ -149,15 +155,15 @@
       "Check out the category list below or type *.allmenu* to browse! 🔍",
       "Browse categories below or type *.allmenu* for full options! 🌟",
       "Pick a category below or type *.allmenu* to open the menu! 📱",
-      "Explore categories below or type *.allmenu* to get started! ⚡",
-      "Check out the category list below or type *.allmenu* to see everything! 👇",
-      "Browse our categories below or type *.allmenu* for all commands! ✨",
-      "Explore the categories below, or just type *.allmenu* to view all options! 📂",
-      "Take a look at the categories below or simply type *.allmenu*! 🌟",
-      "Scroll down for categories or type *.allmenu* to see all features! 📋",
-      "Pick from the categories below or type *.allmenu* to view the full list! 💫"
+      "Explore categories below or type *.allmenu* to get started! ⚡"
     ],
     "hint_back": [
+      "Type *.menu* to return or *.allmenu* for everything! 🔙",
+      "Head back with *.menu* or check *.allmenu* for all options. 🏠",
+      "Want to go back? Type *.menu* or see *.allmenu*! ✨",
+      "Return via *.menu* or explore everything using *.allmenu*! 📂",
+      "Go back home with *.menu* or view all with *.allmenu*! 🌟",
+      "Type *.menu* for the main menu or *.allmenu* for commands! 📌",
       "Type *.menu* to head back or *.allmenu* for all commands. 🔙",
       "Want to go back? Type *.menu* or check *.allmenu* for everything! ✨",
       "Head back anytime with *.menu* or view all commands using *.allmenu*. 🤖",
@@ -175,15 +181,15 @@
       "Head home using *.menu* or check *.allmenu* for everything! ✨",
       "Need a U-turn? Try *.menu* or view *.allmenu* for more! 🔄",
       "Return to start with *.menu* or browse *.allmenu*! 🏡",
-      "Go back with *.menu* or check out *.allmenu* for all commands! 📋",
-      "Type *.menu* to go back or *.allmenu* for all options! 🔙",
-      "Want to return? Type *.menu* or explore *.allmenu* right now! ✨",
-      "Head back with *.menu* or check out *.allmenu* for everything! 💡",
-      "Go back via *.menu* or see all commands using *.allmenu*! 🚀",
-      "Need to go back? Type *.menu* or view *.allmenu* for more! 😊",
-      "Return to the main menu with *.menu* or try *.allmenu*! 🎯"
+      "Go back with *.menu* or check out *.allmenu* for all commands! 📋"
     ],
     "hint_end": [
+      "Pick a category by typing *.menu* right now! 👇",
+      "Choose a category by typing *.menu* below! ✨",
+      "Select your category by typing *.menu*! 🚀",
+      "Type *.menu* to pick a category! 📱",
+      "Explore categories by typing *.menu*! 🔍",
+      "Pick your favorite category using *.menu*! 🌟",
       "Pick a category by typing *.menu* right now. 📌",
       "Type *.menu* to choose your next category. ✨",
       "Select a category by entering *.menu*. 💬",
@@ -201,15 +207,14 @@
       "Select a category using *.menu*! 👇",
       "Type *.menu* to pick a category! 🔍",
       "Pick a section by typing *.menu*! ✨",
-      "Ready? Type *.menu* to choose a category! 🚀",
-      "Pick a category by typing *.menu*! 📌",
-      "Choose a category using *.menu*! 📱",
-      "Select a category with *.menu*! 👇",
-      "Find a category by typing *.menu*! 🌟",
-      "Type *.menu* to pick a category! ✨",
-      "Explore categories using *.menu*! 🔍"
+      "Ready? Type *.menu* to choose a category! 🚀"
     ],
     "cat_ai": [
+      "Chat with smart AI right here 🤖",
+      "Ask anything and get fast answers ✨",
+      "Your clever AI helper awaits 🧠",
+      "Got questions? Let AI assist 💬",
+      "Unlock smart features instantly 🔮",
       "Chat, create, and solve with AI! 🤖",
       "Your smart AI companion is here! ✨",
       "Unlock the power of AI tools! 🚀",
@@ -228,11 +233,14 @@
       "Get instant AI answers! 🧠",
       "Chat with smart AI anytime! 🤖",
       "Ask me anything you need! ✨",
-      "Your personal AI assistant! 💡",
-      "Let's chat and explore ideas! 🧠",
-      "Get instant answers right here! 🚀"
+      "Your personal AI assistant! 💡"
     ],
     "cat_tools": [
+      "Handy utilities at your service 🛠️",
+      "Useful tools to save your time ⚙️",
+      "Quick helpers for daily tasks 🔧",
+      "Get things done with smart tools 🧰",
+      "Handy shortcuts for everything 📌",
       "Make tasks easier with handy tools! ⚙️",
       "Quick tools to boost your workflow! ⚡",
       "Handy tools to make life easier! 🛠️",
@@ -254,6 +262,11 @@
       "Get things done in a flash! ⚡"
     ],
     "cat_fun": [
+      "Play games and have fun today 🎮",
+      "Enjoy cool games and jokes 🎲",
+      "Time for some fun and laughs 🎉",
+      "Play mini games with friends 🕹️",
+      "Keep the good vibes rolling 🎈",
       "Play games and have a blast! 🎮",
       "Endless fun and mini-games inside! 🎲",
       "Spruce up your chat with fun stuff! 🎉",
@@ -272,13 +285,14 @@
       "Time to relax and play! 🕹️",
       "Fun commands for good vibes! 🎉",
       "Let loose and have some laughs! 🚀",
-      "Time to play and have fun! 🎮",
-      "Games and laughs await you! 🎲",
-      "Enjoy fun mini-games here! 🎉",
-      "Play games and beat records! 🏆",
-      "Laughter and fun all day! 😄"
+      "Time to play and have fun! 🎮"
     ],
     "cat_audiochanger": [
+      "Change your voice in seconds! 🎤",
+      "Make your voice sound fun! 🎶",
+      "Transform your audio right now! 🎧",
+      "Switch up how you sound! 🎙️",
+      "Try cool voice effects today! ✨",
       "Change your voice instantly! 🎧",
       "Make your audio sound fun! 🎤",
       "Modify your voice with effects! 🎵",
@@ -297,15 +311,14 @@
       "Make your voice sound cool! ✨",
       "Alter your audio like magic! 🎶",
       "Switch up how you sound! 🔊",
-      "Try fun voice effects today! 🎧",
-      "Change your voice instantly 🎙️",
-      "Make your audio sound unique 🎶",
-      "Transform your voice notes 🎧",
-      "Pitch shift and modify sounds 🎛️",
-      "Send hilarious voice effects 🔊"
+      "Try fun voice effects today! 🎧"
     ],
     "cat_download": [
       "Grab your media instantly! 📥",
+      "Save files with one click! ⚡",
+      "Download anything you want! 🔗",
+      "Get your favorite media fast! 🚀",
+      "Pull files right to your chat! 📂",
       "Download videos and pics! ⚡",
       "Save content with one tap! 🚀",
       "Fetch files right now! 📂",
@@ -324,11 +337,14 @@
       "Download content in a snap! 🚀",
       "Save media right from links 📥",
       "Download your favorite videos 🎬",
-      "Grab content in seconds ⚡",
-      "Save files instantly to chat 📂",
-      "Quick downloads on the go 🚀"
+      "Grab content in seconds ⚡"
     ],
     "cat_group": [
+      "Manage your group with ease! 👥",
+      "Keep your chats running smooth! 🛠️",
+      "Admin tools for your squad! 🛡️",
+      "Supercharge your group chat! 🚀",
+      "Control and manage your chat! ⚙️",
       "Manage your chats easily! 👥",
       "Supercharge your group! 👑",
       "Control group tools fast! ⚙️",
@@ -347,14 +363,14 @@
       "Manage your community with ease! 👥",
       "Keep chats safe and fun! 🛡️",
       "Control your chat members! ⚙️",
-      "Admin tools for your squad! ⚡",
-      "Run your community smoothly! 🌟",
-      "Manage your members easily 👥",
-      "Keep community chats active 💬",
-      "Handy tools for group admins 🛡️",
-      "Supercharge your group chat 🌐"
+      "Admin tools for your squad! ⚡"
     ],
     "cat_limit": [
+      "Check your current limits here ✨",
+      "See what you can use today 📊",
+      "Manage your active plan easily 💳",
+      "View usage and limits now 🚀",
+      "Track your remaining quotas ⚡",
       "Check usage and upgrade plans here! 📊",
       "See your limits and active plan! ⚡",
       "Check your daily limits and plan! 🌟",
@@ -373,11 +389,14 @@
       "Track your daily quota and limits ⏳",
       "View your current usage status 📈",
       "Check your usage limits anytime ⚡",
-      "View your plan details! 📋",
-      "Track your active limits! 📈",
-      "Check your subscription! ⭐"
+      "View your plan details! 📋"
     ],
     "cat_owner": [
+      "Special tools for the bot owner 👑",
+      "Access exclusive owner controls ⚙️",
+      "Manage bot settings and power 🛠️",
+      "Admin tools just for you 💻",
+      "Control the system right here 🔧",
       "Contact the bot creator here! 👑",
       "Get in touch with the owner! 🛠️",
       "Chat with the developer directly! 💬",
@@ -396,13 +415,14 @@
       "Contact the bot owner here 👑",
       "Get in touch with the admin 💬",
       "Reach out to the bot creator 🛠️",
-      "Talk to the owner directly 👤",
-      "Connect with the bot admin 📲",
-      "Get help from admin! 🛠️",
-      "Talk to the developer! 🤖",
-      "Reach out to owner! 👑"
+      "Talk to the owner directly 👤"
     ],
     "cat_main": [
+      "Explore all core bot features 🌟",
+      "Get started with main tools 🚀",
+      "Your central menu for commands 🎯",
+      "Discover what you can do here 🔥",
+      "Quick access to top features 💡",
       "Explore all core bot features! 🏠",
       "Check out the main commands! 🌟",
       "Access all essential features! 🔥",
@@ -421,14 +441,14 @@
       "Explore main bot features 🚀",
       "Check out core commands here 💡",
       "Browse primary bot options ✨",
-      "Discover essential commands 🌟",
-      "View the main menu options 🎯",
-      "Explore the main menu! 🏠",
-      "Check out core features! ✨",
-      "Start using main tools! 🚀",
-      "Browse primary commands! 📂"
+      "Discover essential commands 🌟"
     ],
     "cat_general": [
+      "Explore more cool stuff here! ✨",
+      "Find other awesome features! 🚀",
+      "Check out our other goodies! 🎁",
+      "Discover more fun options! 🌟",
+      "Explore the rest right here! 👀",
       "Everything else right here! ✨",
       "More fun stuff awaits you. 🚀",
       "Check out these extra goodies! 🎁",
@@ -447,12 +467,7 @@
       "✨ Explore more fun stuff here!",
       "🪄 Check out extra goodies!",
       "🌟 Find other cool things!",
-      "💫 Discover more surprises!",
-      "🎉 See what else we have!",
-      "Everything else here! 🗂️",
-      "More fun stuff waiting! ✨",
-      "Extra goodies inside! 🎁",
-      "Check out the rest! 🚀"
+      "💫 Discover more surprises!"
     ]
   }
 }
