@@ -1,5 +1,5 @@
 import { api } from '../../src/api/index.js';
-import { typing, downloadMedia } from '../../src/util/index.js';
+import { downloadMedia } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -11,22 +11,23 @@ export default plugin('removebg', 'rmbg')
     .run(async (sock, {
         message,
         raw,
-        from
+        reply,
+        typing
     }) => {
         const result = await downloadMedia(raw, message.quoted, ['image']);
-        if (!result) return sock.sendMessage(from, { text: msg('need.image') }, { quoted: raw });
+        if (!result) return reply(msg('need.image'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.removebg') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.removebg'));
 
         try {
             const output = await api.removebg(result.buffer, result.mimetype || 'image/jpeg');
-            await sock.sendMessage(from, {
+            await reply({
                 image: output,
                 mimetype: 'image/png',
                 caption: msg('done.bg_removed'),
-            }, { quoted: raw });
+            });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

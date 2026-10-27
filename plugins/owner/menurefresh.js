@@ -8,8 +8,8 @@ export default plugin('menurefresh', 'menutext')
     .desc('Force regenerate menu text via LLM and show status')
     .prefixOnly()
     .ownerOnly()
-    .run(async (sock, { raw, from }) => {
-        await sock.sendMessage(from, { text: '⏳ Generating menu text via LLM...' }, { quoted: raw });
+    .run(async (sock, { reply }) => {
+        await reply('⏳ Generating menu text via LLM...');
         const r = await refreshMenuText({ force: true });
         const st = menuTextStatus();
         const lines = [
@@ -18,5 +18,5 @@ export default plugin('menurefresh', 'menutext')
             r.error ? `Last error: ${r.error}` : '',
             st.sample ? `Sample morning greeting: ${st.sample}` : '',
         ].filter(Boolean);
-        return sock.sendMessage(from, { text: lines.join('\n') }, { quoted: raw });
+        return reply(lines.join('\n'));
     });

@@ -14,21 +14,17 @@ export default plugin('inv', 'inventory', 'bag', 'tas')
     .desc('View inventory and equipment')
     .prefixOnly()
     .signal('User wants to see inventory or bag', ['.inv', '.inventory', '.bag'])
-    .run(async (sock, { raw, from, primaryId, gdb }) => {
+    .run(async (sock, { primaryId, gdb, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
@@ -51,5 +47,5 @@ export default plugin('inv', 'inventory', 'bag', 'tas')
                 : `*.equip <id>*  ·  *.unequip <slot>*`,
         ].join('\n');
 
-        await sock.sendMessage(from, { text }, { quoted: raw });
+        await reply(text);
     });

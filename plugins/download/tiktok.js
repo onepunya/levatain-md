@@ -1,5 +1,5 @@
 import { api } from '../../src/api/index.js';
-import { typing, getArgs, sendAnyMedia } from '../../src/util/index.js';
+import { getArgs, sendAnyMedia } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -15,15 +15,15 @@ export default plugin('tiktok', 'tt')
     .run(async (sock, {
         body,
         raw,
-        from
+        from,
+        reply,
+        typing
     }) => {
         const url = getArgs(body);
-        if (!url) return sock.sendMessage(from, {
-            text: msg('need.url.tiktok')
-        }, { quoted: raw });
+        if (!url) return reply(msg('need.url.tiktok'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.download_tiktok') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.download_tiktok'));
 
         try {
             const data = await api.tiktok(url);
@@ -32,6 +32,6 @@ export default plugin('tiktok', 'tt')
                 quoted: raw,
             });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

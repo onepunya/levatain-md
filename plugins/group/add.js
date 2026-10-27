@@ -1,5 +1,5 @@
 import { getArgs } from '../../src/util/index.js';
-import { msg } from '../../src/wa/index.js';
+import { msg, addMember, inviteCode } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('add')
@@ -13,28 +13,19 @@ export default plugin('add')
         examples: ['add 6281234567890'],
         args: { text: 'Target WhatsApp number' },
     })
-    .run(async (sock, {
-        body,
-        raw,
-        from,
-        isBotAdmin
-    }) => {
-        if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
-
+    .botAdmin()
+    .run(async (sock, { body, from, reply }) => {
         const num = getArgs(body).replace(/\D/g, '');
-        if (!num) return sock.sendMessage(from, { text: msg('need.number') }, { quoted: raw });
+        if (!num) return reply(msg('need.number'));
 
         const target = `${num}@s.whatsapp.net`;
         try {
-            const [res] = await sock.groupParticipantsUpdate(from, [target], 'add');
+            const res = await addMember(sock, from, target);
             if (res?.status === '403') {
-                const code = await sock.groupInviteCode(from);
-                return sock.sendMessage(from, {
-                    text: msg('group.add_privacy', { code }),
-                }, { quoted: raw });
+                return reply(msg('group.add_privacy', { code: await inviteCode(sock, from) }));
             }
-            await sock.sendMessage(from, { text: `✅ Invited @${num}`, mentions: [target] }, { quoted: raw });
+            await reply(`✅ Invited @${num}`, { mentions: [target] });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.add', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.add', { msg: e.message }));
         }
     });

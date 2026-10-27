@@ -18,14 +18,12 @@ export default plugin('leaderboard', 'lb', 'rank', 'ranking', 'top')
         '.lb aether',
         '.rank power',
     ])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
@@ -47,5 +45,5 @@ export default plugin('leaderboard', 'lb', 'rank', 'ranking', 'top')
             text += `#${myRank.level} Level · #${myRank.aether} Aether · #${myRank.power} Power`;
         }
 
-        await sock.sendMessage(from, { text }, { quoted: raw });
+        await reply(text);
     });

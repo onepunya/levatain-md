@@ -17,19 +17,16 @@ export default plugin('pilihnama', 'spinnama')
     })
     .run(async (sock, {
         body,
-        raw,
         from,
         mentionedJid,
-        gdb
+        gdb,
+        reply
     }) => {
         const rawText = body.split(' ').slice(1).join(' ').trim();
 
         if (!rawText) {
-            return sock.sendMessage(from, {
-                text:
-                    `❌ Provide names separated by commas, or tag people.\n\n` +
-                    `Example:\n*.pilihnama Andi, Budi, Citra*\n*.pilihnama @orang1, @orang2, @orang3*`,
-            }, { quoted: raw });
+            return reply(`❌ Provide names separated by commas, or tag people.\n\n` +
+                    `Example:\n*.pilihnama Andi, Budi, Citra*\n*.pilihnama @orang1, @orang2, @orang3*`);
         }
 
         const nameOf = (jid) => {
@@ -61,23 +58,21 @@ export default plugin('pilihnama', 'spinnama')
         }
 
         if (entries.length < 2) {
-            return sock.sendMessage(from, {
-                text: msg('need.names_min2'),
-            }, { quoted: raw });
+            return reply(msg('need.names_min2'));
         }
 
         const mentionsAll = entries.filter(e => e.jid).map(e => e.jid);
 
-        await sock.sendMessage(from, {
+        await reply({
             text: `🎯 Randomizing from ${entries.length} names...\n_${entries.map(e => e.label).join(' • ')}_`,
             mentions: mentionsAll,
-        }, { quoted: raw });
+        });
 
         await sleep(1200);
 
         const winner = pick(entries);
-        return sock.sendMessage(from, {
+        return reply({
             text: `🎉 Picked: *${winner.label}*!`,
             mentions: winner.jid ? [winner.jid] : [],
-        }, { quoted: raw });
+        });
     });

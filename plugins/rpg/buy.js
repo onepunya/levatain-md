@@ -13,21 +13,17 @@ export default plugin('buy', 'beli')
     .prefixOnly()
     .cooldown(2)
     .signal('User wants to buy item from shop', ['.buy wooden_sword', '.beli iron_sword 2'])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
@@ -36,9 +32,7 @@ export default plugin('buy', 'beli')
         const qty = parseInt(parts[1], 10) || 1;
 
         if (!itemId) {
-            return sock.sendMessage(from, {
-                text: t('buy_need', lang),
-            }, { quoted: raw });
+            return reply(t('buy_need', lang));
         }
 
         const result = buyItem(char, itemId, qty);
@@ -50,15 +44,11 @@ export default plugin('buy', 'beli')
                 NO_MONEY: t('no_money', lang, formatAether(result.need), formatAether(result.have)),
                 FULL: t('inv_full', lang),
             };
-            return sock.sendMessage(from, {
-                text: map[result.reason] || `❌ ${result.reason}`,
-            }, { quoted: raw });
+            return reply(map[result.reason] || `❌ ${result.reason}`);
         }
 
         await persist();
 
         const name = result.item.name[lang] || result.item.name.en;
-        await sock.sendMessage(from, {
-            text: t('buy_ok', lang, name, result.qty, formatAether(result.price), formatAether(result.balance)),
-        }, { quoted: raw });
+        await reply(t('buy_ok', lang, name, result.qty, formatAether(result.price), formatAether(result.balance)));
     });

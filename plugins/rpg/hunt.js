@@ -31,36 +31,28 @@ export default plugin('hunt', 'berburu', 'battle', 'fight')
         '.berburu',
         '.battle wolf',
     ])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { raw, from, primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
 
         if (isHunting(primaryId)) {
-            return sock.sendMessage(from, {
-                text: t('hunt_busy', lang),
-            }, { quoted: raw });
+            return reply(t('hunt_busy', lang));
         }
 
         const cd = canHunt(char);
         if (!cd.ok) {
-            return sock.sendMessage(from, {
-                text: t('hunt_cooldown', lang, formatWaitShort(cd.waitMs)),
-            }, { quoted: raw });
+            return reply(t('hunt_cooldown', lang, formatWaitShort(cd.waitMs)));
         }
 
         const parts = (body || '').trim().split(/\s+/).slice(1);
@@ -71,16 +63,14 @@ export default plugin('hunt', 'berburu', 'battle', 'fight')
                 const m = MONSTERS[id];
                 return `  ${m.emoji} *${id}* (Lv ${m.minLevel}–${m.maxLevel})`;
             }).join('\n');
-            return sock.sendMessage(from, {
-                text: [
+            return reply([
                     lang === 'en' ? '*Available monsters:*' : '*Monster tersedia:*',
                     list,
                     '',
                     lang === 'en'
                         ? 'Usage: *.hunt* or *.hunt <monster>*'
                         : 'Cara: *.hunt* atau *.hunt <monster>*',
-                ].join('\n'),
-            }, { quoted: raw });
+                ].join('\n'));
         }
 
         setHunting(primaryId, true);
@@ -154,10 +144,10 @@ export default plugin('hunt', 'berburu', 'battle', 'fight')
                         oldLevel: result.levelResult.oldLevel,
                         newLevel: result.levelResult.newLevel,
                     });
-                    await sock.sendMessage(from, {
+                    await reply({
                         image: img,
                         caption: t('level_up_caption', lang, result.levelResult.oldLevel, result.levelResult.newLevel),
-                    }, { quoted: raw });
+                    });
                 } catch {
                 }
             }
@@ -165,9 +155,7 @@ export default plugin('hunt', 'berburu', 'battle', 'fight')
             try {
                 await bar.fail(`❌ ${e.message || 'Hunt failed'}`);
             } catch {
-                await sock.sendMessage(from, {
-                    text: `❌ ${e.message || 'Hunt failed'}`,
-                }, { quoted: raw });
+                await reply(`❌ ${e.message || 'Hunt failed'}`);
             }
         } finally {
             setHunting(primaryId, false);

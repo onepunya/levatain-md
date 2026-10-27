@@ -1,4 +1,4 @@
-import { typing, downloadMedia, runFfmpegTempFile } from '../../src/util/index.js';
+import { downloadMedia, runFfmpegTempFile } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -10,12 +10,13 @@ export default plugin('tomp3', 'toaudio')
     .run(async (sock, {
         message,
         raw,
-        from
+        reply,
+        typing
     }) => {
         const result = await downloadMedia(raw, message.quoted, ['audio', 'video']);
-        if (!result) return sock.sendMessage(from, { text: msg('need.audio_video') }, { quoted: raw });
+        if (!result) return reply(msg('need.audio_video'));
 
-        await typing(sock, from);
+        await typing();
         try {
             const out = await runFfmpegTempFile(result.buffer, {
                 inExt: result.type === 'video' ? 'mp4' : 'bin',
@@ -28,12 +29,12 @@ export default plugin('tomp3', 'toaudio')
                     .format('mp3'),
             });
 
-            await sock.sendMessage(from, {
+            await reply({
                 audio: out,
                 mimetype: 'audio/mpeg',
                 fileName: 'audio.mp3',
-            }, { quoted: raw });
+            });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.audio', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.audio', { msg: e.message }));
         }
     });

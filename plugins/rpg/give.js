@@ -14,49 +14,37 @@ export default plugin('give', 'kasih', 'beri')
     .prefixOnly()
     .cooldown(3)
     .signal('User wants to give item to another player', ['.give @user wooden_sword', '.kasih iron_sword'])
-    .run(async (sock, { raw, from, primaryId, gdb, body, message, mentionedJid }) => {
+    .run(async (sock, { primaryId, gdb, body, message, mentionedJid, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
         const targetId = resolveTargetId({ message, mentionedJid, primaryId, body });
         if (!targetId) {
-            return sock.sendMessage(from, {
-                text: t('give_need', lang),
-            }, { quoted: raw });
+            return reply(t('give_need', lang));
         }
 
         const found = findUserInDb(gdb, targetId);
         if (!found) {
-            return sock.sendMessage(from, {
-                text: t('no_target', lang),
-            }, { quoted: raw });
+            return reply(t('no_target', lang));
         }
 
         if (found.id === primaryId) {
-            return sock.sendMessage(from, {
-                text: t('self_trade', lang),
-            }, { quoted: raw });
+            return reply(t('self_trade', lang));
         }
 
         const targetChar = getCharacter(found.user);
         if (!targetChar) {
-            return sock.sendMessage(from, {
-                text: t('target_no_rpg', lang),
-            }, { quoted: raw });
+            return reply(t('target_no_rpg', lang));
         }
 
         const parts = (body || '').trim().split(/\s+/).slice(1);
@@ -75,9 +63,7 @@ export default plugin('give', 'kasih', 'beri')
         }
 
         if (!itemId) {
-            return sock.sendMessage(from, {
-                text: t('give_need', lang),
-            }, { quoted: raw });
+            return reply(t('give_need', lang));
         }
 
         const result = transferItem(char, targetChar, itemId, qty);
@@ -87,16 +73,12 @@ export default plugin('give', 'kasih', 'beri')
                 INVALID: t('item_not_found', lang),
                 TARGET_FULL: t('target_full', lang),
             };
-            return sock.sendMessage(from, {
-                text: map[result.reason] || `❌ ${result.reason}`,
-            }, { quoted: raw });
+            return reply(map[result.reason] || `❌ ${result.reason}`);
         }
 
         await persist();
 
         const name = result.item.name[lang] || result.item.name.en;
         const targetName = displayName(gdb, found.id, 'Player');
-        await sock.sendMessage(from, {
-            text: t('give_ok', lang, name, result.qty, targetName),
-        }, { quoted: raw });
+        await reply(t('give_ok', lang, name, result.qty, targetName));
     });

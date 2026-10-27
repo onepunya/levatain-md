@@ -12,12 +12,12 @@ export default plugin('testhtml', 'sendhtml')
             'reply to a message with html then .testhtml',
         ])
     .run(async (sock, {
-        raw,
         from,
         body,
         message,
         db,
-        primaryId
+        primaryId,
+        reply
     }) => {
         const _i18n = { db, primaryId };
         let html = body.replace(/^\S+\s*/, '');
@@ -27,22 +27,18 @@ export default plugin('testhtml', 'sendhtml')
         }
 
         if (!html.trim()) {
-            return sock.sendMessage(from, {
-                text: msg('need.html')
-                    + 'Example: `.testhtml <h1>Hello</h1>`',
-            }, { quoted: raw });
+            return reply(msg('need.html')
+                    + 'Example: `.testhtml <h1>Hello</h1>`');
         }
 
         const bytes = Buffer.byteLength(html, 'utf-8');
         if (bytes > WEBUI_MAX_PAYLOAD_BYTES) {
-            return sock.sendMessage(from, {
-                text: `🛑 HTML too large (${(bytes / 1024).toFixed(1)}KB), safe limit ${(WEBUI_MAX_PAYLOAD_BYTES / 1024).toFixed(0)}KB.`,
-            }, { quoted: raw });
+            return reply(`🛑 HTML too large (${(bytes / 1024).toFixed(1)}KB), safe limit ${(WEBUI_MAX_PAYLOAD_BYTES / 1024).toFixed(0)}KB.`);
         }
 
         try {
             await sendInlineWebUI(sock, from, html, 'Test HTML');
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.send', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.send', { msg: e.message }));
         }
     });

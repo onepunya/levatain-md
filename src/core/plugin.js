@@ -1,3 +1,5 @@
+import { msg } from '../wa/messages.js';
+
 export function plugin(...cmds) {
     const state = {
         cmd: cmds.map(c => String(c).toLowerCase().trim()).filter(Boolean),
@@ -7,6 +9,7 @@ export function plugin(...cmds) {
         isOwner: false,
         isAdmin: false,
         isGroup: false,
+        botAdmin: false,
         cooldown: undefined,
         ai: undefined,
     };
@@ -44,6 +47,10 @@ export function plugin(...cmds) {
             state.isGroup = true;
             return api;
         },
+        botAdmin() {
+            state.botAdmin = true;
+            return api;
+        },
         cooldown(sec) {
             const n = Number(sec);
             state.cooldown = Number.isFinite(n) ? n : undefined;
@@ -71,12 +78,15 @@ export function plugin(...cmds) {
             if (!state.cmd.length) {
                 throw new TypeError('plugin() minimal 1 command');
             }
+            const guarded = state.botAdmin
+                ? (sock, ctx) => (ctx.isBotAdmin ? fn(sock, ctx) : ctx.reply(msg('sys.bot_admin')))
+                : fn;
             const iface = {
                 cmd: state.cmd.length === 1 ? state.cmd[0] : state.cmd,
                 tag: state.tag,
                 desc: state.desc,
                 aliasOnly: state.aliasOnly,
-                run: fn,
+                run: guarded,
             };
             if (state.isOwner) iface.isOwner = true;
             if (state.isAdmin) iface.isAdmin = true;

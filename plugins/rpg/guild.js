@@ -24,21 +24,17 @@ export default plugin('guild', 'serikat')
         '.guild join Dragon',
         '.guild leave',
     ])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
@@ -48,22 +44,16 @@ export default plugin('guild', 'serikat')
 
         if (!action || action === 'info') {
             const guild = getGuild(gdb, char);
-            return sock.sendMessage(from, {
-                text: buildGuildText(gdb, guild, lang),
-            }, { quoted: raw });
+            return reply(buildGuildText(gdb, guild, lang));
         }
 
         if (action === 'list' || action === 'daftar') {
-            return sock.sendMessage(from, {
-                text: buildGuildListText(gdb, lang),
-            }, { quoted: raw });
+            return reply(buildGuildListText(gdb, lang));
         }
 
         if (action === 'create' || action === 'buat') {
             if (!nameArg) {
-                return sock.sendMessage(from, {
-                    text: t('guild_need_name', lang),
-                }, { quoted: raw });
+                return reply(t('guild_need_name', lang));
             }
 
             const result = createGuild(gdb, primaryId, char, nameArg);
@@ -74,22 +64,16 @@ export default plugin('guild', 'serikat')
                     NAME_TAKEN: t('guild_taken', lang),
                     NO_MONEY: t('no_money', lang, formatAether(result.need || GUILD_CREATE_COST), formatAether(char.aether)),
                 };
-                return sock.sendMessage(from, {
-                    text: map[result.reason] || `❌ ${result.reason}`,
-                }, { quoted: raw });
+                return reply(map[result.reason] || `❌ ${result.reason}`);
             }
 
             await persist();
-            return sock.sendMessage(from, {
-                text: t('guild_created', lang, result.guild.name, formatAether(GUILD_CREATE_COST)),
-            }, { quoted: raw });
+            return reply(t('guild_created', lang, result.guild.name, formatAether(GUILD_CREATE_COST)));
         }
 
         if (action === 'join' || action === 'gabung') {
             if (!nameArg) {
-                return sock.sendMessage(from, {
-                    text: t('guild_need_name', lang),
-                }, { quoted: raw });
+                return reply(t('guild_need_name', lang));
             }
 
             const result = joinGuild(gdb, primaryId, char, nameArg);
@@ -99,31 +83,21 @@ export default plugin('guild', 'serikat')
                     NOT_FOUND: t('guild_not_found', lang),
                     FULL: t('guild_full', lang),
                 };
-                return sock.sendMessage(from, {
-                    text: map[result.reason] || `❌ ${result.reason}`,
-                }, { quoted: raw });
+                return reply(map[result.reason] || `❌ ${result.reason}`);
             }
 
             await persist();
-            return sock.sendMessage(from, {
-                text: t('guild_joined', lang, result.guild.name),
-            }, { quoted: raw });
+            return reply(t('guild_joined', lang, result.guild.name));
         }
 
         if (action === 'leave' || action === 'keluar') {
             const result = leaveGuild(gdb, primaryId, char);
             if (!result.ok) {
-                return sock.sendMessage(from, {
-                    text: t('guild_no', lang),
-                }, { quoted: raw });
+                return reply(t('guild_no', lang));
             }
             await persist();
-            return sock.sendMessage(from, {
-                text: t('guild_left', lang),
-            }, { quoted: raw });
+            return reply(t('guild_left', lang));
         }
 
-        return sock.sendMessage(from, {
-            text: t('guild_need_name', lang),
-        }, { quoted: raw });
+        return reply(t('guild_need_name', lang));
     });

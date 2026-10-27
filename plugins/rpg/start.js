@@ -21,21 +21,17 @@ export default plugin('start', 'create', 'buatkarakter')
         '.start mage en',
         '.create archer id',
     ])
-    .run(async (sock, { raw, from, primaryId, gdb, pushname, body }) => {
+    .run(async (sock, { primaryId, gdb, pushname, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         if (hasCharacter(user)) {
             const lang = user.rpg?.lang || 'id';
-            return sock.sendMessage(from, {
-                text: t('already_started', lang),
-            }, { quoted: raw });
+            return reply(t('already_started', lang));
         }
 
         const parts = (body || '').trim().split(/\s+/).slice(1);
@@ -48,8 +44,7 @@ export default plugin('start', 'create', 'buatkarakter')
                 return `  ${c.emoji} *.start ${id} id*  /  *.start ${id} en*`;
             }).join('\n');
 
-            return sock.sendMessage(from, {
-                text: [
+            return reply([
                     `⚔️ *Create Character / Buat Karakter*`,
                     ``,
                     `Format: *.start <class> <lang>*`,
@@ -62,15 +57,12 @@ export default plugin('start', 'create', 'buatkarakter')
                     `Example:`,
                     `*.start swordman id*`,
                     `*.start mage en*`,
-                ].join('\n'),
-            }, { quoted: raw });
+                ].join('\n'));
         }
 
         const lang = pickLang(langRaw);
         if (!lang) {
-            return sock.sendMessage(from, {
-                text: t('invalid_lang', 'id') + '\n' + t('invalid_lang', 'en'),
-            }, { quoted: raw });
+            return reply(t('invalid_lang', 'id') + '\n' + t('invalid_lang', 'en'));
         }
 
         const name = safeCharName({}, { username: user.username, name: user.name || pushname }, 'Adventurer');
@@ -81,5 +73,5 @@ export default plugin('start', 'create', 'buatkarakter')
         const className = cls.name[lang];
         const msg = t('start_success', lang, char.name, className, formatAether(char.aether));
 
-        await sock.sendMessage(from, { text: msg }, { quoted: raw });
+        await reply(msg);
     });

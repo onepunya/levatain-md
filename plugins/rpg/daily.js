@@ -14,35 +14,27 @@ export default plugin('daily', 'klaim', 'hadiah')
     .prefixOnly()
     .cooldown(3)
     .signal('User wants to claim daily reward or daily Aether', ['.daily', '.klaim'])
-    .run(async (sock, { raw, from, primaryId, gdb }) => {
+    .run(async (sock, { primaryId, gdb, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
         const result = claimDaily(char);
 
         if (!result.ok) {
-            return sock.sendMessage(from, {
-                text: t('daily_already', lang, formatWait(result.waitMs)),
-            }, { quoted: raw });
+            return reply(t('daily_already', lang, formatWait(result.waitMs)));
         }
 
         await persist();
 
-        await sock.sendMessage(from, {
-            text: t('daily_claimed', lang, formatAether(result.amount), formatAether(result.total)),
-        }, { quoted: raw });
+        await reply(t('daily_claimed', lang, formatAether(result.amount), formatAether(result.total)));
     });

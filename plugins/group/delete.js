@@ -7,17 +7,17 @@ export default plugin('delete', 'del')
     .adminOnly()
     .groupOnly()
     .signal('User asks to delete a specific message in a group, usually by replying to it', ['del', 'delete', 'hapus pesan ini'])
+    .botAdmin()
     .run(async (sock, {
         message,
-        raw,
         from,
-        isBotAdmin
+        reply,
+        send
     }) => {
-        if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
-        if (!message.quoted) return sock.sendMessage(from, { text: msg('need.reply_delete') }, { quoted: raw });
+        if (!message.quoted) return reply(msg('need.reply_delete'));
 
         try {
-            await sock.sendMessage(from, {
+            await send({
                 delete: {
                     remoteJid: from,
                     fromMe: Boolean(message.quoted.fromMe),
@@ -26,6 +26,6 @@ export default plugin('delete', 'del')
                 },
             });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.delete', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.delete', { msg: e.message }));
         }
     });

@@ -10,22 +10,21 @@ export default plugin('setsticker', 'stikercmd')
     .signal('register a sticker as a bot command', ['.setsticker nightcore (reply sticker)', '.setsticker remove (reply sticker)'])
     .run(async (sock, {
         message,
-        raw,
-        from,
         gdb,
         saveDb,
-        body
+        body,
+        reply
     }) => {
         const quoted = message.quoted;
         const stickerMsg = quoted?.raw?.message?.stickerMessage;
 
         if (!stickerMsg) {
-            return sock.sendMessage(from, { text: msg('need.sticker_reply') }, { quoted: raw });
+            return reply(msg('need.sticker_reply'));
         }
 
         const arg = body.trim().split(/\s+/).slice(1).join(' ').toLowerCase();
         if (!arg) {
-            return sock.sendMessage(from, { text: msg('need.command') }, { quoted: raw });
+            return reply(msg('need.command'));
         }
 
         const hash = Buffer.from(stickerMsg.fileSha256 || []).toString('hex');
@@ -34,14 +33,14 @@ export default plugin('setsticker', 'stikercmd')
         if (['hapus', 'del', 'remove'].includes(arg)) {
             delete gdb.settings.stickerCmds[hash];
             await saveDb();
-            return sock.sendMessage(from, { text: msg('done.sticker_unset') }, { quoted: raw });
+            return reply(msg('done.sticker_unset'));
         }
 
         if (!plugins.has(arg)) {
-            return sock.sendMessage(from, { text: msg('fail.cmd_missing', { arg }) }, { quoted: raw });
+            return reply(msg('fail.cmd_missing', { arg }));
         }
 
         gdb.settings.stickerCmds[hash] = arg;
         await saveDb();
-        return sock.sendMessage(from, { text: msg('done.sticker_set', { cmd: arg }) }, { quoted: raw });
+        return reply(msg('done.sticker_set', { cmd: arg }));
     });

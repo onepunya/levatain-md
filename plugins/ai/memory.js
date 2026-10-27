@@ -7,18 +7,15 @@ export default plugin('memory', 'aiclear')
     .showAllAliases()
     .run(async (sock, {
         body,
-        raw,
-        from,
         primaryId,
-        pushname
+        pushname,
+        reply
     }) => {
         const args = body.split(' ').slice(1).join(' ').trim().toLowerCase();
 
         if (['clear', 'reset', 'hapus', 'delete'].includes(args) || body.toLowerCase().startsWith('aiclear')) {
             await clearHistory(primaryId);
-            return sock.sendMessage(from, {
-                text: '🗑️ *Memory reset!*\n\nAll chat history deleted. Starting fresh!'
-            }, { quoted: raw });
+            return reply('🗑️ *Memory reset!*\n\nAll chat history deleted. Starting fresh!');
         }
 
         const history = await getHistory(primaryId);
@@ -39,5 +36,5 @@ export default plugin('memory', 'aiclear')
         }
         text += `\n_Type *.memory clear* to wipe everything._`;
 
-        await sock.sendMessage(from, { text }, { quoted: raw });
+        await reply(text);
     });

@@ -13,21 +13,17 @@ export default plugin('sell', 'jual')
     .prefixOnly()
     .cooldown(2)
     .signal('User wants to sell item', ['.sell wooden_sword', '.jual copper_ring 2'])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
@@ -36,9 +32,7 @@ export default plugin('sell', 'jual')
         const qty = parseInt(parts[1], 10) || 1;
 
         if (!itemId) {
-            return sock.sendMessage(from, {
-                text: t('sell_need', lang),
-            }, { quoted: raw });
+            return reply(t('sell_need', lang));
         }
 
         const result = sellItem(char, itemId, qty);
@@ -48,15 +42,11 @@ export default plugin('sell', 'jual')
                 INVALID: t('item_not_found', lang),
                 NOT_FOUND: t('item_not_found', lang),
             };
-            return sock.sendMessage(from, {
-                text: map[result.reason] || `❌ ${result.reason}`,
-            }, { quoted: raw });
+            return reply(map[result.reason] || `❌ ${result.reason}`);
         }
 
         await persist();
 
         const name = result.item.name[lang] || result.item.name.en;
-        await sock.sendMessage(from, {
-            text: t('sell_ok', lang, name, result.qty, formatAether(result.gain), formatAether(result.balance)),
-        }, { quoted: raw });
+        await reply(t('sell_ok', lang, name, result.qty, formatAether(result.gain), formatAether(result.balance)));
     });

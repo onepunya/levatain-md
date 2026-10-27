@@ -1,5 +1,6 @@
 import { pick } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
+import { resolveTarget } from '../../src/core/identity.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('tembak', 'lamar', 'terima', 'tolak')
@@ -10,7 +11,6 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
     .cooldown(10)
     .signal('User wants to confess feelings or propose to someone in a group', ['tembak @user', 'lamar @user aku suka kamu', 'terima', 'tolak'])
     .run(async (sock, {
-        raw,
         from,
         command,
         message,
@@ -18,7 +18,9 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
         primaryId,
         pushname,
         botNumber,
-        gdb
+        gdb,
+        reply,
+        send
     }) => {
         const nameOf = (jid, fallbackName) => gdb?.users?.[jid]?.name || fallbackName || `+${jid.split('@')[0]}`;
 
@@ -26,7 +28,7 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
             const key = `${from}:${primaryId}`;
             const entry = pending.get(key);
             if (!entry) {
-                return sock.sendMessage(from, { text: '❓ Nobody is proposing to you here.' }, { quoted: raw });
+                return reply('❓ Nobody is proposing to you here.');
             }
 
             clearTimeout(entry.timer);
@@ -37,26 +39,26 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
             const targetName = nameOf(primaryId, pushname);
             const fromName = nameOf(entry.fromId);
 
-            return sock.sendMessage(from, {
-                text: `${accepted ? '💌' : '💔'} *${targetName}* ${accepted ? 'accepted' : 'rejected'} proposal from *${fromName}*!\n\n_${quote}_`,
-                mentions: [primaryId, entry.fromId],
-            }, { quoted: raw });
+            return reply(
+                `${accepted ? '💌' : '💔'} *${targetName}* ${accepted ? 'accepted' : 'rejected'} proposal from *${fromName}*!\n\n_${quote}_`,
+                { mentions: [primaryId, entry.fromId] }
+            );
         }
 
-        const target = resolveTarget(message, mentionedJid);
+        const target = resolveTarget({ message, mentionedJid })?.id;
         if (!target) {
-            return sock.sendMessage(from, { text: msg('need.tag') }, { quoted: raw });
+            return reply(msg('need.tag'));
         }
         if (target.split('@')[0] === primaryId.split('@')[0]) {
-            return sock.sendMessage(from, { text: msg('tembak.self') }, { quoted: raw });
+            return reply(msg('tembak.self'));
         }
         if (botNumber && target.split('@')[0] === botNumber.split('@')[0]) {
-            return sock.sendMessage(from, { text: msg('tembak.bot') }, { quoted: raw });
+            return reply(msg('tembak.bot'));
         }
 
         const key = `${from}:${target}`;
         if (pending.has(key)) {
-            return sock.sendMessage(from, { text: msg('tembak.busy') }, { quoted: raw });
+            return reply(msg('tembak.busy'));
         }
 
         const targetName = nameOf(target);
@@ -66,24 +68,20 @@ export default plugin('tembak', 'lamar', 'terima', 'tolak')
             if (!pending.has(key)) return;
             pending.delete(key);
             try {
-                await sock.sendMessage(from, {
-                    text: msg('tembak.timeout', { target: targetName, from: fromName }),
-                    mentions: [target, primaryId],
-                });
+                await send(msg('tembak.timeout', { target: targetName, from: fromName }), { mentions: [target, primaryId] });
             } catch {}
         }, TIMEOUT_MS);
 
         pending.set(key, { fromId: primaryId, timer });
 
-        await sock.sendMessage(from, {
-            text:
-                `💘 *${fromName}* wants to confess to *${targetName}*!\n\n` +
-                `_${pick(PEMBUKA)}_\n\n` +
-                `*${targetName}*, reply within 5 minutes:\n` +
-                `• *.terima* — if you feel the same\n` +
-                `• *.tolak* — if you don't`,
-            mentions: [target, primaryId],
-        }, { quoted: raw });
+        await reply(
+            `💘 *${fromName}* wants to confess to *${targetName}*!\n\n` +
+            `_${pick(PEMBUKA)}_\n\n` +
+            `*${targetName}*, reply within 5 minutes:\n` +
+            `• *.terima* — if you feel the same\n` +
+            `• *.tolak* — if you don't`,
+            { mentions: [target, primaryId] }
+        );
     });
 
 const pending = new Map();
@@ -108,11 +106,3 @@ const DITOLAK = [
     'Sometimes all it takes is one brave moment and one yes.',
 ];
 
-function resolveTarget(message, mentionedJid) {
-    if (message?.quoted) {
-        const s = message.quoted.sender.replace(/@.*/, '').split(':')[0];
-        return message.quoted.sender.includes('@lid') ? `${s}@lid` : `${s}@s.whatsapp.net`;
-    }
-    if (mentionedJid?.[0]) return mentionedJid[0].split(':')[0] + '@s.whatsapp.net';
-    return null;
-}

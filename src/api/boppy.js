@@ -33,11 +33,6 @@ function makeTitle(lyrics, caption) {
     return fromCaption || 'AI Song';
 }
 
-/**
- * Generate a song via Crun.ai Suno API (custom mode with lyrics + style tags).
- * Signature kept compatible with the old boppy generateSong:
- *   generateSong({ caption, lyrics }, onProgress?) → { url, urls, tracks, taskId }
- */
 export async function generateSong(
     {
         caption = '',

@@ -1,6 +1,6 @@
 import { api, MAX_FILE_SIZE, cleanupTempFile, extractSongUrl } from '../../src/api/index.js';
 import { extractAudioClip } from '../../src/media/audioEffects.js';
-import { typing, getArgs, downloadMedia } from '../../src/util/index.js';
+import { getArgs, downloadMedia } from '../../src/util/index.js';
 import { ProgressMessage, msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -24,7 +24,9 @@ export default plugin('play')
         body,
         raw,
         from,
-        message
+        message,
+        reply,
+        typing
     }) => {
         const bar = new ProgressMessage(sock, from, raw);
         let filePath = null;
@@ -33,7 +35,7 @@ export default plugin('play')
 
         try {
             if (songUrl) {
-                await typing(sock, from);
+                await typing();
                 await bar.start(msg('wait.songfinder'));
 
                 const found = await api.songFromUrl(songUrl);
@@ -47,12 +49,10 @@ export default plugin('play')
             } else if (!searchQuery) {
                 const media = await downloadMedia(raw, message.quoted, ['audio', 'video']);
                 if (!media) {
-                    return sock.sendMessage(from, {
-                        text: msg('need.play')
-                    }, { quoted: raw });
+                    return reply(msg('need.play'));
                 }
 
-                await typing(sock, from);
+                await typing();
                 await bar.start(msg('wait.listening'));
 
                 let clip;
@@ -80,7 +80,7 @@ export default plugin('play')
                 const via = recognized.source === 'kode S' ? 'kode S' : recognized.source === 'kode A' ? 'kode A' : '';
                 await bar.stage(`🎶 Found${via ? ` (${via})` : ''}: ${recognized.artist} - ${recognized.title}`, true);
             } else {
-                await typing(sock, from);
+                await typing();
                 await bar.start('🔍 Searching for song...');
             }
 
@@ -95,12 +95,12 @@ export default plugin('play')
 
             await bar.done(msg('wait.yt_send', { title: data.title }));
 
-            await sock.sendMessage(from, {
+            await reply({
                 audio: { url: filePath },
                 mimetype: 'audio/mpeg',
                 fileName: `${data.title}.mp3`,
                 ptt: false,
-            }, { quoted: raw });
+            });
 
         } catch (e) {
             await bar.fail(msg('fail.generic', { msg: e.message }));

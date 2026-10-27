@@ -1,4 +1,4 @@
-import { typing, downloadMedia } from '../../src/util/index.js';
+import { downloadMedia } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -10,15 +10,16 @@ export default plugin('toimg')
     .run(async (sock, {
         message,
         raw,
-        from
+        reply,
+        typing
     }) => {
         const result = await downloadMedia(raw, message.quoted, ['sticker']);
-        if (!result) return sock.sendMessage(from, { text: msg('need.sticker') }, { quoted: raw });
+        if (!result) return reply(msg('need.sticker'));
 
-        await typing(sock, from);
+        await typing();
         try {
-            await sock.sendMessage(from, { image: result.buffer, caption: msg('done.sticker_img') }, { quoted: raw });
+            await reply({ image: result.buffer, caption: msg('done.sticker_img') });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

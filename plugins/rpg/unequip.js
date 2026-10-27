@@ -14,21 +14,17 @@ export default plugin('unequip', 'lepas', 'unwear')
     .prefixOnly()
     .cooldown(2)
     .signal('User wants to unequip an item', ['.unequip weapon', '.lepas armor'])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
@@ -36,9 +32,7 @@ export default plugin('unequip', 'lepas', 'unwear')
         const slot = (parts[0] || '').toLowerCase();
 
         if (!slot || !SLOTS.includes(slot)) {
-            return sock.sendMessage(from, {
-                text: t('unequip_need_slot', lang),
-            }, { quoted: raw });
+            return reply(t('unequip_need_slot', lang));
         }
 
         const result = unequipSlot(char, slot);
@@ -49,16 +43,12 @@ export default plugin('unequip', 'lepas', 'unwear')
                 FULL: t('inv_full', lang),
                 BAD_SLOT: t('unequip_need_slot', lang),
             };
-            return sock.sendMessage(from, {
-                text: map[result.reason] || `❌ ${result.reason}`,
-            }, { quoted: raw });
+            return reply(map[result.reason] || `❌ ${result.reason}`);
         }
 
         await persist();
 
         const item = getItem(result.itemId);
         const name = item ? (item.name[lang] || item.name.en) : result.itemId;
-        await sock.sendMessage(from, {
-            text: t('unequip_ok', lang, name, result.slot),
-        }, { quoted: raw });
+        await reply(t('unequip_ok', lang, name, result.slot));
     });

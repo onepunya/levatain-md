@@ -1,4 +1,4 @@
-import { typing, getArgs } from '../../src/util/index.js';
+import { getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import axios from 'axios';
 import { plugin } from '../../src/core/plugin.js';
@@ -12,24 +12,18 @@ export default plugin('porn', 'bokep')
         examples: ['porn url video dewasa', 'download video porno ini'],
         args: { url: 'Adult video URL' },
     })
-    .run(async (sock, {
-        body,
-        raw,
-        from
-    }) => {
+    .run(async (sock, { body, reply, typing }) => {
         const url = getArgs(body);
-        if (!url) return sock.sendMessage(from, {
-            text: msg('need.url.porn')
-        }, { quoted: raw });
+        if (!url) return reply(msg('need.url.porn'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.video_info') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.video_info'));
 
         try {
             const data = await getVideoInfo(url);
 
             if (!data || !data.download_urls) {
-                return await sock.sendMessage(from, { text: msg('fail.link') }, { quoted: raw });
+                return await reply(msg('fail.link'));
             }
 
             let listLinks = '📋 *Video Download Links:*\n\n';
@@ -37,10 +31,10 @@ export default plugin('porn', 'bokep')
                 listLinks += `*Quality:* ${item.name}\n*Link:* ${item.url}\n\n`;
             }
 
-            await sock.sendMessage(from, { text: listLinks }, { quoted: raw });
+            await reply(listLinks);
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });
 

@@ -1,4 +1,4 @@
-import { typing, getArgs, truncate } from '../../src/util/index.js';
+import { getArgs, truncate } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 import { checkPlugins, formatReport } from '../../src/tools/pluginCheck.js';
@@ -11,22 +11,18 @@ export default plugin('cekplugin', 'checkplugin')
     .prefixOnly()
     .ownerOnly()
     .cooldown(30)
-    .run(async (sock, {
-        body,
-        raw,
-        from
-    }) => {
+    .run(async (sock, { body, reply, typing }) => {
         const args = getArgs(body).toLowerCase().split(/\s+/).filter(Boolean);
         const only = args.find(arg => !MODES.includes(arg)) || null;
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.plugin_check') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.plugin_check'));
 
         try {
             const report = await checkPlugins({ only, probe: !args.includes('code') });
             const text = formatReport(report, { full: args.includes('full') });
-            await sock.sendMessage(from, { text: truncate(text, 3800) }, { quoted: raw });
+            await reply(truncate(text, 3800));
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

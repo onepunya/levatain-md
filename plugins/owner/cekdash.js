@@ -10,14 +10,11 @@ export default plugin('dashboard', 'cekdash', 'dashbot')
     .prefixOnly()
     .ownerOnly()
     .signal('User (owner) asks for dashboard link, check dashboard, or panel address', ['cekdash', 'link dashboard', 'dashbot'])
-    .run(async (sock, {
-        raw,
-        from
-    }) => {
+    .run(async (sock, { from, reply }) => {
         const port = config.dashboardPort;
         const portSrc = config.dashboardPortSource || 'default';
 
-        await sock.sendMessage(from, { text: msg('wait.dashboard') }, { quoted: raw });
+        await reply(msg('wait.dashboard'));
 
         const info = await lookupPublicIp();
         const local = getLocalIps();
@@ -55,5 +52,5 @@ export default plugin('dashboard', 'cekdash', 'dashbot')
             `🖥️ *Local:*\n${localLines}\n\n` +
             `_Tunnel link works without opening panel port._`;
 
-        await sock.sendMessage(from, { text }, { quoted: raw });
+        await reply(text);
     });

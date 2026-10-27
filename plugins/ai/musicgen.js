@@ -10,46 +10,36 @@ export default plugin('musicgen', 'songgen', 'buatlagu')
     .prefixOnly()
     .cooldown(5)
     .signal('User asks to generate a song or AI music from lyrics', ['musicgen', 'buatlagu'])
-    .run(async (sock, {
-        raw,
-        from,
-        primaryId
-    }) => {
+    .run(async (sock, { from, primaryId, reply, send }) => {
         startSession(primaryId, { from, step: 'lyrics', lyrics: '', prompt: '' }, {
             timeout: SESSION_TIMEOUT,
             onInput: handleInput,
-            onTimeout: session => sock.sendMessage(session.from, {
-                text: msg('fail.session_timeout') + ' Type `musicgen` again to restart.',
-            }),
+            onTimeout: () => send(msg('fail.session_timeout') + ' Type `musicgen` again to restart.'),
         });
 
-        await sock.sendMessage(from, {
-            text: msg('need.lyrics_now'),
-        }, { quoted: raw });
+        await reply(msg('need.lyrics_now'));
     });
 
 async function handleInput(sock, body, ctx, session) {
-    const { from, raw, primaryId } = ctx;
+    const { from, raw, primaryId, reply } = ctx;
     const text = body.trim();
 
     if (session.step === 'lyrics') {
-        if (!text) return sock.sendMessage(from, { text: msg('need.lyrics') }, { quoted: raw });
+        if (!text) return reply(msg('need.lyrics'));
         updateSession(primaryId, { step: 'prompt', lyrics: text });
-        return sock.sendMessage(from, {
-            text: '🎨 Now send the *music style/prompt*.\nExample: cheerful acoustic pop, chill lofi, energetic rock.',
-        }, { quoted: raw });
+        return reply('🎨 Now send the *music style/prompt*.\nExample: cheerful acoustic pop, chill lofi, energetic rock.');
     }
 
     if (session.step === 'prompt') {
-        if (!text) return sock.sendMessage(from, { text: msg('need.prompt') }, { quoted: raw });
+        if (!text) return reply(msg('need.prompt'));
         const lyrics = session.lyrics;
         endSession(primaryId);
-        await sock.sendMessage(from, { text: msg('wait.musicgen') }, { quoted: raw });
-        await generateMusic(sock, from, raw, lyrics, text);
+        await reply(msg('wait.musicgen'));
+        await generateMusic(sock, ctx, lyrics, text);
     }
 }
 
-async function generateMusic(sock, from, raw, lyrics, prompt) {
+async function generateMusic(sock, { from, raw, reply }, lyrics, prompt) {
     const bar = new ProgressMessage(sock, from, raw);
     await bar.start('🎼 Sending song generation request...');
 
@@ -67,12 +57,12 @@ async function generateMusic(sock, from, raw, lyrics, prompt) {
             const trackTitle = result.tracks?.[i]?.title || result.title || 'AI Song';
             const suffix = urls.length > 1 ? ` (${i + 1}/${urls.length})` : '';
 
-            await sock.sendMessage(from, {
+            await reply({
                 audio: audioBuffer,
                 mimetype: 'audio/mpeg',
                 fileName: `${trackTitle}${suffix}.mp3`.replace(/[^\w.\- ()]/g, '_').slice(0, 80),
                 ptt: false,
-            }, { quoted: raw });
+            });
         }
     } catch (e) {
         await bar.fail(msg('fail.generic', { msg: e.message }));

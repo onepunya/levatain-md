@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { fetchBufferLimited } from '../../src/media/mediaLimit.js';
-import { typing, getArgs } from '../../src/util/index.js';
+import { getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -14,40 +14,34 @@ export default plugin('twitter', 'twi', 'x')
         examples: ['tw https://x.com/user/status/xxx', 'download twitter ini'],
         args: { url: 'Twitter/X URL' },
     })
-    .run(async (sock, {
-        body,
-        raw,
-        from
-    }) => {
+    .run(async (sock, { body, reply, typing }) => {
         const url = getArgs(body);
-        if (!url) return sock.sendMessage(from, {
-            text: msg('need.url.twitter')
-        }, { quoted: raw });
+        if (!url) return reply(msg('need.url.twitter'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.download_tw') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.download_tw'));
 
         try {
             const result = await twitterDownload(url);
 
             if (result.type === 'video') {
                 const buffer = await fetchTwitterMedia(result.links[0]);
-                await sock.sendMessage(from, {
+                await reply({
                     video: buffer,
                     caption: `🐦 *${result.title}*`,
-                }, { quoted: raw });
+                });
             } else {
                 for (let i = 0; i < result.links.length; i++) {
                     const buffer = await fetchTwitterMedia(result.links[i]);
-                    await sock.sendMessage(from, {
+                    await reply({
                         image: buffer,
                         caption: i === 0 ? `🐦 *${result.title}*` : '',
-                    }, { quoted: raw });
+                    });
                 }
             }
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });
 

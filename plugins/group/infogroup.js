@@ -8,13 +8,13 @@ export default plugin('infogroup', 'ginfo')
     .groupOnly()
     .signal('User asks to info group', ['infogroup', 'ginfo', 'info group'])
     .run(async (sock, {
-        raw,
         from,
         groupMetadata,
         admins,
-        participants
+        participants,
+        reply
     }) => {
-        if (!groupMetadata) return sock.sendMessage(from, { text: msg('fail.group') }, { quoted: raw });
+        if (!groupMetadata) return reply(msg('fail.group'));
 
         const created = groupMetadata.creation
             ? new Date(groupMetadata.creation * 1000).toLocaleDateString('en-US')

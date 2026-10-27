@@ -16,21 +16,17 @@ export default plugin('quest', 'quests', 'misi')
     .prefixOnly()
     .cooldown(2)
     .signal('User wants to see or claim RPG quests', ['.quest', '.quest claim hunt_3'])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
@@ -42,9 +38,7 @@ export default plugin('quest', 'quests', 'misi')
 
         if (action === 'claim' || action === 'klaim') {
             if (!questId) {
-                return sock.sendMessage(from, {
-                    text: t('quest_need', lang),
-                }, { quoted: raw });
+                return reply(t('quest_need', lang));
             }
 
             const result = claimQuest(char, questId);
@@ -54,9 +48,7 @@ export default plugin('quest', 'quests', 'misi')
                     CLAIMED: t('quest_claimed', lang),
                     INCOMPLETE: t('quest_incomplete', lang, result.prog, result.target),
                 };
-                return sock.sendMessage(from, {
-                    text: map[result.reason] || `❌ ${result.reason}`,
-                }, { quoted: raw });
+                return reply(map[result.reason] || `❌ ${result.reason}`);
             }
 
             await persist();
@@ -68,7 +60,7 @@ export default plugin('quest', 'quests', 'misi')
                 text += `\n🎉 LEVEL UP! ${result.levelResult.oldLevel} → ${result.levelResult.newLevel}`;
             }
 
-            await sock.sendMessage(from, { text }, { quoted: raw });
+            await reply(text);
 
             if (result.levelResult?.leveled) {
                 try {
@@ -76,10 +68,10 @@ export default plugin('quest', 'quests', 'misi')
                         oldLevel: result.levelResult.oldLevel,
                         newLevel: result.levelResult.newLevel,
                     });
-                    await sock.sendMessage(from, {
+                    await reply({
                         image: img,
                         caption: t('level_up_caption', lang, result.levelResult.oldLevel, result.levelResult.newLevel),
-                    }, { quoted: raw });
+                    });
                 } catch {}
             }
             return;
@@ -93,5 +85,5 @@ export default plugin('quest', 'quests', 'misi')
             t('quest_need', lang),
         ].join('\n');
 
-        await sock.sendMessage(from, { text }, { quoted: raw });
+        await reply(text);
     });

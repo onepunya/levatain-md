@@ -1,11 +1,6 @@
-import { sendInlineWebUI, renderInfoCard, htmlEscape } from '../../src/wa/index.js';
+import { sendInlineWebUI, renderInfoCard, htmlEscape, findParticipant, getAbout } from '../../src/wa/index.js';
+import { resolveTarget } from '../../src/core/identity.js';
 import { plugin } from '../../src/core/plugin.js';
-
-function normalizeTarget(raw) {
-    const s = raw.split(':')[0];
-    if (s.includes('@lid') || s.includes('@s.whatsapp.net')) return s;
-    return `${s.replace(/\D/g, '')}@s.whatsapp.net`;
-}
 
 export default plugin('infouser', 'whois', 'userinfo')
     .in('group')
@@ -22,32 +17,13 @@ export default plugin('infouser', 'whois', 'userinfo')
         gdb,
         pushname
     }) => {
-        let targetId;
-        if (message.quoted?.sender) {
-            targetId = normalizeTarget(message.quoted.sender);
-        } else if (mentionedJid?.[0]) {
-            targetId = normalizeTarget(mentionedJid[0]);
-        } else {
-            targetId = primaryId;
-        }
-
-        const targetNum = targetId.replace(/\D/g, '');
-
-        const p = isGroup
-            ? participants.find(x =>
-                (x.id && x.id.replace(/\D/g, '') === targetNum) ||
-                (x.lid && x.lid.replace(/\D/g, '') === targetNum) ||
-                (x.phoneNumber && x.phoneNumber.replace(/\D/g, '') === targetNum))
-            : null;
+        const targetId = resolveTarget({ message, mentionedJid })?.id ?? primaryId;
+        const p = isGroup ? findParticipant(participants, targetId) : null;
 
         const lookupId = p?.phoneNumber || (targetId.includes('@s.whatsapp.net') ? targetId : null) || targetId;
         const userDb = gdb.users?.[targetId] || gdb.users?.[lookupId] || {};
 
-        let about = '-';
-        try {
-            const status = await sock.fetchStatus(lookupId);
-            about = status?.status || '-';
-        } catch {}
+        const about = (await getAbout(sock, lookupId)) || '-';
 
         const roleLabel = p?.admin === 'superadmin' ? '👑 Super Admin'
             : p?.admin === 'admin' ? '🛡️ Admin'

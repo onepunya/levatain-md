@@ -1,11 +1,6 @@
-export function normalizeTarget(raw) {
-    if (!raw) return null;
-    const s = String(raw).split(':')[0];
-    if (s.includes('@lid') || s.includes('@s.whatsapp.net')) return s;
-    const num = s.replace(/\D/g, '');
-    if (!num) return null;
-    return `${num}@s.whatsapp.net`;
-}
+import { normalizeJid } from '../wa/jid.js';
+
+export const normalizeTarget = normalizeJid;
 
 export function resolveTargetId({ message, mentionedJid, primaryId, body }) {
     if (message?.quoted?.sender) {

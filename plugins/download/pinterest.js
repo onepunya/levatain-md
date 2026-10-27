@@ -2,7 +2,7 @@ import axios from 'axios';
 import https from 'https';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { typing, getArgs, sendMediaBatch, sendAnyMedia } from '../../src/util/index.js';
+import { getArgs, sendMediaBatch, sendAnyMedia } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -25,20 +25,20 @@ export default plugin('pinterest', 'pin')
     .run(async (sock, {
         body,
         raw,
-        from
+        from,
+        reply,
+        typing
     }) => {
         const input = getArgs(body);
-        if (!input) return sock.sendMessage(from, {
-            text: msg('need.url.pin')
+        if (!input) return reply(msg('need.url.pin')
                 + 'Example:\n'
                 + '• *.pinterest https://pin.it/xxxxx* _(download pin)_\n'
-                + '• *.pinterest kucing lucu* _(search images)_',
-        }, { quoted: raw });
+                + '• *.pinterest kucing lucu* _(search images)_');
 
-        await typing(sock, from);
+        await typing();
 
         if (IS_LINK(input)) {
-            await sock.sendMessage(from, { text: msg('wait.download_pin') }, { quoted: raw });
+            await reply(msg('wait.download_pin'));
             try {
                 const res = await pinterestDownloader(input);
                 const data = res?.data;
@@ -55,12 +55,12 @@ export default plugin('pinterest', 'pin')
                 });
             } catch (e) {
                 console.error(e);
-                await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+                await reply(msg('fail.generic', { msg: e.message }));
             }
             return;
         }
 
-        await sock.sendMessage(from, { text: msg('wait.search_pin_q', { q: input }) }, { quoted: raw });
+        await reply(msg('wait.search_pin_q', { q: input }));
         try {
             const res = await pinterestSearch(input);
             const results = res?.resource_response?.data?.results || [];
@@ -83,7 +83,7 @@ export default plugin('pinterest', 'pin')
             }
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });
 

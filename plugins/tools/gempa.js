@@ -1,6 +1,6 @@
 import { loadDb, saveDb } from '../../src/storage/db.js';
 import { fetchJson } from '../../src/util/index.js';
-import { msg } from '../../src/wa/index.js';
+import { msg, sendTo } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 const AUTOGEMPA_URL = 'https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json';
@@ -48,9 +48,9 @@ async function watchGempa() {
                 for (const jid of subs) {
                     try {
                         if (shakemapUrl) {
-                            await global.sock.sendMessage(jid, { image: { url: shakemapUrl }, caption });
+                            await sendTo(global.sock, jid, { image: { url: shakemapUrl }, caption });
                         } else {
-                            await global.sock.sendMessage(jid, { text: caption });
+                            await sendTo(global.sock, jid, caption);
                         }
                     } catch {}
                 }
@@ -72,13 +72,13 @@ export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
     .showAllAliases()
     .signal('User asks for latest earthquake info with command="gempa", or to enable notifications', ['any earthquakes?', 'check latest earthquake', 'earthquake info today', 'enable earthquake alerts here', 'disable earthquake notifications', 'subscribe to automatic earthquake info'])
     .run(async (sock, {
-        raw,
         from,
         command,
         isGroup,
         isAdmin,
         isOwner,
-        gdb
+        gdb,
+        reply
     }) => {
         if (command === 'gempa' || command === 'cekgempa') {
             try {
@@ -86,18 +86,18 @@ export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
                 const shakemapUrl = g.Shakemap ? `https://data.bmkg.go.id/DataMKG/TEWS/${g.Shakemap}` : null;
                 const caption = formatGempa(g);
                 if (shakemapUrl) {
-                    await sock.sendMessage(from, { image: { url: shakemapUrl }, caption }, { quoted: raw });
+                    await reply({ image: { url: shakemapUrl }, caption });
                 } else {
-                    await sock.sendMessage(from, { text: caption }, { quoted: raw });
+                    await reply(caption);
                 }
             } catch (e) {
-                await sock.sendMessage(from, { text: msg('fail.bmkg', { msg: e.message }) }, { quoted: raw });
+                await reply(msg('fail.bmkg', { msg: e.message }));
             }
             return;
         }
 
         if (isGroup && !isAdmin && !isOwner) {
-            return sock.sendMessage(from, { text: msg('sys.admin_only_short') }, { quoted: raw });
+            return reply(msg('sys.admin_only_short'));
         }
 
         gdb.settings.gempaSubscribers ??= [];
@@ -106,11 +106,11 @@ export default plugin('gempa', 'cekgempa', 'gempaon', 'gempaoff')
         if (command === 'gempaon') {
             if (!subs.includes(from)) subs.push(from);
             await saveDb();
-            return sock.sendMessage(from, { text: msg('done.gempa_on') }, { quoted: raw });
+            return reply(msg('done.gempa_on'));
         }
 
         const idx = subs.indexOf(from);
         if (idx !== -1) subs.splice(idx, 1);
         await saveDb();
-        return sock.sendMessage(from, { text: msg('done.gempa_off') }, { quoted: raw });
+        return reply(msg('done.gempa_off'));
     });

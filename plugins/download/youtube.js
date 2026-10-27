@@ -1,5 +1,5 @@
 import { api, MAX_FILE_SIZE, cleanupTempFile } from '../../src/api/index.js';
-import { typing, getArgs } from '../../src/util/index.js';
+import { getArgs } from '../../src/util/index.js';
 import { ProgressMessage, msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -16,16 +16,16 @@ export default plugin('ytmp3', 'ytmp4', 'ytv', 'ytvideo')
         body,
         raw,
         from,
-        command
+        command,
+        reply,
+        typing
     }) => {
         const url = getArgs(body);
         const format = command === 'ytmp3' ? 'mp3' : 'mp4';
 
-        if (!url) return sock.sendMessage(from, {
-            text: msg('need.url.yt')
-        }, { quoted: raw });
+        if (!url) return reply(msg('need.url.yt'));
 
-        await typing(sock, from);
+        await typing();
 
         let filePath = null;
         const bar = new ProgressMessage(sock, from, raw);
@@ -44,18 +44,18 @@ export default plugin('ytmp3', 'ytmp4', 'ytv', 'ytvideo')
             await bar.done(msg('wait.yt_send', { title: data.title }));
 
             if (format === 'mp3') {
-                await sock.sendMessage(from, {
+                await reply({
                     audio: { url: filePath },
                     mimetype: 'audio/mpeg',
                     fileName: `${data.title}.mp3`,
                     ptt: false,
-                }, { quoted: raw });
+                });
             } else {
-                await sock.sendMessage(from, {
+                await reply({
                     video: { url: filePath },
                     mimetype: 'video/mp4',
                     caption: `🎬 ${data.title}`
-                }, { quoted: raw });
+                });
             }
 
         } catch (e) {

@@ -14,10 +14,11 @@ export default plugin('pushgh', 'deploy')
     .run(async (sock, {
         body,
         raw,
-        from
+        from,
+        reply
     }) => {
         if (!isGithubSyncEnabled()) {
-            return sock.sendMessage(from, { text: msg('fail.github_not_configured') }, { quoted: raw });
+            return reply(msg('fail.github_not_configured'));
         }
 
         const note = body.split(/\s+/).slice(1).join(' ').trim();

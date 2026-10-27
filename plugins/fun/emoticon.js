@@ -1,4 +1,4 @@
-import { typing, getArgs } from '../../src/util/index.js';
+import { getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 import { scrapeEmoji } from '../../src/util/scrapeEmoji.js';
@@ -15,28 +15,20 @@ export default plugin('emoticon', 'emoji', 'emo', 'kaomoji')
         'kaomoji love',
         'smile emoji',
     ])
-    .run(async (sock, {
-        body,
-        raw,
-        from
-    }) => {
+    .run(async (sock, { body, reply, typing }) => {
         const query = getArgs(body, 1);
 
         if (!query) {
-            return sock.sendMessage(from, { text: msg('emo.usage') }, { quoted: raw });
+            return reply(msg('emo.usage'));
         }
 
-        await typing(sock, from);
+        await typing();
 
         try {
             const { results } = await scrapeEmoji(query, { limit: 15 });
 
             if (!results.length) {
-                return sock.sendMessage(
-                    from,
-                    { text: msg('emo.not_found', { query }) },
-                    { quoted: raw }
-                );
+                return reply(msg('emo.not_found', { query }));
             }
 
             const list = results.map((e, i) => `${i + 1}. ${e}`).join('\n');
@@ -46,12 +38,8 @@ export default plugin('emoticon', 'emoji', 'emo', 'kaomoji')
                 list,
             });
 
-            await sock.sendMessage(from, { text }, { quoted: raw });
+            await reply(text);
         } catch (e) {
-            await sock.sendMessage(
-                from,
-                { text: msg('fail.emoji', { msg: e.message }) },
-                { quoted: raw }
-            );
+            await reply(msg('fail.emoji', { msg: e.message }));
         }
     });

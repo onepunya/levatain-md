@@ -1,3 +1,5 @@
+import { normalizeJid, jidTag, findParticipant } from '../wa/jid.js';
+
 const stripDevice = (id, server) => id ? `${id.split(':')[0].replace(/@.+/, '')}${server}` : null;
 
 export function resolveIdentity(sock, m) {
@@ -72,4 +74,18 @@ export function resolvePermissions({ senderIds, botNumber, adminEntries, isGroup
         isAdmin: isGroup && adminEntries.some(p => matchesParticipant(p, senderIds)),
         isBotAdmin: isGroup && adminEntries.some(p => matchesParticipant(p, [botNumber]))
     };
+}
+
+export function resolveTarget({ message, mentionedJid, participants = [], body = '' }, { allowNumber = false } = {}) {
+    let id = normalizeJid(message?.quoted?.sender) || normalizeJid(mentionedJid?.[0]);
+
+    if (!id && allowNumber) {
+        const digits = String(body).trim().split(/\s+/).slice(1)
+            .filter(p => !p.startsWith('@'))
+            .map(p => p.replace(/\D/g, ''))
+            .find(d => d.length >= 8 && d.length <= 15);
+        if (digits) id = `${digits}@s.whatsapp.net`;
+    }
+
+    return id ? { id, tag: jidTag(id), participant: findParticipant(participants, id) } : null;
 }

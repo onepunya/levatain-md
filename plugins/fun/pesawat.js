@@ -6,21 +6,17 @@ export default plugin('pesawat', 'plane', 'shooter')
     .desc('Canvas plane shooter game')
     .prefixOnly()
     .signal('User wants to play plane shooter or space shooter', ['pesawat', 'plane', 'shooter'])
-    .run(async (sock, {
-        raw,
-        from,
-        pushname
-    }) => {
+    .run(async (sock, { from, pushname, reply }) => {
         const name = String(pushname || 'Player').replace(/[<>'\\']/g, '').slice(0, 20);
-        await sock.sendMessage(from, { text: msg('game.open_panel') }, { quoted: raw });
+        await reply(msg('game.open_panel'));
         const html = build(name);
         if (Buffer.byteLength(html, 'utf-8') > WEBUI_MAX_PAYLOAD_BYTES) {
-            return sock.sendMessage(from, { text: msg('fail.panel_big') }, { quoted: raw });
+            return reply(msg('fail.panel_big'));
         }
         try {
             await sendInlineWebUI(sock, from, html, '🚀 Plane');
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });
 

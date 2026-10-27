@@ -15,16 +15,16 @@ export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'set
     })
     .run(async (sock, {
         body,
-        raw,
         from,
         command,
-        gdb
+        gdb,
+        reply
     }) => {
         const feature = featureMap[command];
         if (!feature) return;
 
         const grp = gdb.groups[from];
-        if (!grp) return sock.sendMessage(from, { text: msg('fail.group_data') }, { quoted: raw });
+        if (!grp) return reply(msg('fail.group_data'));
 
         const args = body.split(' ').slice(1).join(' ').trim().toLowerCase();
         const turnOn = ['on', 'aktif', 'nyala', '1', 'enable', 'true'].includes(args);
@@ -38,7 +38,7 @@ export default plugin('setwelcome', 'setantilink', 'setmute', 'setcaptcha', 'set
 
         await saveDb();
         const status = grp[feature.key] ? '✅ Active' : '❌ Inactive';
-        await sock.sendMessage(from, { text: `${feature.label}: *${status}*` }, { quoted: raw });
+        await reply(`${feature.label}: *${status}*`);
     });
 
 const featureMap = {

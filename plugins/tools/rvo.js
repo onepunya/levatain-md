@@ -1,4 +1,4 @@
-import { typing, downloadMedia } from '../../src/util/index.js';
+import { downloadMedia } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -16,47 +16,31 @@ export default plugin('rvo', 'readviewonce', 'readvo', 'viewonce')
     .run(async (sock, {
         message,
         raw,
-        from
+        reply,
+        typing
     }) => {
         const result = await downloadMedia(raw, message.quoted, ['image', 'video', 'audio']);
 
         if (!result) {
-            return sock.sendMessage(from, { text: msg('need.viewonce') }, { quoted: raw });
+            return reply(msg('need.viewonce'));
         }
 
-        await typing(sock, from);
+        await typing();
 
         try {
             const caption = msg('done.viewonce');
-            const opts = { quoted: raw };
 
             if (result.type === 'image') {
-                await sock.sendMessage(from, {
-                    image: result.buffer,
-                    caption,
-                    mimetype: result.mimetype || 'image/jpeg',
-                }, opts);
+                await reply({ image: result.buffer, caption, mimetype: result.mimetype || 'image/jpeg' });
             } else if (result.type === 'video') {
-                await sock.sendMessage(from, {
-                    video: result.buffer,
-                    caption,
-                    mimetype: result.mimetype || 'video/mp4',
-                }, opts);
+                await reply({ video: result.buffer, caption, mimetype: result.mimetype || 'video/mp4' });
             } else if (result.type === 'audio') {
-                await sock.sendMessage(from, {
-                    audio: result.buffer,
-                    mimetype: result.mimetype || 'audio/ogg; codecs=opus',
-                    ptt: true,
-                }, opts);
-                await sock.sendMessage(from, { text: caption }, opts);
+                await reply({ audio: result.buffer, mimetype: result.mimetype || 'audio/ogg; codecs=opus', ptt: true });
+                await reply(caption);
             } else {
-                await sock.sendMessage(from, { text: msg('fail.unsupported') }, opts);
+                await reply(msg('fail.unsupported'));
             }
         } catch (e) {
-            await sock.sendMessage(
-                from,
-                { text: msg('fail.viewonce', { msg: e.message }) },
-                { quoted: raw }
-            );
+            await reply(msg('fail.viewonce', { msg: e.message }));
         }
     });

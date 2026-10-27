@@ -1,5 +1,5 @@
 import { pick, shuffle } from '../../src/util/index.js';
-import { msg } from '../../src/wa/index.js';
+import { msg, sendTo } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('impostor', 'wordwolf')
@@ -20,14 +20,14 @@ export default plugin('impostor', 'wordwolf')
     })
     .run(async (sock, {
         body,
-        raw,
         from,
         primaryId,
         pushname,
         gdb,
         mentionedJid,
         isOwner,
-        isGroup
+        isGroup,
+        reply
     }) => {
         const args = body.trim().split(/\s+/);
         const sub = (args[1] || '').toLowerCase();
@@ -36,9 +36,7 @@ export default plugin('impostor', 'wordwolf')
 
         if (sub === 'kata' || sub === 'mykata' || sub === 'cek') {
             if (isGroup) {
-                return sock.sendMessage(from, {
-                    text: `🤫 For secrecy, DM me and type *.impostor kata* there, ${myName}.`,
-                }, { quoted: raw });
+                return reply(`🤫 For secrecy, DM me and type *.impostor kata* there, ${myName}.`);
             }
 
             const found = [];
@@ -49,25 +47,21 @@ export default plugin('impostor', 'wordwolf')
             }
 
             if (!found.length) {
-                return sock.sendMessage(from, {
-                    text: msg('impostor.not_in_game'),
-                }, { quoted: raw });
+                return reply(msg('impostor.not_in_game'));
             }
 
             const text = found.map(p => `🕵️ Your secret word: *${p.word}*`).join('\n\n');
-            return sock.sendMessage(from, { text }, { quoted: raw });
+            return reply(text);
         }
 
         if (GROUP_ONLY_SUBS.has(sub) && !isGroup) {
-            return sock.sendMessage(from, { text: msg('sys.group_only_short') }, { quoted: raw });
+            return reply(msg('sys.group_only_short'));
         }
 
         const game = games.get(from);
 
         if (!sub || sub === 'help' || sub === 'menu') {
-            return sock.sendMessage(from, {
-                text:
-                    `🕵️ *IMPOSTOR (Word Wolf)*\n\n` +
+            return reply(`🕵️ *IMPOSTOR (Word Wolf)*\n\n` +
                     `*.impostor create* — create a new lobby\n` +
                     `*.impostor join* — join the lobby\n` +
                     `*.impostor start* — start the game (host, min. 3 players)\n` +
@@ -75,29 +69,26 @@ export default plugin('impostor', 'wordwolf')
                     `*.impostor status* — check the game status\n` +
                     `*.impostor cancel* — cancel the game (host/owner)\n` +
                     `*.impostor mykata* — check your secret word (MUST be done via DM to the bot)\n\n` +
-                    `_How to play: everyone gets the same word, except for 1 impostor with a different word. Get your word by DMing the bot first and typing .impostor mykata. Discuss without saying the word directly, then vote on who you suspect is the impostor._`,
-            }, { quoted: raw });
+                    `_How to play: everyone gets the same word, except for 1 impostor with a different word. Get your word by DMing the bot first and typing .impostor mykata. Discuss without saying the word directly, then vote on who you suspect is the impostor._`);
         }
 
         if (sub === 'status') {
-            if (!game) return sock.sendMessage(from, { text: msg('impostor.idle') }, { quoted: raw });
+            if (!game) return reply(msg('impostor.idle'));
             const names = game.players.map(p => p.name).join(', ');
-            return sock.sendMessage(from, {
-                text: `ℹ️ Status: *${game.status}*\nPlayers (${game.players.length}): ${names}`,
-            }, { quoted: raw });
+            return reply(`ℹ️ Status: *${game.status}*\nPlayers (${game.players.length}): ${names}`);
         }
 
         if (sub === 'cancel' || sub === 'stop' || sub === 'batal') {
-            if (!game) return sock.sendMessage(from, { text: msg('impostor.no_game') }, { quoted: raw });
+            if (!game) return reply(msg('impostor.no_game'));
             if (game.hostId !== primaryId && !isOwner) {
-                return sock.sendMessage(from, { text: msg('impostor.host_cancel') }, { quoted: raw });
+                return reply(msg('impostor.host_cancel'));
             }
             resetGame(from);
-            return sock.sendMessage(from, { text: msg('done.game_cancel') }, { quoted: raw });
+            return reply(msg('done.game_cancel'));
         }
 
         if (sub === 'buat' || sub === 'create') {
-            if (game) return sock.sendMessage(from, { text: msg('impostor.exists_status', { status: game.status }) }, { quoted: raw });
+            if (game) return reply(msg('impostor.exists_status', { status: game.status }));
 
             games.set(from, {
                 status: 'lobby',
@@ -107,32 +98,27 @@ export default plugin('impostor', 'wordwolf')
                 timer: null,
             });
 
-            return sock.sendMessage(from, {
-                text:
-                    `🕵️ *Impostor lobby created by ${myName}!*\n\n` +
+            return reply(`🕵️ *Impostor lobby created by ${myName}!*\n\n` +
                     `Type *.impostor join* to join.\n` +
-                    `Need at least 3 players; host types *.impostor start* when ready.`,
-            }, { quoted: raw });
+                    `Need at least 3 players; host types *.impostor start* when ready.`);
         }
 
         if (!game) {
-            return sock.sendMessage(from, { text: msg('impostor.no_lobby') }, { quoted: raw });
+            return reply(msg('impostor.no_lobby'));
         }
 
         if (sub === 'join' || sub === 'gabung') {
-            if (game.status !== 'lobby') return sock.sendMessage(from, { text: msg('impostor.started') }, { quoted: raw });
-            if (game.players.some(p => p.id === primaryId)) return sock.sendMessage(from, { text: msg('impostor.lobby') }, { quoted: raw });
+            if (game.status !== 'lobby') return reply(msg('impostor.started'));
+            if (game.players.some(p => p.id === primaryId)) return reply(msg('impostor.lobby'));
 
             game.players.push({ id: primaryId, name: myName });
-            return sock.sendMessage(from, {
-                text: msg('done.joined_game', { name: myName, n: game.players.length, players: game.players.map(p => p.name).join(', ') }),
-            }, { quoted: raw });
+            return reply(msg('done.joined_game', { name: myName, n: game.players.length, players: game.players.map(p => p.name).join(', ') }));
         }
 
         if (sub === 'start' || sub === 'mulai') {
-            if (game.status !== 'lobby') return sock.sendMessage(from, { text: msg('impostor.running') }, { quoted: raw });
-            if (game.hostId !== primaryId && !isOwner) return sock.sendMessage(from, { text: msg('impostor.host_start') }, { quoted: raw });
-            if (game.players.length < 3) return sock.sendMessage(from, { text: msg('impostor.min3_n', { n: game.players.length }) }, { quoted: raw });
+            if (game.status !== 'lobby') return reply(msg('impostor.running'));
+            if (game.hostId !== primaryId && !isOwner) return reply(msg('impostor.host_start'));
+            if (game.players.length < 3) return reply(msg('impostor.min3_n', { n: game.players.length }));
 
             const [majorityWord, impostorWord] = pick(WORD_PAIRS);
             const shuffled = shuffle(game.players);
@@ -155,26 +141,26 @@ export default plugin('impostor', 'wordwolf')
                 `Words were dealt secretly. *DM this bot*, then type *.impostor mykata* to see your secret word.\n\n` +
                 `Discuss together, describe your word without saying it directly. Time: 3 minutes, then voting starts automatically.`;
 
-            return sock.sendMessage(from, { text, mentions: game.players.map(p => p.id) }, { quoted: raw });
+            return reply(text, { mentions: game.players.map(p => p.id) });
         }
 
         if (sub === 'vote') {
-            if (game.status !== 'voting') return sock.sendMessage(from, { text: msg('impostor.not_voting') }, { quoted: raw });
-            if (!game.players.some(p => p.id === primaryId)) return sock.sendMessage(from, { text: msg('impostor.not_player') }, { quoted: raw });
+            if (game.status !== 'voting') return reply(msg('impostor.not_voting'));
+            if (!game.players.some(p => p.id === primaryId)) return reply(msg('impostor.not_player'));
 
             const targetJid = mentionedJid?.[0];
-            if (!targetJid) return sock.sendMessage(from, { text: msg('impostor.vote_tag') }, { quoted: raw });
+            if (!targetJid) return reply(msg('impostor.vote_tag'));
 
             const cleanTarget = targetJid.includes('@') ? targetJid.split(':')[0] : `${targetJid.split(':')[0]}@s.whatsapp.net`;
             const targetNum = cleanTarget.split('@')[0];
             const targetPlayer = game.players.find(p => p.id.split('@')[0] === targetNum);
 
-            if (!targetPlayer) return sock.sendMessage(from, { text: msg('impostor.not_target') }, { quoted: raw });
-            if (targetPlayer.id === primaryId) return sock.sendMessage(from, { text: msg('impostor.self_vote') }, { quoted: raw });
+            if (!targetPlayer) return reply(msg('impostor.not_target'));
+            if (targetPlayer.id === primaryId) return reply(msg('impostor.self_vote'));
 
             game.votes[primaryId] = targetPlayer.id;
 
-            await sock.sendMessage(from, { text: msg('done.vote', { name: myName, n: Object.keys(game.votes).length, total: game.players.length }) }, { quoted: raw });
+            await reply(msg('done.vote', { name: myName, n: Object.keys(game.votes).length, total: game.players.length }));
 
             if (Object.keys(game.votes).length >= game.players.length) {
                 await finalizeVote(sock, from);
@@ -182,7 +168,7 @@ export default plugin('impostor', 'wordwolf')
             return;
         }
 
-        return sock.sendMessage(from, { text: msg('impostor.unknown_sub') }, { quoted: raw });
+        return reply(msg('impostor.unknown_sub'));
     });
 
 const GROUP_ONLY_SUBS = new Set(['buat', 'create', 'gabung', 'join', 'mulai', 'start', 'vote', 'batal', 'stop', 'cancel', 'status']);
@@ -251,7 +237,7 @@ async function revealAndEnd(sock, from, game, resultText) {
         .map(p => `${p.isImpostor ? '🕵️' : '🙂'} ${p.name} — _${p.word}_`)
         .join('\n');
 
-    await sock.sendMessage(from, {
+    await sendTo(sock, from, {
         text: `${resultText}\n\n📜 *Reveal:*\n${list}\n\nMajority word: *${game.majorityWord}*\nImpostor word: *${game.impostorWord}*\n\nType *.impostor create* to play again.`,
         mentions: game.players.map(p => p.id),
     });
@@ -267,7 +253,7 @@ async function startVotingPhase(sock, from) {
     game.votes = {};
     clearTimers(game);
 
-    await sock.sendMessage(from, {
+    await sendTo(sock, from, {
         text:
             `🗳️ *Discussion time is up! Time to vote.*\n\n` +
             `Type *.impostor vote @user* to vote who you think is the impostor.\n` +

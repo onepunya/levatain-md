@@ -42,17 +42,16 @@ export default plugin('exec', 'sh', 'term')
     .run(async (sock, {
         body,
         raw,
-        from
+        from,
+        reply
     }) => {
         const rawCmd = getArgs(body).trim();
         if (!rawCmd) {
-            return sock.sendMessage(from, {
-                text: `💻 *Workspace Terminal*\nCwd: \`${getCwd(from).replace(WORKSPACE_ROOT, '~') || '~'}\`\n\nExample: \`.exec ls\`, \`.exec cd folder\`, \`.exec curl https://...\``,
-            }, { quoted: raw });
+            return reply(`💻 *Workspace Terminal*\nCwd: \`${getCwd(from).replace(WORKSPACE_ROOT, '~') || '~'}\`\n\nExample: \`.exec ls\`, \`.exec cd folder\`, \`.exec curl https://...\``);
         }
 
         if (BLOCKLIST.some(rx => rx.test(rawCmd))) {
-            return sock.sendMessage(from, { text: msg('fail.destructive', { cmd: rawCmd }) }, { quoted: raw });
+            return reply(msg('fail.destructive', { cmd: rawCmd }));
         }
 
         const cwd = getCwd(from);
@@ -60,12 +59,12 @@ export default plugin('exec', 'sh', 'term')
         if (/^cd(\s|$)/.test(rawCmd)) {
             const target = rawCmd.replace(/^cd\s*/, '').trim() || WORKSPACE_ROOT;
             const next = resolveInWorkspace(cwd, target);
-            if (!next) return sock.sendMessage(from, { text: msg('fail.workspace_escape') }, { quoted: raw });
+            if (!next) return reply(msg('fail.workspace_escape'));
             if (!fs.existsSync(next) || !fs.statSync(next).isDirectory()) {
-                return sock.sendMessage(from, { text: msg('fail.folder_missing', { path: target }) }, { quoted: raw });
+                return reply(msg('fail.folder_missing', { path: target }));
             }
             sessionCwd.set(from, next);
-            return sock.sendMessage(from, { text: `📁 Cwd: \`${next.replace(WORKSPACE_ROOT, '~') || '~'}\`` }, { quoted: raw });
+            return reply(`📁 Cwd: \`${next.replace(WORKSPACE_ROOT, '~') || '~'}\``);
         }
 
         const progress = new ProgressMessage(sock, from, raw);

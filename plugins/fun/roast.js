@@ -1,22 +1,8 @@
 import { api } from '../../src/api/index.js';
-import { typing, getArgs } from '../../src/util/index.js';
-import { msg } from '../../src/wa/index.js';
+import { getArgs } from '../../src/util/index.js';
+import { msg, getAbout, getBusiness, getAvatarUrl } from '../../src/wa/index.js';
+import { resolveTarget } from '../../src/core/identity.js';
 import { plugin } from '../../src/core/plugin.js';
-
-function normalizeTarget(raw) {
-    if (!raw) return null;
-    const s = String(raw).split(':')[0];
-    if (s.includes('@lid') || s.includes('@s.whatsapp.net')) return s;
-    const digits = s.replace(/\D/g, '');
-    if (!digits) return null;
-    return `${digits}@s.whatsapp.net`;
-}
-
-function resolveTarget({ message, mentionedJid }) {
-    if (message?.quoted?.sender) return normalizeTarget(message.quoted.sender);
-    if (mentionedJid?.[0]) return normalizeTarget(mentionedJid[0]);
-    return null;
-}
 
 function reasonFromBody(body) {
     let text = getArgs(body || '', 1) || '';
@@ -87,36 +73,11 @@ async function collectWaProfile(sock, lookupId) {
         hasProfilePic: null,
         phoneVisible: lookupId?.includes('@s.whatsapp.net') || false,
     };
-
     if (!lookupId) return out;
 
-    try {
-        const status = await sock.fetchStatus(lookupId);
-        const text = status?.status || status?.statusText || '';
-        if (text && String(text).trim()) out.about = String(text).trim().slice(0, 180);
-    } catch {}
-
-    try {
-        if (typeof sock.getBusinessProfile === 'function') {
-            const biz = await sock.getBusinessProfile(lookupId);
-            if (biz && (biz.description || biz.category || biz.email || biz.website || biz.address)) {
-                out.business = {
-                    description: biz.description ? String(biz.description).slice(0, 220) : null,
-                    category: biz.category || biz.business_category || null,
-                    email: biz.email || null,
-                    website: biz.website || null,
-                };
-            }
-        }
-    } catch {}
-
-    try {
-        const url = await sock.profilePictureUrl(lookupId, 'image').catch(() => null);
-        out.hasProfilePic = Boolean(url);
-    } catch {
-        out.hasProfilePic = false;
-    }
-
+    out.about = await getAbout(sock, lookupId, 180);
+    out.business = await getBusiness(sock, lookupId);
+    out.hasProfilePic = Boolean(await getAvatarUrl(sock, lookupId));
     return out;
 }
 
@@ -192,7 +153,6 @@ export default plugin('roast', 'roasting')
         'roast hard @user read doang',
     ])
     .run(async (sock, {
-        raw,
         from,
         body,
         message,
@@ -202,11 +162,12 @@ export default plugin('roast', 'roasting')
         primaryId,
         gdb,
         pushname,
+        typing,
+        reply
     }) => {
-        const targetId = resolveTarget({ message, mentionedJid });
+        const targetId = resolveTarget({ message, mentionedJid })?.id;
         if (!targetId) {
-            return sock.sendMessage(from, {
-                text: [
+            return reply([
                     '🔥 *Roast*',
                     '',
                     'Tag or reply to someone:',
@@ -215,8 +176,7 @@ export default plugin('roast', 'roasting')
                     '• *.roast @user read doang, sok sibuk*',
                     '',
                     '_Uses WA about/business + group activity when available._',
-                ].join('\n'),
-            }, { quoted: raw });
+                ].join('\n'));
         }
 
         const level = levelFromBody(body);
@@ -251,10 +211,8 @@ export default plugin('roast', 'roasting')
         const activity = activityLabel(slot);
         const tenure = memberTenureHint(slot, isGroup);
 
-        await typing(sock, from);
-        await sock.sendMessage(from, {
-            text: '🔥 Gathering profile signals & cooking the roast...',
-        }, { quoted: raw });
+        await typing();
+        await reply('🔥 Gathering profile signals & cooking the roast...');
 
         let wa;
         try {
@@ -284,13 +242,11 @@ export default plugin('roast', 'roasting')
             const text = String(roastText || '').trim();
             if (!text) throw new Error('Empty roast from AI');
 
-            await sock.sendMessage(from, {
+            await reply({
                 text: `🔥 *Roast for ${name}*\n\n${text}`,
                 mentions: [targetId],
-            }, { quoted: raw });
+            });
         } catch (e) {
-            await sock.sendMessage(from, {
-                text: msg('fail.generic', { msg: e.message }),
-            }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

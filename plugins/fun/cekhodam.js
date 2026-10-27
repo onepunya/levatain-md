@@ -1,5 +1,4 @@
 import { api } from '../../src/api/index.js';
-import { typing } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 import { saveDb } from '../../src/storage/db.js';
@@ -149,44 +148,40 @@ export default plugin('cekhodam', 'khodam', 'mykhodam')
         'my khodam',
     ])
     .run(async (sock, {
-        raw,
-        from,
         primaryId,
         gdb,
         pushname,
         message,
         mentionedJid,
+        reply,
+        typing
     }) => {
         const targetId = resolveTargetId(message, mentionedJid, primaryId);
         const isSelf = targetId === primaryId || targetId?.split('@')[0] === primaryId?.split('@')[0];
 
         const targetUser = gdb.users?.[targetId] || (isSelf ? gdb.users[primaryId] : null);
         if (!targetUser) {
-            return sock.sendMessage(from, {
-                text: '❌ User not found in bot data. They need to interact with the bot first.',
-            }, { quoted: raw });
+            return reply('❌ User not found in bot data. They need to interact with the bot first.');
         }
 
         const ownerLabel = targetUser.name || targetUser.username || pushname || 'User';
 
         if (targetUser.khodam?.name) {
-            return sock.sendMessage(from, {
+            return reply({
                 text: formatKhodam(ownerLabel, targetUser.khodam, isSelf),
                 mentions: isSelf ? [] : [targetId],
-            }, { quoted: raw });
+            });
         }
 
         if (!isSelf) {
-            return sock.sendMessage(from, {
+            return reply({
                 text: `❌ *${ownerLabel}* has no khodam yet.\nThey must run *.cekhodam* themselves to summon one.`,
                 mentions: [targetId],
-            }, { quoted: raw });
+            });
         }
 
-        await typing(sock, from);
-        await sock.sendMessage(from, {
-            text: '🔮 Consulting the chaos realm for your khodam...',
-        }, { quoted: raw });
+        await typing();
+        await reply('🔮 Consulting the chaos realm for your khodam...');
 
         try {
             const registry = ensureRegistry(gdb);
@@ -208,12 +203,8 @@ export default plugin('cekhodam', 'khodam', 'mykhodam')
             registry[key] = primaryId;
             await saveDb();
 
-            await sock.sendMessage(from, {
-                text: formatKhodam(ownerLabel, record, true),
-            }, { quoted: raw });
+            await reply(formatKhodam(ownerLabel, record, true));
         } catch (e) {
-            await sock.sendMessage(from, {
-                text: msg('fail.generic', { msg: e.message }),
-            }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

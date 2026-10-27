@@ -6,29 +6,24 @@ export default plugin('setlang', 'rpgLang', 'bahasa')
     .desc('Change RPG language (en/id)')
     .prefixOnly()
     .signal('User wants to change RPG language', ['.setlang en', '.setlang id', '.bahasa id'])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const parts = (body || '').trim().split(/\s+/).slice(1);
         const lang = pickLang(parts[0]);
 
         if (!lang) {
-            return sock.sendMessage(from, {
-                text: [
+            return reply([
                     `🌐 *RPG Language / Bahasa RPG*`,
                     ``,
                     `Current: *${char.lang === 'en' ? 'English' : 'Indonesia'}*`,
@@ -36,14 +31,11 @@ export default plugin('setlang', 'rpgLang', 'bahasa')
                     `Usage:`,
                     `*.setlang en*  — English`,
                     `*.setlang id*  — Indonesia`,
-                ].join('\n'),
-            }, { quoted: raw });
+                ].join('\n'));
         }
 
         setLanguage(char, lang);
         await persist();
 
-        await sock.sendMessage(from, {
-            text: t('lang_changed', lang),
-        }, { quoted: raw });
+        await reply(t('lang_changed', lang));
     });

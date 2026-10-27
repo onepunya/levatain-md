@@ -1,4 +1,4 @@
-import { typing, getArgs, downloadMedia, getExtFromMime, sleep } from '../../src/util/index.js';
+import { getArgs, downloadMedia, getExtFromMime, sleep } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { config } from '../../src/config.js';
 import { plugin } from '../../src/core/plugin.js';
@@ -48,27 +48,26 @@ export default plugin('editimage', 'aiedit')
         body,
         message,
         raw,
-        from
+        reply,
+        typing
     }) => {
         const prompt = getArgs(body);
 
         if (!prompt) {
-            return sock.sendMessage(from, {
-                text: msg('need.editimage')
-            }, { quoted: raw });
+            return reply(msg('need.editimage'));
         }
 
         const result = await downloadMedia(raw, message.quoted, ['image']);
         if (!result) {
-            return sock.sendMessage(from, { text: msg('need.image') }, { quoted: raw });
+            return reply(msg('need.image'));
         }
 
         if (apiKeys.length === 0) {
-            return sock.sendMessage(from, { text: msg('fail.feature_magic') }, { quoted: raw });
+            return reply(msg('fail.feature_magic'));
         }
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.upload_ai') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.upload_ai'));
 
         try {
             const currentKey = apiKeys[keyIndex];
@@ -107,7 +106,7 @@ export default plugin('editimage', 'aiedit')
             let attempts = 0;
             const maxAttempts = 15;
 
-            await sock.sendMessage(from, { text: msg('wait.drawing', { id: projectId }) }, { quoted: raw });
+            await reply(msg('wait.drawing', { id: projectId }));
 
             while (!isCompleted && attempts < maxAttempts) {
                 await sleep(5000);
@@ -139,15 +138,15 @@ export default plugin('editimage', 'aiedit')
             }
 
             if (isCompleted && imageUrl) {
-                await sock.sendMessage(from, {
+                await reply({
                     image: { url: imageUrl },
                     caption: `🎨 *AI Image Editor*\n\n*Prompt:* ${prompt}`
-                }, { quoted: raw });
+                });
             } else {
                 throw new Error('Timed out. AI server is too busy.');
             }
 
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

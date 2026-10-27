@@ -14,13 +14,13 @@ export default plugin('afk')
     })
     .run(async (sock, {
         body,
-        raw,
         from,
         primaryId,
         gdb,
-        isGroup
+        isGroup,
+        reply
     }) => {
-        if (!isGroup) return sock.sendMessage(from, { text: msg('sys.group_only_short') }, { quoted: raw });
+        if (!isGroup) return reply(msg('sys.group_only_short'));
 
         const reason = getArgs(body) || '';
         const grp = gdb.groups[from];
@@ -28,8 +28,8 @@ export default plugin('afk')
         await saveDb();
 
         const tag = primaryId.split('@')[0];
-        await sock.sendMessage(from, {
+        await reply({
             text: `┌───「 *AFK STATUS ON* 」\n├ *User:* @${tag}\n├ *Reason:* ${reason || 'None'}\n└ _The bot will notify if someone mentions you._`,
             mentions: [primaryId],
-        }, { quoted: raw });
+        });
     });

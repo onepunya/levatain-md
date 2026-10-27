@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { fetchBufferLimited } from '../../src/media/mediaLimit.js';
-import { typing, getArgs } from '../../src/util/index.js';
+import { getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -14,24 +14,18 @@ export default plugin('facebook', 'fb')
         examples: ['fb https://www.facebook.com/share/r/xxx/', 'download facebook ini'],
         args: { url: 'Facebook URL' },
     })
-    .run(async (sock, {
-        body,
-        raw,
-        from
-    }) => {
+    .run(async (sock, { body, reply, typing }) => {
         const url = getArgs(body);
-        if (!url) return sock.sendMessage(from, {
-            text: msg('need.url.fb')
-        }, { quoted: raw });
+        if (!url) return reply(msg('need.url.fb'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.download_fb') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.download_fb'));
 
         try {
             const data = await fbDownloader(url);
 
             if (!data || !data.video) {
-                return await sock.sendMessage(from, { text: msg('fail.link_fb') }, { quoted: raw });
+                return await reply(msg('fail.link_fb'));
             }
 
             const videoBuffer = await fetchBufferLimited(data.video, {
@@ -42,14 +36,14 @@ export default plugin('facebook', 'fb')
                 timeout: 60000,
             });
 
-            await sock.sendMessage(from, {
+            await reply({
                 video: videoBuffer,
                 caption: '📸 *facebook*',
-            }, { quoted: raw });
+            });
 
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });
 

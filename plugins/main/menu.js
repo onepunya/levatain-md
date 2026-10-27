@@ -15,7 +15,8 @@ export default plugin('menu', 'allmenu')
         isOwner,
         command,
         body,
-        device: deviceHint
+        device: deviceHint,
+        reply
     }) => {
         const device = deviceHint || detectDevice(raw);
         const arg = command === 'allmenu' ? 'all' : getArgs(body);
@@ -31,9 +32,7 @@ export default plugin('menu', 'allmenu')
             const { grouped } = collectGrouped(isOwner);
             const items = grouped[target.tag];
             if (!items?.length) {
-                return sock.sendMessage(from, {
-                    text: msg('menu.missing_cat', { tag: target.tag }),
-                }, { quoted: raw });
+                return reply(msg('menu.missing_cat', { tag: target.tag }));
             }
             const { emoji, label } = TAG_META[target.tag] || { emoji: '📋', label: labelize(target.tag) };
             const caption = `✦ *${global.botName}* — ${emoji} ${label}\n\n${buildCategoryText(target.tag, items)}\n\n${backHint()}`;

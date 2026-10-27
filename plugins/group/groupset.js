@@ -1,5 +1,5 @@
 import { getArgs } from '../../src/util/index.js';
-import { msg } from '../../src/wa/index.js';
+import { msg, setSubject, setDescription, inviteLink, revokeInvite } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
 export default plugin('setgname', 'setgdesc', 'linkgroup', 'revoklink')
@@ -13,36 +13,32 @@ export default plugin('setgname', 'setgdesc', 'linkgroup', 'revoklink')
         examples: ['setgname Nama Baru', 'setgdesc Deskripsi baru', 'linkgroup', 'revoklink'],
         args: { text: 'New name/description text (for setgname/setgdesc)' },
     })
+    .botAdmin()
     .run(async (sock, {
         body,
-        raw,
         from,
         command,
-        isBotAdmin
+        reply
     }) => {
-        if (!isBotAdmin) return sock.sendMessage(from, { text: msg('sys.bot_admin') }, { quoted: raw });
-
         if (command === 'setgname') {
             const text = getArgs(body);
-            if (!text) return sock.sendMessage(from, { text: msg('need.gname') }, { quoted: raw });
-            await sock.groupUpdateSubject(from, text);
-            return sock.sendMessage(from, { text: msg('done.group_name', { name: text }) }, { quoted: raw });
+            if (!text) return reply(msg('need.gname'));
+            await setSubject(sock, from, text);
+            return reply(msg('done.group_name', { name: text }));
         }
 
         if (command === 'setgdesc') {
             const text = getArgs(body);
-            if (!text) return sock.sendMessage(from, { text: msg('need.gdesc') }, { quoted: raw });
-            await sock.groupUpdateDescription(from, text);
-            return sock.sendMessage(from, { text: msg('done.group_desc') }, { quoted: raw });
+            if (!text) return reply(msg('need.gdesc'));
+            await setDescription(sock, from, text);
+            return reply(msg('done.group_desc'));
         }
 
         if (command === 'linkgroup') {
-            const code = await sock.groupInviteCode(from);
-            return sock.sendMessage(from, { text: `🔗 https://chat.whatsapp.com/${code}` }, { quoted: raw });
+            return reply(`🔗 ${await inviteLink(sock, from)}`);
         }
 
         if (command === 'revoklink') {
-            const code = await sock.groupRevokeInvite(from);
-            return sock.sendMessage(from, { text: msg('done.link_reset', { code }) }, { quoted: raw });
+            return reply(msg('done.link_reset', { code: await revokeInvite(sock, from) }));
         }
     });

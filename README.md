@@ -202,33 +202,38 @@ Status meanings: `mati` means the host does not respond or returns 5xx, `dibatas
 
 ## Adding a New Plugin/Command
 
-Every plugin uses the `onepunya.interface()` registry format — not a plain `export function run()`. Minimal example:
+Every plugin is built with the `plugin()` builder from `src/core/plugin.js`. Minimal example:
 
 ```js
-export const meta = {
-    interface: {
-        cmd:  ['commandname', 'alias1'],   // main command + aliases, all lowercase
-        tag:  'category',                  // used for grouping in the menu
-        aliasOnly: true,                   // true = can only be invoked with a prefix
-        desc: 'Short description for the menu',
-        ai: {
-            trigger: 'When the AI should trigger this command (in natural language)',
-            examples: ['example sentence 1', 'example sentence 2'],
-            args: { url: 'Explanation of the argument, if any' }, // optional
-        },
-        async run(sock, { raw, from, body, args, command, isOwner, pushname }) {
-            // command logic goes here
-            await sock.sendMessage(from, { text: 'Hello!' }, { quoted: raw });
-        },
-    },
-};
+import { plugin } from '../../src/core/plugin.js';
+
+export default plugin('commandname', 'alias1')   // main command + aliases, all lowercase
+    .in('category')                              // menu grouping
+    .desc('Short description for the menu')
+    .groupOnly()                                 // optional: .adminOnly() .ownerOnly() .botAdmin() .cooldown(sec)
+    .signal('When the AI should trigger this command', ['example sentence 1', 'example sentence 2'])
+    .run(async (sock, ctx) => {
+        await ctx.reply('Hello!');
+    });
 ```
+
+The `ctx` object already carries the everyday helpers, so plugins rarely touch `sock` directly:
+
+| Helper | What it does |
+|---|---|
+| `reply(text \| content, extra?)` | Quoted reply, e.g. `reply('hi', { mentions: [id] })` or `reply({ image: buf, caption })` |
+| `send(text \| content, extra?)` | Same chat, no quote |
+| `react(emoji)` / `del(key?)` / `typing()` | Reaction, delete message, "typing…" presence |
+| `sendTo(sock, jid, text \| content)` (from `wa/reply.js`) | Send when there is no incoming message (timers, schedulers) |
+| `resolveTarget(ctx)` (from `core/identity.js`) | Who the command points at: quoted → @mention → (opt-in) a number. Returns `{ id, tag, participant }` |
+| `kick` `promote` `demote` `addMember` `inviteLink` … (from `wa/group.js`) | Group actions, with the metadata cache refreshed afterwards |
+| `getAbout` `getAvatarUrl` `getBusiness` (from `wa/profile.js`) | Profile lookups that return `null` instead of throwing |
 
 Put new files in the `plugins/<category>/` folder. Plugins are automatically scanned and registered by `src/core/loader.js` based on `meta.interface.cmd` — **no need to register them manually anywhere else**. The `ai` block is optional but recommended, so the command can also be triggered via natural chat, not just via prefix.
 
 The owner can reload all plugins without restarting the process using the `.reload` command.
 
-> If porting a plugin from a reference bot (CommonJS / `module.exports` format), it must be adapted to the `onepunya.interface()` format above, not copy-pasted directly.
+> If porting a plugin from a reference bot (CommonJS / `module.exports` format), it must be adapted to the `plugin()` format above, not copy-pasted directly.
 
 ## Troubleshooting
 

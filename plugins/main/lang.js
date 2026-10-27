@@ -16,22 +16,19 @@ export default plugin('lang', 'language')
     ])
     .run(async (sock, {
         body,
-        raw,
-        from,
         db,
-        saveDb
+        saveDb,
+        reply
     }) => {
         const arg = body.split(/\s+/).slice(1).join(' ').trim().toLowerCase();
         const current = (db?.lang === 'id' ? 'id' : 'en');
 
         if (!arg) {
-            return sock.sendMessage(from, {
-                text: msg('lang.current', { lang: current }) + '\n\n' + msg('lang.usage'),
-            }, { quoted: raw });
+            return reply(msg('lang.current', { lang: current }) + '\n\n' + msg('lang.usage'));
         }
 
         if (!LANGS.includes(arg)) {
-            return sock.sendMessage(from, { text: msg('lang.invalid') }, { quoted: raw });
+            return reply(msg('lang.invalid'));
         }
 
         if (db) {
@@ -39,5 +36,5 @@ export default plugin('lang', 'language')
             if (typeof saveDb === 'function') await saveDb();
         }
 
-        return sock.sendMessage(from, { text: msg('lang.set', { lang: arg }) }, { quoted: raw });
+        return reply(msg('lang.set', { lang: arg }));
     });

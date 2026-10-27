@@ -15,7 +15,7 @@ export default plugin('rpg')
     .desc('Levatain RPG — info & overview (EN + ID)')
     .prefixOnly()
     .signal('User asks about RPG system or wants RPG info', ['.rpg', 'apa itu rpg', 'how does rpg work'])
-    .run(async (sock, { raw, from }) => {
+    .run(async (sock, { reply }) => {
         const classLines = CLASS_LIST.map((id) => {
             const c = CLASSES[id];
             return `  ${c.emoji} *${c.name.en}*`;
@@ -50,5 +50,5 @@ export default plugin('rpg')
             `_Phase 1–5 complete_`,
         ].join('\n');
 
-        await sock.sendMessage(from, { text }, { quoted: raw });
+        await reply(text);
     });

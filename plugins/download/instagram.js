@@ -1,4 +1,4 @@
-import { typing, getArgs, sendMediaBatch, base64ToString } from '../../src/util/index.js';
+import { getArgs, sendMediaBatch, base64ToString } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -14,15 +14,15 @@ export default plugin('instagram', 'ig')
     .run(async (sock, {
         body,
         raw,
-        from
+        from,
+        reply,
+        typing
     }) => {
         const url = getArgs(body);
-        if (!url) return sock.sendMessage(from, {
-            text: msg('need.url.ig')
-        }, { quoted: raw });
+        if (!url) return reply(msg('need.url.ig'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.download_ig') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.download_ig'));
 
         try {
             const rawText = await fetchDownloadgram(url);
@@ -34,7 +34,7 @@ export default plugin('instagram', 'ig')
             const captionText = '📸 *Instagram Downloaded*';
             await sendMediaBatch(sock, from, items, { caption: captionText, quoted: raw });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });
 

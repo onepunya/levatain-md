@@ -1,5 +1,5 @@
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
-import { typing, downloadMedia } from '../../src/util/index.js';
+import { downloadMedia } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -11,13 +11,14 @@ export default plugin('sticker', 's')
     .run(async (sock, {
         message,
         raw,
-        from,
-        pushname
+        pushname,
+        reply,
+        typing
     }) => {
         const result = await downloadMedia(raw, message.quoted, ['image', 'video']);
-        if (!result) return sock.sendMessage(from, { text: msg('need.image_video') }, { quoted: raw });
+        if (!result) return reply(msg('need.image_video'));
 
-        await typing(sock, from);
+        await typing();
         try {
             const sticker = new Sticker(result.buffer, {
                 pack: global.botName,
@@ -25,8 +26,8 @@ export default plugin('sticker', 's')
                 type: StickerTypes.FULL,
                 quality: 70,
             });
-            await sock.sendMessage(from, { sticker: await sticker.toBuffer() }, { quoted: raw });
+            await reply({ sticker: await sticker.toBuffer() });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

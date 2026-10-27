@@ -8,12 +8,11 @@ export default plugin('register', 'daftar')
     .prefixOnly()
     .signal('User wants to register account for limit bonus', ['.register username 18 West Java', '.daftar levatain 20 Jakarta'])
     .run(async (sock, {
-        raw,
-        from,
         primaryId,
         gdb,
         pushname,
-        body
+        body,
+        reply
     }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
@@ -25,19 +24,16 @@ export default plugin('register', 'daftar')
                 user.age ? `🎂 Age: *${user.age}*` : null,
                 user.province ? `📍 Province: *${user.province}*` : null,
             ].filter(Boolean).join('\n');
-            return sock.sendMessage(from, {
-                text: [
+            return reply([
                     `✅ You are already registered!`,
                     extra ? `\n${extra}\n` : '',
                     buildLimitCard(info, user.username || user.name || pushname),
-                ].join('\n'),
-            }, { quoted: raw });
+                ].join('\n'));
         }
 
         const parts = (body || '').trim().split(/\s+/).slice(1);
         if (parts.length < 3) {
-            return sock.sendMessage(from, {
-                text: [
+            return reply([
                     `📝 *Registration format*`,
                     ``,
                     `*.register <username> <age> <province>*`,
@@ -52,8 +48,7 @@ export default plugin('register', 'daftar')
                     `• Province of origin is required`,
                     ``,
                     `After registering you get a *200%* limit bonus (100% free + 100% register bonus).`,
-                ].join('\n'),
-            }, { quoted: raw });
+                ].join('\n'));
         }
 
         const username = parts[0].trim();
@@ -62,36 +57,26 @@ export default plugin('register', 'daftar')
         const age = parseInt(ageRaw, 10);
 
         if (username.length < 6) {
-            return sock.sendMessage(from, {
-                text: '❌ Username must be at least *6 characters*.\nExample: *.register levatain 20 West Java*',
-            }, { quoted: raw });
+            return reply('❌ Username must be at least *6 characters*.\nExample: *.register levatain 20 West Java*');
         }
 
         if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-            return sock.sendMessage(from, {
-                text: '❌ Username may only contain letters, numbers, and underscore (_).',
-            }, { quoted: raw });
+            return reply('❌ Username may only contain letters, numbers, and underscore (_).');
         }
 
         if (!Number.isFinite(age) || age < 1 || age > 120) {
-            return sock.sendMessage(from, {
-                text: '❌ Age must be a valid number (1–120).\nExample: *.register levatain 20 West Java*',
-            }, { quoted: raw });
+            return reply('❌ Age must be a valid number (1–120).\nExample: *.register levatain 20 West Java*');
         }
 
         if (!province || province.length < 2) {
-            return sock.sendMessage(from, {
-                text: '❌ Province of origin is required.\nExample: *.register levatain 20 West Java*',
-            }, { quoted: raw });
+            return reply('❌ Province of origin is required.\nExample: *.register levatain 20 West Java*');
         }
 
         const taken = Object.values(gdb.users || {}).some(
             u => u.registered && u.username && u.username.toLowerCase() === username.toLowerCase() && u !== user
         );
         if (taken) {
-            return sock.sendMessage(from, {
-                text: `❌ Username *${username}* is already taken. Choose another one.`,
-            }, { quoted: raw });
+            return reply(`❌ Username *${username}* is already taken. Choose another one.`);
         }
 
         const ok = registerUser(user, { username, age, province });
@@ -99,14 +84,11 @@ export default plugin('register', 'daftar')
 
         if (!ok) {
             const info = getLimitInfo(user);
-            return sock.sendMessage(from, {
-                text: `✅ You are already registered!\n\n${buildLimitCard(info, user.username || user.name || pushname)}`,
-            }, { quoted: raw });
+            return reply(`✅ You are already registered!\n\n${buildLimitCard(info, user.username || user.name || pushname)}`);
         }
 
         const info = getLimitInfo(user);
-        await sock.sendMessage(from, {
-            text: [
+        await reply([
                 `🎉 *Registration successful!*`,
                 ``,
                 `👤 Username: *${username}*`,
@@ -119,6 +101,5 @@ export default plugin('register', 'daftar')
                 buildLimitCard(info, username),
                 ``,
                 `Type *.plan* to see upgrade packages.`,
-            ].join('\n'),
-        }, { quoted: raw });
+            ].join('\n'));
     });

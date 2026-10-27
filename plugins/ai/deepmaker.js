@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import CryptoJS from 'crypto-js';
 import { createRequire } from 'module';
-import { typing, getArgs, downloadMedia, sleep } from '../../src/util/index.js';
+import { getArgs, downloadMedia, sleep } from '../../src/util/index.js';
 import { msg, ProgressMessage } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -300,7 +300,6 @@ async function waitForVerificationEmail(address, maxWaitMs = 180000) {
         }
       }
     } catch {
-      // ignore polling errors
     }
 
     await sleep(pollInterval);
@@ -464,7 +463,6 @@ async function pollTask(token, taskId, bar, intervalMs = 10000, maxAttempts = 60
       throw new Error(`Task failed (${result.code}): ${result.msg || 'Generation failed'}`);
     }
 
-    // Update spinner/stage while waiting for queue generation
     const percent = Math.min(95, Math.round((attempt / maxAttempts) * 100));
     await bar.update(`🎨 Generating AI result... (Attempt ${attempt}/${maxAttempts})`, percent);
 
@@ -512,7 +510,6 @@ async function createSession(bar, maxRetries = 3) {
       try {
         await claimReward(token);
       } catch {
-        // reward is optional
       }
 
       return { email, password, token };
@@ -544,17 +541,19 @@ export default plugin('deepmaker', 'remover', 'undress')
       body,
       message,
       raw,
-      from
+      from,
+      reply,
+      typing
   }) => {
     const prompt = getArgs(body) || 'remove all clothes, naked body';
     const bar = new ProgressMessage(sock, from, raw);
 
     const result = await downloadMedia(raw, message.quoted, ['image']);
     if (!result) {
-      return sock.sendMessage(from, { text: msg('need.image') }, { quoted: raw });
+      return reply(msg('need.image'));
     }
 
-    await typing(sock, from);
+    await typing();
     await bar.start('⏳ Initializing DeepFakeMaker session...');
 
     try {
@@ -592,14 +591,10 @@ export default plugin('deepmaker', 'remover', 'undress')
 
       await bar.done('✅ Generation complete! Sending result...');
 
-      await sock.sendMessage(
-        from,
-        {
+      await reply({
           image: { url: generateUrl },
           caption: `🎨 *AI DeepFakeMaker*\n\n*Prompt:* ${prompt}`,
-        },
-        { quoted: raw }
-      );
+        });
     } catch (e) {
       const errMsg = String(e.message || e);
       await bar.fail(msg('fail.generic', {

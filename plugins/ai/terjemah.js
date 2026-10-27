@@ -1,5 +1,5 @@
 import { api } from '../../src/api/index.js';
-import { typing, getArgs } from '../../src/util/index.js';
+import { getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -15,8 +15,8 @@ export default plugin('tr', 'terjemah', 'translate')
     .run(async (sock, {
         body,
         message,
-        raw,
-        from
+        reply,
+        typing
     }) => {
         const args = (getArgs(body, 1) || '').trim();
         const first = args.split(/\s+/)[0] || '';
@@ -27,14 +27,14 @@ export default plugin('tr', 'terjemah', 'translate')
         const text = inline || message.quoted?.text || '';
 
         if (!text) {
-            return sock.sendMessage(from, { text: msg('need.translate') }, { quoted: raw });
+            return reply(msg('need.translate'));
         }
 
-        await typing(sock, from);
+        await typing();
         try {
             const result = await api.translate(text, target);
-            return sock.sendMessage(from, { text: `${result}\n\n_→ ${target} · Gemini_` }, { quoted: raw });
+            return reply(`${result}\n\n_→ ${target} · Gemini_`);
         } catch (e) {
-            return sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            return reply(msg('fail.generic', { msg: e.message }));
         }
     });

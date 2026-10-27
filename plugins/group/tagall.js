@@ -13,18 +13,17 @@ export default plugin('tagall', 'hidetag')
     })
     .run(async (sock, {
         body,
-        raw,
-        from,
         command,
-        participants
+        participants,
+        reply
     }) => {
         const text = body.split(' ').slice(1).join(' ') || '📢 Attention!';
         const mentions = participants.map(p => p.id);
 
         if (command === 'tagall') {
             const tags = mentions.map(id => `@${id.split('@')[0]}`).join(' ');
-            await sock.sendMessage(from, { text: `${text}\n\n${tags}`, mentions }, { quoted: raw });
+            await reply(`${text}\n\n${tags}`, { mentions });
         } else {
-            await sock.sendMessage(from, { text, mentions }, { quoted: raw });
+            await reply(text, { mentions });
         }
     });

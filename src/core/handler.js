@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { promisify, inspect } from 'util';
-import { logger, sendMess } from '../util/index.js';
-import { routeSessionInput, getGroupMeta, detectDevice, msg } from '../wa/index.js';
+import { logger } from '../util/index.js';
+import { routeSessionInput, getGroupMeta, detectDevice, msg, makeSendHelpers } from '../wa/index.js';
 import { loadDb, saveDb, ensureUser, ensureGroup } from '../storage/db.js';
 import { handleAI } from '../ai/index.js';
 import { plugins } from './loader.js';
@@ -204,9 +204,9 @@ export async function handler(sock, m) {
         isOwner, isAdmin, isBotAdmin, isGroup, isMentioned,
         participants, admins, groupMetadata,
         senderIds, primaryId, botNumber,
-        mentionedJid, sendMess, pushname, saveDb,
+        mentionedJid, pushname, saveDb,
         device: m.device || detectDevice(raw),
-        reply: (text, extra = {}) => sock.sendMessage(from, { text, ...extra }, { quoted: raw })
+        ...makeSendHelpers(sock, from, raw)
     };
 
     if (!isOwner && body && isTarget(senderIds) && !(isCmd && plugins.has(command))) {

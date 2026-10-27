@@ -1,5 +1,5 @@
 import { extractSongUrl, api } from '../../src/api/index.js';
-import { typing, getArgs } from '../../src/util/index.js';
+import { getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -38,29 +38,29 @@ export default plugin('songfinder', 'findsong')
     })
     .run(async (sock, {
         body,
-        raw,
-        from,
-        message
+        message,
+        reply,
+        typing
     }) => {
         const url = extractSongUrl(getArgs(body)) || extractSongUrl(message.quoted?.text);
-        if (!url) return sock.sendMessage(from, { text: msg('need.url.songfinder') }, { quoted: raw });
+        if (!url) return reply(msg('need.url.songfinder'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.songfinder') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.songfinder'));
 
         try {
             const song = await api.songFromUrl(url);
-            if (!song) return sock.sendMessage(from, { text: msg('fail.not_found') }, { quoted: raw });
+            if (!song) return reply(msg('fail.not_found'));
 
             const caption = buildCaption(song);
-            if (!song.cover) return sock.sendMessage(from, { text: caption }, { quoted: raw });
+            if (!song.cover) return reply(caption);
 
             try {
-                await sock.sendMessage(from, { image: { url: song.cover }, caption }, { quoted: raw });
+                await reply({ image: { url: song.cover }, caption });
             } catch {
-                await sock.sendMessage(from, { text: caption }, { quoted: raw });
+                await reply(caption);
             }
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

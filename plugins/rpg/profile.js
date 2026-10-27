@@ -6,23 +6,19 @@ export default plugin('profile', 'me', 'profil', 'char')
     .desc('View RPG character profile')
     .prefixOnly()
     .signal('User wants to see RPG profile or character stats', ['.profile', '.me', '.profil'])
-    .run(async (sock, { raw, from, primaryId, gdb, pushname }) => {
+    .run(async (sock, { primaryId, gdb, pushname, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const text = buildProfile(char, user.username || pushname);
-        await sock.sendMessage(from, { text }, { quoted: raw });
+        await reply(text);
     });

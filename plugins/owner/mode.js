@@ -8,28 +8,21 @@ export default plugin('mode')
     .desc('Set bot mode: public (all chats), group (groups only), private (owner only)')
     .prefixOnly()
     .ownerOnly()
-    .run(async (sock, {
-        body,
-        raw,
-        from,
-        gdb
-    }) => {
+    .run(async (sock, { body, gdb, reply }) => {
         const arg = getArgs(body).toLowerCase();
 
         if (!arg || !VALID.includes(arg)) {
             const current = gdb.settings.mode || 'public';
-            return sock.sendMessage(from, {
-                text: `*Current bot mode:*\n${LABELS[current]}\n\n`
+            return reply(`*Current bot mode:*\n${LABELS[current]}\n\n`
                     + `Change with:\n`
                     + `• .mode public\n`
                     + `• .mode group\n`
-                    + `• .mode private`,
-            }, { quoted: raw });
+                    + `• .mode private`);
         }
 
         gdb.settings.mode = arg;
         await saveDb();
-        return sock.sendMessage(from, { text: msg('done.mode_set', { mode: LABELS[arg] }) }, { quoted: raw });
+        return reply(msg('done.mode_set', { mode: LABELS[arg] }));
     });
 
 const VALID = ['public', 'group', 'private'];

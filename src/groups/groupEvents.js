@@ -1,5 +1,5 @@
 import { logger, randomInt } from '../util/index.js';
-import { bustGroupMetaCache } from '../wa/index.js';
+import { bustGroupMetaCache, kick } from '../wa/index.js';
 import { loadDb } from '../storage/db.js';
 
 const CAPTCHA_TIMEOUT = 120_000;
@@ -18,7 +18,7 @@ function startCaptcha(sock, groupId, userJid) {
         if (!captchaPending.delete(userJid)) return;
         try {
             await sock.sendMessage(groupId, { text: `⏰ @${number} did not solve captcha. Removed.`, mentions: [userJid] });
-            await sock.groupParticipantsUpdate(groupId, [userJid], 'remove');
+            await kick(sock, groupId, userJid);
         } catch {}
     }, CAPTCHA_TIMEOUT);
 

@@ -16,49 +16,37 @@ export default plugin('pay', 'transfer', 'kirim')
     .prefixOnly()
     .cooldown(3)
     .signal('User wants to pay or transfer Aether', ['.pay @user 100', '.transfer 50'])
-    .run(async (sock, { raw, from, primaryId, gdb, body, message, mentionedJid }) => {
+    .run(async (sock, { primaryId, gdb, body, message, mentionedJid, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
         const targetId = resolveTargetId({ message, mentionedJid, primaryId, body });
         if (!targetId) {
-            return sock.sendMessage(from, {
-                text: t('pay_need', lang),
-            }, { quoted: raw });
+            return reply(t('pay_need', lang));
         }
 
         const found = findUserInDb(gdb, targetId);
         if (!found) {
-            return sock.sendMessage(from, {
-                text: t('no_target', lang),
-            }, { quoted: raw });
+            return reply(t('no_target', lang));
         }
 
         if (found.id === primaryId) {
-            return sock.sendMessage(from, {
-                text: t('self_trade', lang),
-            }, { quoted: raw });
+            return reply(t('self_trade', lang));
         }
 
         const targetChar = getCharacter(found.user);
         if (!targetChar) {
-            return sock.sendMessage(from, {
-                text: t('target_no_rpg', lang),
-            }, { quoted: raw });
+            return reply(t('target_no_rpg', lang));
         }
 
         const parts = (body || '').trim().split(/\s+/).slice(1);
@@ -73,27 +61,19 @@ export default plugin('pay', 'transfer', 'kirim')
         }
 
         if (!amount) {
-            return sock.sendMessage(from, {
-                text: t('pay_need', lang),
-            }, { quoted: raw });
+            return reply(t('pay_need', lang));
         }
 
         const result = transferAether(char, targetChar, amount);
         if (!result.ok) {
             if (result.reason === 'NO_MONEY') {
-                return sock.sendMessage(from, {
-                    text: t('no_money', lang, formatAether(amount), formatAether(result.have)),
-                }, { quoted: raw });
+                return reply(t('no_money', lang, formatAether(amount), formatAether(result.have)));
             }
-            return sock.sendMessage(from, {
-                text: t('bad_amount', lang),
-            }, { quoted: raw });
+            return reply(t('bad_amount', lang));
         }
 
         await persist();
 
         const targetName = displayName(gdb, found.id, 'Player');
-        await sock.sendMessage(from, {
-            text: t('pay_ok', lang, formatAether(result.amount), targetName),
-        }, { quoted: raw });
+        await reply(t('pay_ok', lang, formatAether(result.amount), targetName));
     });

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -75,34 +74,6 @@ export function applyAudioFilter(buffer, filterChain) {
             .on('error', reject)
             .pipe(output, { end: true });
     });
-}
-
-export async function sendMess(sock, chatId, content, options = {}) {
-    const { type = 'text', caption = '', buffer, title = global.botName, body = '' } = options;
-    try {
-        if (type === 'text') return await sock.sendMessage(chatId, { text: content });
-        if (type === 'image') {
-            let buf = buffer;
-            if (typeof buffer === 'string' && buffer.startsWith('http')) {
-                const res = await axios.get(buffer, { responseType: 'arraybuffer' });
-                buf = Buffer.from(res.data, 'binary');
-            }
-            return await sock.sendMessage(chatId, {
-                image: buf, caption,
-                contextInfo: {
-                    externalAdReply: {
-                        title, body,
-                        thumbnail: buf,
-                        sourceUrl: global.link || '',
-                        mediaType: 1,
-                        renderLargerThumbnail: true
-                    }
-                }
-            });
-        }
-    } catch (e) {
-        logger.error(`[sendMess] ${e.message}`);
-    }
 }
 
 export const typing = (sock, from) => sock.sendPresenceUpdate('composing', from);

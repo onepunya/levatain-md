@@ -1,5 +1,5 @@
 import { api } from '../../src/api/index.js';
-import { typing, getArgs } from '../../src/util/index.js';
+import { getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -12,23 +12,17 @@ export default plugin('imagine', 'genimg')
         examples: ['imagine cat astronaut', 'buatkan gambar naga biru'],
         args: { prompt: 'Description of the image to generate' },
     })
-    .run(async (sock, {
-        body,
-        raw,
-        from
-    }) => {
+    .run(async (sock, { body, reply, typing }) => {
         const prompt = getArgs(body);
-        if (!prompt) return sock.sendMessage(from, {
-            text: msg('need.imagine')
-        }, { quoted: raw });
+        if (!prompt) return reply(msg('need.imagine'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.generating', { prompt }) }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.generating', { prompt }));
 
         try {
             const url = await api.imagine(prompt);
-            await sock.sendMessage(from, { image: url, caption: `🎨 *${prompt}*` }, { quoted: raw });
+            await reply({ image: url, caption: `🎨 *${prompt}*` });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

@@ -1,4 +1,4 @@
-import { typing, downloadMedia, runFfmpegTempFile } from '../../src/util/index.js';
+import { downloadMedia, runFfmpegTempFile } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -13,17 +13,18 @@ export default plugin('ptv', 'toptv', 'videotoptv')
     .run(async (sock, {
         message,
         raw,
-        from
+        reply,
+        typing
     }) => {
         let result;
         try {
             result = await downloadMedia(raw, message.quoted, ['video']);
         } catch (e) {
-            return sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            return reply(msg('fail.generic', { msg: e.message }));
         }
-        if (!result) return sock.sendMessage(from, { text: msg('need.video') }, { quoted: raw });
+        if (!result) return reply(msg('need.video'));
 
-        await typing(sock, from);
+        await typing();
         try {
             const out = await runFfmpegTempFile(result.buffer, {
                 inExt: 'src',
@@ -39,12 +40,12 @@ export default plugin('ptv', 'toptv', 'videotoptv')
                     .format('mp4'),
             });
 
-            await sock.sendMessage(from, {
+            await reply({
                 video: out,
                 ptv: true,
                 mimetype: 'video/mp4',
-            }, { quoted: raw });
+            });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

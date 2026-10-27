@@ -8,11 +8,10 @@ export default plugin('plan', 'harga')
     .prefixOnly()
     .signal('User asks about limit plans prices or how to buy premium', ['.plan', '.harga'])
     .run(async (sock, {
-        raw,
-        from,
         primaryId,
         gdb,
-        pushname
+        pushname,
+        reply
     }) => {
         const user = gdb.users[primaryId];
         const info = user ? getLimitInfo(user) : null;
@@ -50,5 +49,5 @@ export default plugin('plan', 'harga')
             `_Limit resets automatically every 3 hours, even if the bot restarts._`,
         ].filter(Boolean).join('\n');
 
-        await sock.sendMessage(from, { text }, { quoted: raw });
+        await reply(text);
     });

@@ -26,19 +26,16 @@ export default plugin('setplan')
     .prefixOnly()
     .signal('Owner sets user limit plan', ['.setplan @user basic', '.setplan 628xxx pro'])
     .run(async (sock, {
-        raw,
-        from,
         message,
         body,
         mentionedJid,
-        gdb
+        gdb,
+        reply
     }) => {
         const parts = (body || '').trim().split(/\s+/).slice(1);
         const planKey = (parts.find(p => PLANS[p.toLowerCase()]) || '').toLowerCase();
         if (!planKey || !PLANS[planKey]) {
-            return sock.sendMessage(from, {
-                text: `❌ Invalid plan.\nOptions: ${Object.keys(PLANS).join(', ')}\nExample: *.setplan @user basic*`,
-            }, { quoted: raw });
+            return reply(`❌ Invalid plan.\nOptions: ${Object.keys(PLANS).join(', ')}\nExample: *.setplan @user basic*`);
         }
 
         let targetId = null;
@@ -55,9 +52,7 @@ export default plugin('setplan')
         }
 
         if (!targetId) {
-            return sock.sendMessage(from, {
-                text: '❌ Tag a user / reply / provide a number.\nExample: *.setplan @user pro*',
-            }, { quoted: raw });
+            return reply('❌ Tag a user / reply / provide a number.\nExample: *.setplan @user pro*');
         }
 
         let keys = findUserKeys(gdb, targetId);
@@ -92,7 +87,7 @@ export default plugin('setplan')
         const primary = gdb.users[keys[0]];
         const info = getLimitInfo(primary);
         const tag = targetId.split('@')[0];
-        await sock.sendMessage(from, {
+        await reply({
             text: [
                 `✅ Plan *${PLANS[planKey].label}* activated for @${tag}`,
                 `Keys updated: ${keys.length}`,
@@ -102,5 +97,5 @@ export default plugin('setplan')
                 buildLimitCard(info, primary.username || primary.name || tag),
             ].join('\n'),
             mentions: [targetId],
-        }, { quoted: raw });
+        });
     });

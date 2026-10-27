@@ -24,21 +24,17 @@ export default plugin('bank', 'bankaether', 'tabungan')
         '.bank withdraw 50',
         '.bank deposit all',
     ])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
@@ -49,15 +45,13 @@ export default plugin('bank', 'bankaether', 'tabungan')
         const amountRaw = (parts[1] || '').toLowerCase();
 
         if (!action || action === 'status' || action === 'info') {
-            return sock.sendMessage(from, {
-                text: [
+            return reply([
                     t('bank_title', lang),
                     `━━━━━━━━━━━━━━━━`,
                     t('bank_status', lang, formatAether(char.aether), formatAether(char.bank || 0)),
                     `━━━━━━━━━━━━━━━━`,
                     t('bank_help', lang),
-                ].join('\n'),
-            }, { quoted: raw });
+                ].join('\n'));
         }
 
         if (action === 'deposit' || action === 'dep' || action === 'tabung' || action === 'simpan') {
@@ -75,19 +69,13 @@ export default plugin('bank', 'bankaether', 'tabungan')
                     BANK_FULL: t('bank_full', lang, formatAether(BANK_MAX)),
                 };
                 if (result.reason === 'NO_MONEY') {
-                    return sock.sendMessage(from, {
-                        text: t('no_money', lang, formatAether(Math.floor(Number(amountRaw) || BANK_MIN)), formatAether(result.have || 0)),
-                    }, { quoted: raw });
+                    return reply(t('no_money', lang, formatAether(Math.floor(Number(amountRaw) || BANK_MIN)), formatAether(result.have || 0)));
                 }
-                return sock.sendMessage(from, {
-                    text: map[result.reason] || `❌ ${result.reason}`,
-                }, { quoted: raw });
+                return reply(map[result.reason] || `❌ ${result.reason}`);
             }
 
             await persist();
-            return sock.sendMessage(from, {
-                text: t('bank_deposit_ok', lang, formatAether(result.amount), formatAether(result.wallet), formatAether(result.bank)),
-            }, { quoted: raw });
+            return reply(t('bank_deposit_ok', lang, formatAether(result.amount), formatAether(result.wallet), formatAether(result.bank)));
         }
 
         if (action === 'withdraw' || action === 'wd' || action === 'tarik' || action === 'ambil') {
@@ -100,27 +88,17 @@ export default plugin('bank', 'bankaether', 'tabungan')
 
             if (!result.ok) {
                 if (result.reason === 'MIN') {
-                    return sock.sendMessage(from, {
-                        text: t('bank_min', lang, formatAether(BANK_MIN)),
-                    }, { quoted: raw });
+                    return reply(t('bank_min', lang, formatAether(BANK_MIN)));
                 }
                 if (result.reason === 'NO_BANK') {
-                    return sock.sendMessage(from, {
-                        text: t('bank_no', lang, formatAether(result.have || 0)),
-                    }, { quoted: raw });
+                    return reply(t('bank_no', lang, formatAether(result.have || 0)));
                 }
-                return sock.sendMessage(from, {
-                    text: `❌ ${result.reason}`,
-                }, { quoted: raw });
+                return reply(`❌ ${result.reason}`);
             }
 
             await persist();
-            return sock.sendMessage(from, {
-                text: t('bank_withdraw_ok', lang, formatAether(result.amount), formatAether(result.wallet), formatAether(result.bank)),
-            }, { quoted: raw });
+            return reply(t('bank_withdraw_ok', lang, formatAether(result.amount), formatAether(result.wallet), formatAether(result.bank)));
         }
 
-        return sock.sendMessage(from, {
-            text: t('bank_help', lang),
-        }, { quoted: raw });
+        return reply(t('bank_help', lang));
     });

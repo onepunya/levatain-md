@@ -12,7 +12,8 @@ export default plugin('limit', 'ceklimit')
         from,
         primaryId,
         gdb,
-        pushname
+        pushname,
+        reply
     }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
@@ -22,6 +23,6 @@ export default plugin('limit', 'ceklimit')
             await animateLimitBar(sock, from, info, raw, user.name || pushname || 'User');
         } catch {
             const card = buildLimitCard(info, user.name || pushname || 'User');
-            await sock.sendMessage(from, { text: card }, { quoted: raw });
+            await reply(card);
         }
     });

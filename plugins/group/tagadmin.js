@@ -13,19 +13,14 @@ export default plugin('tagadmin')
         examples: ['tagadmin please check', 'call all admins'],
         args: { text: 'Message to send' },
     })
-    .run(async (sock, {
-        body,
-        raw,
-        from,
-        admins
-    }) => {
-        if (!admins?.length) return sock.sendMessage(from, { text: msg('fail.no_admins') }, { quoted: raw });
+    .run(async (sock, { body, admins, reply }) => {
+        if (!admins?.length) return reply(msg('fail.no_admins'));
 
         const text = getArgs(body) || '📢 Calling all admins!';
         const list = admins.map((id, i) => `${i + 1}. @${id.split('@')[0]}`).join('\n');
 
-        await sock.sendMessage(from, {
+        await reply({
             text: `${text}\n\n${list}`,
             mentions: admins,
-        }, { quoted: raw });
+        });
     });

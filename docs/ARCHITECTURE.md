@@ -32,6 +32,7 @@ Rule of thumb: a folder imports from the ones below it, not above. Low-level fol
 | Media size checks / audio processing      | `src/media/`                            |
 | A group rule (anti-link, welcome, captcha)| `src/groups/`                           |
 | A tiny generic helper                     | `src/util/`                             |
+| A Baileys call (group admin, profile, …)  | a small wrapper in `src/wa/` (`group.js`, `profile.js`) |
 | A new `.env` variable                     | `src/config.js` + `.env.example`        |
 
 ## Importing
@@ -56,4 +57,19 @@ Folders with a single main file (`limits`, `storage`, `menu`, `media`) are impor
 npm run check            # plugins: code errors, empty env keys, API host health
 npm run check -- --no-probe
 npm run check:imports    # every import points to a real file and a real export
+```
+
+## Talking to Baileys
+
+Plugins should not call `sock.*` for routine work. Use, in this order:
+
+1. `ctx.reply / send / react / del / typing` (built per message in `src/wa/reply.js`).
+2. `resolveTarget(ctx)` (`src/core/identity.js`) and `normalizeJid / findParticipant` (`src/wa/jid.js`) for "who is this about".
+3. `src/wa/group.js` and `src/wa/profile.js` for group admin and profile lookups.
+4. `plugin().botAdmin()` instead of an `isBotAdmin` check inside `run`.
+
+Only `src/runtime/` (connection), `src/wa/` and `src/util/utils.js` import from `@whiskeysockets/baileys`.
+
+```bash
+npm test    # helpers + the kick/promote/demote and warn plugins, no network or session needed
 ```

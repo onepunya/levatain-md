@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
-import { typing, downloadMedia, getArgs } from '../../src/util/index.js';
+import { downloadMedia, getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -56,19 +56,17 @@ export default plugin('smeme')
         body,
         message,
         raw,
-        from,
-        pushname
+        pushname,
+        typing,
+        reply
     }) => {
         const args = getArgs(body);
         if (!args) {
-            return sock.sendMessage(from, {
-                text:
-                    `❌ Provide the meme text.\n\n` +
+            return reply(`❌ Provide the meme text.\n\n` +
                     `Format:\n` +
                     `*.smeme atas | bawah*\n` +
                     `*.smeme bawah saja*\n` +
-                    `*.smeme | bawah saja*`,
-            }, { quoted: raw });
+                    `*.smeme | bawah saja*`);
         }
 
         const parts = args.split('|');
@@ -76,17 +74,15 @@ export default plugin('smeme')
         const bottom = parts.length >= 2 ? parts.slice(1).join('|').trim() : parts[0].trim();
 
         if (!top && !bottom) {
-            return sock.sendMessage(from, { text: msg('need.text') }, { quoted: raw });
+            return reply(msg('need.text'));
         }
 
         const result = await downloadMedia(raw, message.quoted, ['image', 'sticker']);
         if (!result) {
-            return sock.sendMessage(from, {
-                text: '❌ Send or reply to an image/sticker first.',
-            }, { quoted: raw });
+            return reply('❌ Send or reply to an image/sticker first.');
         }
 
-        await typing(sock, from);
+        await typing();
         try {
             const base = sharp(result.buffer).ensureAlpha();
             const meta = await base.metadata();
@@ -112,8 +108,8 @@ export default plugin('smeme')
                 quality: 70,
             });
 
-            await sock.sendMessage(from, { sticker: await sticker.toBuffer() }, { quoted: raw });
+            await reply({ sticker: await sticker.toBuffer() });
         } catch (e) {
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });

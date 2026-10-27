@@ -1,4 +1,4 @@
-import { typing, downloadMedia } from '../../src/util/index.js';
+import { downloadMedia } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -10,29 +10,24 @@ export default plugin('tourl', 'geturl', 'uploadfile')
     .run(async (sock, {
         message,
         raw,
-        from
+        reply,
+        typing
     }) => {
         const types = ['image', 'video', 'audio', 'sticker', 'document'];
         const result = await downloadMedia(raw, message.quoted, types);
 
-        if (!result) return sock.sendMessage(from, {
-            text: msg('need.media_full')
-        }, { quoted: raw });
+        if (!result) return reply(msg('need.media_full'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.upload') }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.upload'));
 
         try {
             const url = await global.api.tourl(result.buffer);
             const label = LABELS[result.type] || '📁 File';
 
-            await sock.sendMessage(from, {
-                text: `✅ *${label} uploaded successfully!*\n\n🔗 *URL:*\n${url}\n\n_Link is available as long as the file remains on the server._`
-            }, { quoted: raw });
+            await reply(`✅ *${label} uploaded successfully!*\n\n🔗 *URL:*\n${url}\n\n_Link is available as long as the file remains on the server._`);
         } catch (e) {
-            await sock.sendMessage(from, {
-                text: msg('fail.upload', { msg: e.message })
-            }, { quoted: raw });
+            await reply(msg('fail.upload', { msg: e.message }));
         }
     });
 

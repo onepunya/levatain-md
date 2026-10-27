@@ -1,4 +1,5 @@
 import { formatDurationWords } from '../util/index.js';
+import { kick } from '../wa/index.js';
 
 const INVITE_LINK = /chat\.whatsapp\.com\/(?:invite\/)?[0-9A-Za-z]{20,24}/i;
 const AFK_COMMAND = /^\S?afk(\s|$)/i;
@@ -10,7 +11,7 @@ export async function enforceAntilink(sock, { from, raw, body, primaryId }) {
     if (!INVITE_LINK.test(body)) return false;
     await sock.sendMessage(from, { text: `🚫 Group link detected. ${tag(primaryId)} removed.`, mentions: [primaryId] });
     await sock.sendMessage(from, { delete: raw.key });
-    await sock.groupParticipantsUpdate(from, [primaryId], 'remove');
+    await kick(sock, from, primaryId);
     return true;
 }
 

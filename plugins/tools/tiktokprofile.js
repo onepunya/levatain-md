@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { typing, getArgs, logger } from '../../src/util/index.js';
+import { getArgs, logger } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
 
@@ -12,27 +12,19 @@ export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')
         examples: ['ttprofile jokowi', 'check tiktok profile @user', 'stalk tiktok user'],
         args: { username: 'TikTok username without @' },
     })
-    .run(async (sock, {
-        body,
-        raw,
-        from
-    }) => {
+    .run(async (sock, { body, reply, typing }) => {
         const username = getArgs(body).replace('@', '').trim();
-        if (!username) return sock.sendMessage(from, {
-            text: msg('need.username')
-        }, { quoted: raw });
+        if (!username) return reply(msg('need.username'));
 
-        await typing(sock, from);
-        await sock.sendMessage(from, { text: msg('wait.profile', { user: username }) }, { quoted: raw });
+        await typing();
+        await reply(msg('wait.profile', { user: username }));
 
         try {
             const html = await fetchTikmatrixProfile(username);
             const data = parseHTMLtoJSON(html);
 
             if (!data.profile.username) {
-                return sock.sendMessage(from, {
-                    text: msg('fail.profile', { user: username })
-                }, { quoted: raw });
+                return reply(msg('fail.profile', { user: username }));
             }
 
             const { profile, statistics, account_details } = data;
@@ -49,13 +41,13 @@ export default plugin('tiktokprofile', 'ttprofile', 'ttstalk')
                 `📅 Created: ${account_details.created_at}`;
 
             if (profile.avatar_url) {
-                await sock.sendMessage(from, { image: { url: profile.avatar_url }, caption }, { quoted: raw });
+                await reply({ image: { url: profile.avatar_url }, caption });
             } else {
-                await sock.sendMessage(from, { text: caption }, { quoted: raw });
+                await reply(caption);
             }
         } catch (e) {
             logger.error(`[ttprofile] ${e.message}`);
-            await sock.sendMessage(from, { text: msg('fail.generic', { msg: e.message }) }, { quoted: raw });
+            await reply(msg('fail.generic', { msg: e.message }));
         }
     });
 

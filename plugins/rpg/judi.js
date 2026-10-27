@@ -24,21 +24,17 @@ export default plugin('judi', 'bet', 'gamble', 'coin')
         '.judi coin 50 gambar',
         '.bet coin 100 tail',
     ])
-    .run(async (sock, { raw, from, primaryId, gdb, body }) => {
+    .run(async (sock, { primaryId, gdb, body, reply }) => {
         const user = gdb.users[primaryId];
         if (!user) return;
 
         if (!user.registered) {
-            return sock.sendMessage(from, {
-                text: t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'),
-            }, { quoted: raw });
+            return reply(t('not_registered', 'id') + '\n\n' + t('not_registered', 'en'));
         }
 
         const char = getCharacter(user);
         if (!char) {
-            return sock.sendMessage(from, {
-                text: t('no_character', 'id'),
-            }, { quoted: raw });
+            return reply(t('no_character', 'id'));
         }
 
         const lang = char.lang || 'id';
@@ -48,17 +44,13 @@ export default plugin('judi', 'bet', 'gamble', 'coin')
         const mode = (parts[0] || '').toLowerCase();
 
         if (!mode || mode === 'help') {
-            return sock.sendMessage(from, {
-                text: t('gamble_help', lang),
-            }, { quoted: raw });
+            return reply(t('gamble_help', lang));
         }
 
         if (mode === 'coin' || mode === 'koin' || mode === 'flip') {
             const cd = canGamble(primaryId);
             if (!cd.ok) {
-                return sock.sendMessage(from, {
-                    text: t('gamble_cd', lang, formatGambleWait(cd.waitMs)),
-                }, { quoted: raw });
+                return reply(t('gamble_cd', lang, formatGambleWait(cd.waitMs)));
             }
 
             const betRaw = parts[1];
@@ -67,33 +59,23 @@ export default plugin('judi', 'bet', 'gamble', 'coin')
 
             if (!bet.ok) {
                 if (bet.reason === 'MIN') {
-                    return sock.sendMessage(from, {
-                        text: t('bank_min', lang, formatAether(GAMBLE_MIN)),
-                    }, { quoted: raw });
+                    return reply(t('bank_min', lang, formatAether(GAMBLE_MIN)));
                 }
                 if (bet.reason === 'MAX') {
-                    return sock.sendMessage(from, {
-                        text: t('gamble_max', lang, formatAether(GAMBLE_MAX)),
-                    }, { quoted: raw });
+                    return reply(t('gamble_max', lang, formatAether(GAMBLE_MAX)));
                 }
                 if (bet.reason === 'NO_MONEY') {
-                    return sock.sendMessage(from, {
-                        text: t('no_money', lang, formatAether(Math.floor(Number(betRaw) || 0)), formatAether(bet.have || 0)),
-                    }, { quoted: raw });
+                    return reply(t('no_money', lang, formatAether(Math.floor(Number(betRaw) || 0)), formatAether(bet.have || 0)));
                 }
             }
 
             if (!pick) {
-                return sock.sendMessage(from, {
-                    text: t('gamble_bad_pick', lang) + '\n' + t('gamble_help', lang),
-                }, { quoted: raw });
+                return reply(t('gamble_bad_pick', lang) + '\n' + t('gamble_help', lang));
             }
 
             const result = coinFlip(char, bet.amount, pick);
             if (!result.ok) {
-                return sock.sendMessage(from, {
-                    text: t('gamble_bad_pick', lang),
-                }, { quoted: raw });
+                return reply(t('gamble_bad_pick', lang));
             }
 
             markGamble(primaryId);
@@ -107,17 +89,11 @@ export default plugin('judi', 'bet', 'gamble', 'coin')
                 : (lang === 'en' ? 'Tail' : 'Gambar');
 
             if (result.win) {
-                return sock.sendMessage(from, {
-                    text: t('gamble_win', lang, pickLabel, resultLabel, formatAether(result.payout), formatAether(result.wallet)),
-                }, { quoted: raw });
+                return reply(t('gamble_win', lang, pickLabel, resultLabel, formatAether(result.payout), formatAether(result.wallet)));
             }
 
-            return sock.sendMessage(from, {
-                text: t('gamble_lose', lang, pickLabel, resultLabel, formatAether(result.amount), formatAether(result.wallet)),
-            }, { quoted: raw });
+            return reply(t('gamble_lose', lang, pickLabel, resultLabel, formatAether(result.amount), formatAether(result.wallet)));
         }
 
-        return sock.sendMessage(from, {
-            text: t('gamble_help', lang),
-        }, { quoted: raw });
+        return reply(t('gamble_help', lang));
     });

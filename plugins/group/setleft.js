@@ -16,26 +16,24 @@ export default plugin('setleft')
     })
     .run(async (sock, {
         body,
-        raw,
         from,
-        gdb
+        gdb,
+        reply
     }) => {
         const text = getArgs(body);
         const grp = gdb.groups[from];
 
         if (!text) {
-            return sock.sendMessage(from, {
-                text: msg('need.text'),
-            }, { quoted: raw });
+            return reply(msg('need.text'));
         }
 
         if (text.toLowerCase() === 'off') {
             grp.leftText = '';
             await saveDb();
-            return sock.sendMessage(from, { text: msg('done.left_reset') }, { quoted: raw });
+            return reply(msg('done.left_reset'));
         }
 
         grp.leftText = text;
         await saveDb();
-        await sock.sendMessage(from, { text: `✅ Leave message set:\n\n${text}` }, { quoted: raw });
+        await reply(`✅ Leave message set:\n\n${text}`);
     });

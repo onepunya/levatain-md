@@ -7,9 +7,7 @@ export default plugin('infobot')
     .desc('View bot info')
     .prefixOnly()
     .signal('User asks to info bot', ['infobot', 'info bot'])
-    .run(async (sock, {
-        from
-    }) => {
+    .run(async (sock, { from }) => {
         const s = getStatus();
 
         const rows = [
