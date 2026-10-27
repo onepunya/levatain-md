@@ -14,9 +14,20 @@ const DEFAULT_EXCLUDES = [
     'temp',
     'tmp',
     '.env',
+    '.env.*',
+    'logs',
+    '.levatain',
+    '.npm',
+    '.DS_Store',
     'cloudflared',
+    'cloudflared-*',
     'tunnel.log',
+    '*.log',
+    '*.part',
 ];
+
+// File yang tetap boleh ikut walau cocok dengan pola exclude (template tanpa rahasia).
+const ALWAYS_INCLUDE = new Set(['.env.example']);
 
 const SKIP_EXTENSIONS = new Set([
     '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.bmp', '.svgz', '.avif', '.heic', '.tiff',
@@ -52,9 +63,10 @@ function loadGitignorePatterns(rootDir) {
 function isExcluded(relPath, patterns) {
     const segments = relPath.split('/');
     const base = segments[segments.length - 1];
+    if (ALWAYS_INCLUDE.has(base)) return false;
     return patterns.some(pattern => {
         if (pattern.startsWith('*.')) return relPath.endsWith(pattern.slice(1));
-        if (pattern.endsWith('*')) return base.startsWith(pattern.slice(0, -1));
+        if (pattern.endsWith('*')) return segments.some(seg => seg.startsWith(pattern.slice(0, -1)));
         return segments.includes(pattern) || relPath === pattern;
     });
 }
@@ -152,15 +164,9 @@ export async function syncProjectToGithub({
         throw new Error('No files found to push (check the exclude list).');
     }
 
-    onProgress?.(`Found ${files.length} files, reading branch ref...`);
-
-    const refData = await githubRequest(`${GITHUB_API}/repos/${repo}/git/ref/heads/${branch}`);
-    const latestCommitSha = refData.object.sha;
-
-    const commitData = await githubRequest(`${GITHUB_API}/repos/${repo}/git/commits/${latestCommitSha}`);
-    const baseTreeSha = commitData.tree.sha;
-
-    const treeItems = [];
+    // 1) Upload semua blob dulu (sekali saja, dipakai ulang kalau perlu retry).
+    onProgress?.(`Found ${files.length} files, uploading...`);
+    const blobItems = [];
     let done = 0;
     for (const file of files) {
         const content = fs.readFileSync(file.abs, 'utf-8');
@@ -171,7 +177,7 @@ export async function syncProjectToGithub({
             body: JSON.stringify({ content, encoding: 'utf-8' }),
         });
 
-        treeItems.push({ path: file.rel, mode: '100644', type: 'blob', sha: blobData.sha });
+        blobItems.push({ path: file.rel, mode: '100644', type: 'blob', sha: blobData.sha });
 
         done++;
         if (done % 15 === 0 || done === files.length) {
@@ -179,36 +185,81 @@ export async function syncProjectToGithub({
         }
     }
 
-    onProgress?.('Creating tree...');
-    const treeData = await githubRequest(`${GITHUB_API}/repos/${repo}/git/trees`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base_tree: baseTreeSha, tree: treeItems }),
-    });
+    // 2) Baca posisi branch TERBARU, buat tree + commit, lalu update ref.
+    //    Kalau branch bergeser di tengah jalan (422 not a fast forward), ulangi dari posisi baru.
+    const MAX_ATTEMPTS = 4;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        onProgress?.(attempt === 1 ? 'Reading branch ref...' : `Branch moved, retrying (${attempt}/${MAX_ATTEMPTS})...`);
 
-    onProgress?.('Creating commit...');
-    const newCommitData = await githubRequest(`${GITHUB_API}/repos/${repo}/git/commits`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            message: commitMessage || `chore: sync from bot (${new Date().toISOString()})`,
-            tree: treeData.sha,
-            parents: [latestCommitSha],
-        }),
-    });
+        const refData = await githubRequest(`${GITHUB_API}/repos/${repo}/git/ref/heads/${branch}`);
+        const latestCommitSha = refData.object.sha;
 
-    onProgress?.('Updating branch ref...');
-    await githubRequest(`${GITHUB_API}/repos/${repo}/git/refs/heads/${branch}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sha: newCommitData.sha }),
-    });
+        const commitData = await githubRequest(`${GITHUB_API}/repos/${repo}/git/commits/${latestCommitSha}`);
+        const baseTreeSha = commitData.tree.sha;
 
-    logger.success(`[GithubSync] Pushed ${files.length} files to ${repo}@${branch} (${newCommitData.sha.slice(0, 7)})`);
+        const treeItems = [...blobItems];
 
-    return {
-        filesCount: files.length,
-        commitSha: newCommitData.sha,
-        commitUrl: `https://github.com/${repo}/commit/${newCommitData.sha}`,
-    };
+        // Hapus file sampah yang sudah terlanjur ada di repo (log, .levatain, .env.*, dll).
+        try {
+            const remote = await githubRequest(`${GITHUB_API}/repos/${repo}/git/trees/${baseTreeSha}?recursive=1`);
+            if (remote.truncated) {
+                logger.warn('[GithubSync] Remote tree truncated, skip prune');
+            } else {
+                const pushed = new Set(blobItems.map(item => item.path));
+                const junk = (remote.tree || []).filter(node =>
+                    node.type === 'blob' && !pushed.has(node.path) && isExcluded(node.path, patterns));
+                for (const node of junk) {
+                    treeItems.push({ path: node.path, mode: '100644', type: 'blob', sha: null });
+                }
+                if (junk.length) {
+                    onProgress?.(`Removing ${junk.length} unneeded file(s) from repo...`);
+                    logger.info(`[GithubSync] Pruned ${junk.length} unneeded file(s) from repo`);
+                }
+            }
+        } catch (e) {
+            logger.warn(`[GithubSync] Prune skipped: ${e.message}`);
+        }
+
+        onProgress?.('Creating tree...');
+        const treeData = await githubRequest(`${GITHUB_API}/repos/${repo}/git/trees`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base_tree: baseTreeSha, tree: treeItems }),
+        });
+
+        onProgress?.('Creating commit...');
+        const newCommitData = await githubRequest(`${GITHUB_API}/repos/${repo}/git/commits`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: commitMessage || `chore: sync from bot (${new Date().toISOString()})`,
+                tree: treeData.sha,
+                parents: [latestCommitSha],
+            }),
+        });
+
+        onProgress?.('Updating branch ref...');
+        try {
+            await githubRequest(`${GITHUB_API}/repos/${repo}/git/refs/heads/${branch}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sha: newCommitData.sha }),
+            });
+        } catch (e) {
+            if (attempt < MAX_ATTEMPTS && /422/.test(e.message) && /fast forward/i.test(e.message)) {
+                logger.warn(`[GithubSync] Branch moved during push, retry ${attempt}/${MAX_ATTEMPTS - 1}`);
+                await sleep(1000 * attempt);
+                continue;
+            }
+            throw e;
+        }
+
+        logger.success(`[GithubSync] Pushed ${files.length} files to ${repo}@${branch} (${newCommitData.sha.slice(0, 7)})`);
+
+        return {
+            filesCount: files.length,
+            commitSha: newCommitData.sha,
+            commitUrl: `https://github.com/${repo}/commit/${newCommitData.sha}`,
+        };
+    }
 }

@@ -6,3 +6,12 @@ database
 .git
 .github
 .DS_Store
+.levatain
+.npm
+cloudflared
+cloudflared-*
+tunnel.log
+logs
+.env.*
+!.env.example
+.npm

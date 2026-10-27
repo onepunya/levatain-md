@@ -9,3 +9,10 @@ cloudflared
 cloudflared-*
 tunnel.log
 *.part
+.levatain
+.npm
+logs/
+.env.*
+!.env.example
+*.tgz
+nohup.out
