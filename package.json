@@ -42,6 +42,7 @@
     "sharp": "^0.33.5",
     "@img/sharp-linux-x64": "^0.33.5",
     "crypto-js": "4.2.0",
-    "jsencrypt": "3.5.4"
+    "jsencrypt": "3.5.4",
+    "long": "^5.2.3"
   }
 }

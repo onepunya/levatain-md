@@ -47,6 +47,10 @@ export const config = {
         },
     },
 
+    agent: {
+        allowGroup: process.env.AGENT_ALLOW_GROUP === 'true',
+    },
+
     tts: {
         nagaApiKey: process.env.NAGA_API_KEY || '',
     },

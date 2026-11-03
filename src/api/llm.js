@@ -28,6 +28,9 @@ const OWNER_BLOCK = loadPrompt('owner-block.txt');
 const RULES = loadPrompt('rules.txt');
 const RULES_EXEC = loadPrompt('rules-exec.txt');
 const RULES_SONG_MEDIA = loadPrompt('rules-song-media.txt');
+const RULES_AGENT = loadPrompt('rules-agent.txt');
+const RULES_NO_TOOLS = loadPrompt('rules-no-tools.txt');
+const MAX_TOOL_STEPS = 8;
 const JSON_SCHEMA = loadPrompt('json-schema.txt');
 
 const stripMarkdownLinks = (str) => {
@@ -135,7 +138,16 @@ const callGemini = async (messages, system) => {
     throw new Error("Failed to retrieve reply text");
 };
 
-const chatAI = (messages, system = '') => callGemini(messages, system);
+const EXTENSION_BLOCK = /(Google Workspace|Workspace because|Gmail settings|required Gmail)/i;
+const isExtensionBlock = (text) => text.length < 400 && EXTENSION_BLOCK.test(text);
+
+const chatAI = async (messages, system = '') => {
+    const first = await callGemini(messages, system);
+    if (!isExtensionBlock(first)) return first;
+    const retry = await callGemini(messages, `${system}\n\nDo not use Google Workspace, Gmail, Drive or any Google extension. Answer only from the conversation text.`);
+    if (!isExtensionBlock(retry)) return retry;
+    throw new Error('Gemini extension block: turn off the Google Workspace extension in gemini.google.com Settings > Extensions for the account used by GEMINI_COOKIE');
+};
 
 export const llmApi = {
     chatAI,
@@ -147,7 +159,8 @@ export const llmApi = {
     },
 
     intent: async (text, pluginList = [], history = [], userCtx = {}) => {
-        const { isOwner, pushname, memoryStr, allUsersContext, hasSongMedia, lang = 'en' } = userCtx;
+        const { isOwner, pushname, memoryStr, allUsersContext, hasSongMedia, lang = 'en', runTool } = userCtx;
+        const toolsOn = isOwner === true && typeof runTool === 'function';
         const NL_EXCLUDE = new Set(['s', 'toimg', 'removebg', 'tourl', 'menu', 'ping', 'memory']);
 
         const cmdList = pluginList
@@ -172,10 +185,33 @@ export const llmApi = {
             ? 'LANGUAGE: Balas user in Bahasa Indonesia. Intent/command routing tetap pahami input English maupun Indonesia.'
             : 'LANGUAGE: Reply to the user in English. Intent/command routing must still understand both English and Indonesian input.';
 
-        const system = `${personality}\n${ownerBlock}${mediaBlock}\nUSER: ${userInfo}\n${langRule}\n${allUsersContext ? `${allUsersContext}\n` : ''}AVAILABLE COMMANDS:\n${cmdList || '(no commands registered)'}\n\nRULES:\n${RULES}\n${isOwner ? `${RULES_EXEC}\n` : ''}${hasSongMedia ? `${RULES_SONG_MEDIA}\n` : ''}${isOwner ? 'This user is the verified OWNER — highest priority service.\n' : ''}\n${JSON_SCHEMA}`;
+        const system = `${personality}\n${ownerBlock}${mediaBlock}\nUSER: ${userInfo}\n${langRule}\n${allUsersContext ? `${allUsersContext}\n` : ''}AVAILABLE COMMANDS:\n${cmdList || '(no commands registered)'}\n\nRULES:\n${RULES}\n${isOwner ? `${RULES_EXEC}\n` : ''}${toolsOn ? `${RULES_AGENT}\n` : `${RULES_NO_TOOLS}\n`}${hasSongMedia ? `${RULES_SONG_MEDIA}\n` : ''}${isOwner ? 'This user is the verified OWNER — highest priority service.\n' : ''}\n${JSON_SCHEMA}`;
 
         const messages = [...history.slice(-10), { role: 'user', content: text }];
-        const response = await chatAI(messages, system);
+        let response = await chatAI(messages, system);
+        let exhausted = false;
+
+        if (toolsOn) {
+            for (let step = 1; step <= MAX_TOOL_STEPS + 1; step++) {
+                const raw = extractJson(response);
+                let call = null;
+                try {
+                    call = raw ? JSON.parse(raw) : null;
+                } catch {
+                    call = null;
+                }
+                if (!call || !call.tool) break;
+                if (step > MAX_TOOL_STEPS) {
+                    exhausted = true;
+                    break;
+                }
+                const toolArgs = call.toolArgs && typeof call.toolArgs === 'object' ? call.toolArgs : {};
+                const output = await runTool(String(call.tool), toolArgs, step);
+                messages.push({ role: 'assistant', content: JSON.stringify({ command: 'chat', tool: call.tool, toolArgs }) });
+                messages.push({ role: 'user', content: `TOOL_RESULT ${call.tool}: ${output}` });
+                response = await chatAI(messages, system);
+            }
+        }
 
         const jsonStr = extractJson(response);
         if (!jsonStr) return { command: 'chat', args: '', message: response.trim(), remember: {}, mood: null, voice: false, preReply: '' };
@@ -184,7 +220,7 @@ export const llmApi = {
             return {
                 command: p.command || 'chat',
                 args: stripMarkdownLinks(p.args || ''),
-                message: p.message || '',
+                message: p.message || (exhausted ? 'Tool step limit reached. Send the request again to continue.' : ''),
                 remember: p.remember || {},
                 mood: p.mood || null,
                 voice: p.voice === true,

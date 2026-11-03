@@ -8,6 +8,8 @@ import { plugins } from '../core/loader.js';
 import { denyReason } from '../core/access.js';
 import { isTarget, hold, PROMPT_TEXT } from '../core/praiseGate.js';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
+import { config } from '../config.js';
+import { makeToolRunner, readAttachment } from './agent.js';
 
 async function sendMoodSticker(sock, from, mood, raw) {
     try {
@@ -70,7 +72,11 @@ export async function handleAI(sock, m, ctx) {
         const allUsersContext = asksAboutOthers ? await getAllUsersContext(primaryId) : '';
 
         const userLang = (db?.lang === 'id') ? 'id' : 'en';
-        const result = await intentEngine(cleanText || body, history, {
+        const agentOn = isOwner === true && (!isGroup || config.agent.allowGroup);
+        const attachment = agentOn ? await readAttachment(raw, m) : '';
+        const runTool = agentOn ? makeToolRunner({ isOwner, sock, from, quoted: raw }) : null;
+        const result = await intentEngine((cleanText || body) + attachment, history, {
+            runTool,
             isOwner,
             pushname,
             memoryStr,
