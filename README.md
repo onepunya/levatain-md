@@ -73,7 +73,7 @@ Open `.env` and fill in at minimum:
 
 - `BOT_THUMB` — (optional) menu thumbnail. Accepts an image URL (`.png/.jpg`) **or** a video URL (`.mp4/.mov/.webm`). A video is sent as a looping GIF-style clip. Keep it small (under ~2 MB, no audio) so WhatsApp auto-downloads it; the recipient's *Auto-download → Video* setting also has to be on, otherwise they see a download button.
 
-Other variables (Giphy, OnePunya, Magic Hour, AudD/Shazam, translate, song finder base URL, dashboard port, etc.) are optional — see the comments in `.env.example` for an explanation of each variable.
+Other variables (Giphy, Magic Hour, translate, dashboard port, etc.) are optional — see the comments in `.env.example` for an explanation of each variable.
 
 ## How to Get All API Keys
 
@@ -85,8 +85,6 @@ All the keys below go in the `.env` file (not `.env.example`), one line per vari
 | Voice note TTS (optional) | `NAGA_API_KEY` | Join the [NagaAI](https://naga.ac/) Discord server → in the bot channel, type `/account key get`. Only used for text-to-speech, not for chat. |
 | Mood/AI stickers (Giphy) | `GIPHY_API_KEY` | Open [developers.giphy.com](https://developers.giphy.com/) → **Create an App** → choose **API** (not SDK) → copy the API Key shown. |
 | `.editimage` / `.aiedit` (Magic Hour) | `MAGICHOUR_KEY_1` through `MAGICHOUR_KEY_3` | Sign up at [magichour.ai](https://magichour.ai/) → go to **Dashboard** → **API Keys** menu → generate a new key. You can fill in more than one for auto-rotation. |
-| `.play` song recognition (fallback) | `AUDD_API_KEY` | Sign up for free at [dashboard.audd.io](https://dashboard.audd.io/). |
-| `.play` song recognition (tried first) | `SHAZAM_RAPIDAPI_KEY`, `SHAZAM_RAPIDAPI_HOST` | Sign up & subscribe (free plan available) at [RapidAPI - Shazam API](https://rapidapi.com/diyorbekkanal/api/shazam-api6). |
 | `.pushgh` / `.deploy` (push source to GitHub) | `GITHUB_SYNC_TOKEN` (or reuses `GITHUB_TOKEN`), `GITHUB_SYNC_REPO`, `GITHUB_SYNC_BRANCH` | [github.com/settings/tokens](https://github.com/settings/tokens) → generate a token with `repo` scope (classic) or `Contents: write` (fine-grained, scoped to the target repo). `GITHUB_SYNC_REPO` is `username/repo-name` of the **public** repo you want the bot to push to. |
 
 Once you have a key, open `.env`, paste it on the matching env var line, save, then restart the bot (`npm start` again / `pm2 restart levatain-md`).
@@ -184,12 +182,24 @@ Sometimes automatic owner detection fails (a WhatsApp LID edge case). If this ha
 4. Copy the digits from `lid=XXXXXXXXXX@lid` (digits only, without `@lid`).
 5. Set it as `OWNER_LID` in `.env`, restart the bot.
 
-## Song Finder
 
-- `.songfinder <TikTok or Instagram link>` (alias `.findsong`) identifies the song used in a video or reel. It also works when you reply to a message that contains the link.
-- `.play <TikTok or Instagram link>` identifies the song from the link and then downloads it as MP3.
-- `.play` while replying to an audio/video file recognizes the song from the file itself (AudD/Shazam), and `.play <title>` searches by title.
-- No API key is needed. The scraper opens a session on the site, reads the page nonce, keeps the cookies, and refreshes both automatically when the site rejects them. If the site ever moves, set `SONGFINDER_BASE_URL` in `.env`.
+## AI Agent
+
+Levatain's AI is an agent: it can call tools in a loop, several at once when they are read-only, and answer when it has enough.
+
+| Tool | Who | What it does |
+|------|-----|--------------|
+| `web_search`, `web_read` | everyone | Search the web and read pages (no API key, private addresses blocked) |
+| `calc`, `time_now` | everyone | Exact math, current time in any timezone |
+| `note_save/find/list/delete` | everyone | Long-term notes per user |
+| `remind`, `remind_list`, `remind_cancel` | everyone | Reminders, one-off or repeating |
+| `run_plugin` | everyone | Run a bot command and use its text result in a multi-step plan |
+| `schedule` | owner | Scheduled agent tasks (e.g. a daily report) |
+| `readfile`, `edit_file`, `exec`, `sandbox_*`, … | owner | Workshop tools for the project itself |
+
+Safety: web content is untrusted. After the agent reads the web, file-changing, code-running, posting and scheduling tools are locked for the rest of that run. Regular users have a smaller step budget and an hourly cap.
+
+Setup: set `GEMINI_API_KEY` (free tier) as a fallback for the cookie, and `BOT_TIMEZONE` for reminders. Tests: `npm run test:agent`.
 
 ## Plugin Checker
 

@@ -13,6 +13,7 @@ import { readGroupMetaCache, getCachedMessage } from '../wa/index.js';
 import { initDb, scheduleAutoReset } from '../storage/db.js';
 import { loadPlugins, plugins } from '../core/loader.js';
 import { bindSocketEvents } from './listeners.js';
+import { startScheduler } from './scheduler.js';
 
 const FALLBACK_WA_VERSION = [2, 3000, 1015901307];
 const MAX_FAST_RETRIES = 5;
@@ -104,6 +105,7 @@ async function onConnectionOpen(sock) {
     await initDb();
     await loadPlugins();
     scheduleAutoReset();
+    startScheduler();
     await resolveOwnerLid(sock);
 
     logger.info(`${plugins.size} commands | Owner: ${global.owner || '(not set)'}`);

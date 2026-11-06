@@ -1,15 +1,17 @@
 import { intentEngine } from './engine.js';
-import { getHistory, addHistory, clearHistory, getUserMemory, setUserMemory, getAllUsersContext } from './memory.js';
+import { runAgentLoop } from './loop.js';
+import { config } from '../config.js';
+import { isAgentTool, runAgentTool } from './tools.js';
+import { getHistory, addHistory, clearHistory, getUserMemory, setUserMemory, getAllUsersContext, getSummary, foldHistoryIfNeeded } from './memory.js';
 import { shouldHandleAI, cleanTrigger, isOnCooldown } from './gate.js';
+import { remainingSteps, recordSteps } from './budget.js';
 import { api, getRandomMoodSticker } from '../api/index.js';
-import { logger, toVoiceNoteOpus } from '../util/index.js';
+import { logger, toVoiceNoteOpus, sleep } from '../util/index.js';
 import { sendLangPicker, msg } from '../wa/index.js';
 import { plugins } from '../core/loader.js';
 import { denyReason } from '../core/access.js';
 import { isTarget, hold, PROMPT_TEXT } from '../core/praiseGate.js';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
-import { config } from '../config.js';
-import { makeToolRunner, readAttachment } from './agent.js';
 
 async function sendMoodSticker(sock, from, mood, raw) {
     try {
@@ -56,14 +58,12 @@ export async function handleAI(sock, m, ctx) {
 
     const cleanText = cleanTrigger(body) || 'Hi!';
 
-    const SONG_MEDIA_TYPES = { audioMessage: 'audio', videoMessage: 'video' };
-    const ownMediaType = Object.keys(raw?.message || {})[0];
-    const hasSongMedia = SONG_MEDIA_TYPES[m.quoted?.type] || SONG_MEDIA_TYPES[ownMediaType] || null;
 
     try {
         await sock.sendPresenceUpdate('composing', from);
 
         const history = await getHistory(primaryId);
+        const summary = await getSummary(primaryId);
         const memory = await getUserMemory(primaryId);
         const memoryStr = Object.keys(memory).length > 0
             ? Object.entries(memory).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
@@ -72,51 +72,108 @@ export async function handleAI(sock, m, ctx) {
         const allUsersContext = asksAboutOthers ? await getAllUsersContext(primaryId) : '';
 
         const userLang = (db?.lang === 'id') ? 'id' : 'en';
-        const agentOn = isOwner === true && (!isGroup || config.agent.allowGroup);
-        const attachment = agentOn ? await readAttachment(raw, m) : '';
-        const runTool = agentOn ? makeToolRunner({ isOwner, sock, from, quoted: raw }) : null;
-        const result = await intentEngine((cleanText || body) + attachment, history, {
-            runTool,
-            isOwner,
-            pushname,
-            memoryStr,
-            allUsersContext,
-            hasSongMedia,
-            lang: userLang,
+
+        let progressKey = null;
+        const notifyProgress = async (line) => {
+            try {
+                if (!progressKey) {
+                    const sent = await sock.sendMessage(from, { text: line }, { quoted: raw });
+                    progressKey = sent?.key || null;
+                } else {
+                    await sock.sendMessage(from, { text: line, edit: progressKey });
+                }
+            } catch (e) {
+                logger.warn(`[AI progress] ${e.message}`);
+            }
+        };
+
+        const { result, steps } = await runAgentLoop({
+            intent: intentEngine,
+            text: cleanText || body,
+            history,
+            userCtx: {
+                isOwner,
+                pushname,
+                memoryStr,
+                summary,
+                allUsersContext,
+                lang: userLang,
+            },
+            toolCtx: { isOwner, primaryId, from, lang: userLang, sock, pluginCtx: ctx, m },
+            notify: notifyProgress,
+            options: isOwner
+                ? config.agent
+                : { ...config.agent, maxStepsUser: Math.min(config.agent.maxStepsUser, remainingSteps(primaryId, config.agent.userStepsPerHour)) },
         });
 
-        const { command: aiCmd, args, message: aiMessage, remember, mood, voice: wantsVoice, preReply } = result;
+        if (!isOwner) recordSteps(primaryId, steps.length);
+
+        if (steps.length) {
+            logger.cmd(primaryId, `agent loop: ${steps.map(x => x.command).join(' > ')}`);
+            db.hit = (db.hit || 0) + steps.length;
+        }
+
+        const { command: aiCmd, args, message: aiMessage, messages: aiMessages, remember, mood, voice: wantsVoice, preReply, isError } = result;
 
         if (remember && typeof remember === 'object') {
             for (const [k, v] of Object.entries(remember))
                 await setUserMemory(primaryId, k, v);
         }
 
-        if (aiMessage) {
-            if (wantsVoice) {
-                if (preReply) {
-                    await sock.sendMessage(from, { text: preReply }, { quoted: raw });
+        const textChunks = [];
+        if (Array.isArray(aiMessages)) {
+            for (const part of aiMessages) {
+                const s = String(part || '').trim();
+                if (s) textChunks.push(s);
+            }
+        }
+        if (aiMessage && String(aiMessage).trim()) {
+            const main = String(aiMessage).trim();
+            if (!textChunks.length || textChunks[textChunks.length - 1] !== main) textChunks.push(main);
+        }
+
+        const chatLike = !aiCmd || aiCmd === 'chat' || aiCmd === 'reset_memory';
+        if (!chatLike) textChunks.length = 0;
+
+        const sendText = async (text, quoted = true) => {
+            const opts = quoted ? { quoted: raw } : {};
+            await sock.sendMessage(from, { text }, opts);
+        };
+
+        if (preReply && String(preReply).trim()) {
+            await sendText(String(preReply).trim());
+            await sleep(400);
+        }
+
+        if (wantsVoice && textChunks.length) {
+            const spoken = textChunks.join('\n\n');
+            try {
+                await sock.sendPresenceUpdate('recording', from);
+                const mp3 = await api.generateVoiceNote(spoken);
+                const ogg = await toVoiceNoteOpus(mp3);
+                await sock.sendMessage(from, { audio: ogg, mimetype: 'audio/ogg; codecs=opus', ptt: true }, { quoted: raw });
+            } catch (e) {
+                logger.error(`[AI voice] ${e.message}`);
+                for (let i = 0; i < textChunks.length; i++) {
+                    await sendText(i === 0 ? `${textChunks[i]}\n\n_⚠️ Voice note unavailable._` : textChunks[i]);
+                    if (i < textChunks.length - 1) await sleep(350);
                 }
-                try {
-                    await sock.sendPresenceUpdate('recording', from);
-                    const mp3 = await api.generateVoiceNote(aiMessage);
-                    const ogg = await toVoiceNoteOpus(mp3);
-                    await sock.sendMessage(from, { audio: ogg, mimetype: 'audio/ogg; codecs=opus', ptt: true }, { quoted: raw });
-                } catch (e) {
-                    logger.error(`[AI voice] ${e.message}`);
-                    if (preReply) {
-                        await sock.sendMessage(from, { text: '_⚠️ Voice note failed, text reply:_\n\n' + aiMessage }, { quoted: raw });
-                    } else {
-                        await sock.sendMessage(from, { text: `${aiMessage}\n\n_⚠️ Voice note unavailable._` }, { quoted: raw });
-                    }
-                }
-            } else {
-                await sock.sendMessage(from, { text: aiMessage }, { quoted: raw });
+            }
+        } else if (textChunks.length) {
+            for (let i = 0; i < textChunks.length; i++) {
+                await sendText(textChunks[i]);
+                if (i < textChunks.length - 1) await sleep(350);
             }
         }
 
-        await addHistory(primaryId, 'user', cleanText || body);
-        if (aiMessage) await addHistory(primaryId, 'assistant', aiMessage);
+        if (!isError) {
+            await addHistory(primaryId, 'user', cleanText || body);
+            foldHistoryIfNeeded(primaryId, (prev, msgs) => api.summarizeChat(prev, msgs)).catch(e => logger.warn(`[AI fold] ${e.message}`));
+            const ranCmd = aiCmd && aiCmd !== 'chat' && aiCmd !== 'reset_memory';
+            const historyText = textChunks.join('\n')
+                || (ranCmd ? `[Lev sudah menjalankan fitur ${aiCmd}${args ? `: ${String(args).slice(0, 120)}` : ''}]` : '');
+            if (historyText) await addHistory(primaryId, 'assistant', historyText);
+        }
 
         if (aiCmd === 'reset_memory') {
             await clearHistory(primaryId);
@@ -124,14 +181,28 @@ export async function handleAI(sock, m, ctx) {
         }
 
         if (!aiCmd || aiCmd === 'chat') {
-
             if (mood) sendMoodSticker(sock, from, mood, raw);
+            return true;
+        }
+
+        if (isAgentTool(aiCmd)) {
+            logger.cmd(primaryId, `${aiCmd} [AI-tool]`);
+            try {
+                const text = await runAgentTool(aiCmd, args || '', { isOwner, primaryId, from });
+                if (text) await sendText(text);
+            } catch (e) {
+                logger.error(`[AI tool ${aiCmd}] ${e.message}`);
+                await sendText(`⚠️ Tool \`${aiCmd}\`: ${e.message}`);
+            }
+            db.hit = (db.hit || 0) + 1;
+            await saveDb();
             return true;
         }
 
         const plugin = plugins.get(aiCmd);
         if (!plugin) {
             logger.warn(`[AI] Command "${aiCmd}" not found`);
+            await sendText(`⚠️ Fitur \`${aiCmd}\` tidak tersedia.`);
             return true;
         }
 
@@ -153,7 +224,12 @@ export async function handleAI(sock, m, ctx) {
             return true;
         }
 
-        await runAiCmd();
+        try {
+            await runAiCmd();
+        } catch (e) {
+            logger.error(`[AI plugin ${aiCmd}] ${e.message}`);
+            await sendText(`⚠️ Gagal menjalankan \`${aiCmd}\`: ${e.message}`);
+        }
 
         db.hit = (db.hit || 0) + 1;
         await saveDb();

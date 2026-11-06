@@ -44,12 +44,21 @@ export const config = {
     ai: {
         gemini: {
             cookie: process.env.GEMINI_COOKIE || '',
+            apiKey: process.env.GEMINI_API_KEY || '',
+            model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
         },
     },
 
     agent: {
-        allowGroup: process.env.AGENT_ALLOW_GROUP === 'true',
+        maxSteps: Math.max(1, Number(process.env.AGENT_MAX_STEPS) || 8),
+        timeoutMs: Math.max(10_000, Number(process.env.AGENT_TIMEOUT_MS) || 120_000),
+        maxStepsUser: Math.max(1, Number(process.env.AGENT_MAX_STEPS_USER) || 4),
+        timeoutMsUser: Math.max(10_000, Number(process.env.AGENT_TIMEOUT_MS_USER) || 60_000),
+        userStepsPerHour: Math.max(0, Number(process.env.AGENT_USER_STEPS_PER_HOUR) || 40),
+        maxParallel: Math.min(6, Math.max(1, Number(process.env.AGENT_MAX_PARALLEL) || 4)),
     },
+
+    timezone: process.env.BOT_TIMEZONE || 'Asia/Jakarta',
 
     tts: {
         nagaApiKey: process.env.NAGA_API_KEY || '',
@@ -59,14 +68,7 @@ export const config = {
         apiKey: process.env.GIPHY_API_KEY || '',
     },
 
-    audd: {
-        apiKey: process.env.AUDD_API_KEY || '',
-    },
 
-    shazam: {
-        rapidApiKey: process.env.SHAZAM_RAPIDAPI_KEY || '',
-        rapidApiHost: process.env.SHAZAM_RAPIDAPI_HOST || 'shazam-api6.p.rapidapi.com',
-    },
 
     magicHour: {
         keys: [
@@ -76,13 +78,7 @@ export const config = {
         ].filter(Boolean),
     },
 
-    crun: {
-        apiKey: process.env.CRUN_API_KEY || '',
-    },
 
-    songFinder: {
-        baseUrl: (process.env.SONGFINDER_BASE_URL || 'https://freesongfinder.com').replace(/\/+$/, ''),
-    },
 
     translateEmail: process.env.TRANSLATE_EMAIL || '',
     dashboardPort: resolveDashboardPort(),
@@ -104,6 +100,6 @@ export const config = {
 
 config.dashboardPortSource = resolveDashboardPort._source || 'default';
 
-if (!config.ai.gemini.cookie) {
-    console.warn('[config] Warning: GEMINI_COOKIE is empty, the AI chat feature will not work.');
+if (!config.ai.gemini.cookie && !config.ai.gemini.apiKey) {
+    console.warn('[config] Warning: GEMINI_COOKIE and GEMINI_API_KEY are both empty, the AI chat feature will not work.');
 }

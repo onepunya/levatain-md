@@ -32,10 +32,11 @@ export default plugin('ai', 'tanya')
             const response = await api.chatAI([
                 ...history.slice(-10),
                 { role: 'user', content: args },
-            ], `You are Levatain, a friendly and smart AI assistant. Reply in the same language as the user.`);
+            ], `${api.personality}\nReply in the same language as the user. Answer the question directly in plain text, not JSON.`);
 
             await reply(response);
         } catch (e) {
+            if (e.refused) return reply('⚠️ Gemini menolak menjawab pesan ini. Coba persingkat atau ubah kalimatnya.');
             await reply(msg('fail.generic', { msg: e.message }));
         }
     });

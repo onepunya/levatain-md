@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '../config.js';
+import { formatLocal, getTimezone } from '../runtime/scheduler.js';
 
 const stripThinking = (text) => {
     let out = String(text || '');
@@ -27,10 +28,7 @@ const PERSONALITY_GENERAL = loadPrompt('personality-general.txt');
 const OWNER_BLOCK = loadPrompt('owner-block.txt');
 const RULES = loadPrompt('rules.txt');
 const RULES_EXEC = loadPrompt('rules-exec.txt');
-const RULES_SONG_MEDIA = loadPrompt('rules-song-media.txt');
-const RULES_AGENT = loadPrompt('rules-agent.txt');
-const RULES_NO_TOOLS = loadPrompt('rules-no-tools.txt');
-const MAX_TOOL_STEPS = 8;
+const RULES_TOOLS = loadPrompt('rules-tools.txt');
 const JSON_SCHEMA = loadPrompt('json-schema.txt');
 
 const stripMarkdownLinks = (str) => {
@@ -65,6 +63,45 @@ const extractJson = (str) => {
     }
     return null;
 };
+
+const scanObject = (str, start) => {
+    let depth = 0, inString = false, escape = false;
+    for (let i = start; i < str.length; i++) {
+        const ch = str[i];
+        if (escape) { escape = false; continue; }
+        if (ch === '\\') { escape = true; continue; }
+        if (ch === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (ch === '{') depth++;
+        else if (ch === '}') {
+            depth--;
+            if (depth === 0) return str.slice(start, i + 1);
+        }
+    }
+    return null;
+};
+
+const parseModelJson = (str) => {
+    const text = String(str || '');
+    const starts = [...text.matchAll(/\{\s*"(?:command|tools)"\s*:/g)].map(m => m.index);
+    let found = null;
+    let skipUntil = 0;
+    for (const start of starts) {
+        if (start < skipUntil) continue;
+        const raw = scanObject(text, start);
+        if (!raw) continue;
+        try {
+            const obj = JSON.parse(raw);
+            if (obj && typeof obj === 'object') {
+                found = obj;
+                skipUntil = start + raw.length;
+            }
+        } catch {}
+    }
+    return found;
+};
+
+const looksLikeBrokenJson = (str) => /```json|\{\s*"(?:command|tools)"\s*:/i.test(String(str || ''));
 
 const callGemini = async (messages, system) => {
     let promptText = system ? `[SYSTEM INSTRUCTIONS]:\n${system}\n\n` : '';
@@ -110,6 +147,7 @@ const callGemini = async (messages, system) => {
         method: 'POST',
         headers: headers,
         body: body,
+        signal: AbortSignal.timeout(45_000),
     });
 
     if (res.status === 429 || res.status === 402) throw new Error("Rate limit tercapai.");
@@ -138,33 +176,108 @@ const callGemini = async (messages, system) => {
     throw new Error("Failed to retrieve reply text");
 };
 
-const EXTENSION_BLOCK = /(Google Workspace|Workspace because|Gmail settings|required Gmail)/i;
-const isExtensionBlock = (text) => text.length < 400 && EXTENSION_BLOCK.test(text);
+
+const REFUSAL_RE = /^\W*(maaf[,.]?\s*)?((saya|aku|i)\s*(adalah|am|'m)\s*(hanya\s*|just\s*)?(sebuah\s*|a\s*)?(large\s*)?(model bahasa|language model)|saya tidak (dapat|bisa) membantu|i (can't|cannot|can not) help with that|i('m| am) unable to (help|assist)|i want to help as much as i can|my safety (system|filters?)|i can(?:'t|not) generate a response|(saya|aku) tidak (dapat|bisa) (membuat|menghasilkan) (respons|respon|jawaban)|sistem keamanan (saya|kami)|(maaf[,.]?\s*)?(saya|aku) tidak (dapat|bisa) memproses|tidak (diprogram|dirancang) untuk (itu|hal)|(saya|aku) hanya (menghasilkan teks|model bahasa)|i can(?:'t|not) (process|fulfill) (that|this) request)/i;
+const isRefusal = (text) => {
+    const t = String(text || '').trim();
+    return t.length > 0 && t.length < 260 && REFUSAL_RE.test(t);
+};
+
+const callGeminiApi = async (messages, system) => {
+    const { apiKey, model } = config.ai.gemini;
+    if (!apiKey) throw new Error('GEMINI_API_KEY is empty in .env');
+    const merged = [];
+    for (const m of messages) {
+        const role = m.role === 'assistant' ? 'model' : 'user';
+        const text = String(m.content ?? '');
+        const last = merged[merged.length - 1];
+        if (last && last.role === role) last.parts[0].text += `\n\n${text}`;
+        else merged.push({ role, parts: [{ text }] });
+    }
+    if (!merged.length || merged[0].role !== 'user') merged.unshift({ role: 'user', parts: [{ text: '(start)' }] });
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({
+            systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+            contents: merged,
+            generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+        }),
+        signal: AbortSignal.timeout(60_000),
+    });
+    if (res.status === 429) throw new Error('Rate limit tercapai.');
+    if (!res.ok) throw new Error(`Gemini API HTTP ${res.status}`);
+    const data = await res.json();
+    const text = (data?.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+    if (!text.trim()) {
+        const err = new Error(data?.promptFeedback?.blockReason ? `Gemini API blocked: ${data.promptFeedback.blockReason}` : 'Gemini API returned an empty reply');
+        if (data?.promptFeedback?.blockReason) err.refused = true;
+        throw err;
+    }
+    return stripThinking(text);
+};
+
+const callProvider = async (messages, system) => {
+    const { cookie, apiKey } = config.ai.gemini;
+    if (cookie) {
+        try {
+            return await callGemini(messages, system);
+        } catch (e) {
+            if (!apiKey) throw e;
+            console.warn(`[llm] cookie provider failed (${e.message}), falling back to Gemini API`);
+        }
+    }
+    if (apiKey) return callGeminiApi(messages, system);
+    throw new Error('No AI provider configured. Set GEMINI_COOKIE or GEMINI_API_KEY in .env');
+};
 
 const chatAI = async (messages, system = '') => {
-    const first = await callGemini(messages, system);
-    if (!isExtensionBlock(first)) return first;
-    const retry = await callGemini(messages, `${system}\n\nDo not use Google Workspace, Gmail, Drive or any Google extension. Answer only from the conversation text.`);
-    if (!isExtensionBlock(retry)) return retry;
-    throw new Error('Gemini extension block: turn off the Google Workspace extension in gemini.google.com Settings > Extensions for the account used by GEMINI_COOKIE');
+    let last;
+    for (let attempt = 0; attempt < 2; attempt++) {
+        last = await callProvider(messages, system);
+        if (!isRefusal(last)) return last;
+    }
+    const err = new Error('AI refused to answer.');
+    err.refused = true;
+    throw err;
 };
 
 export const llmApi = {
     chatAI,
     langName,
+    personality: PERSONALITY_GENERAL,
 
     translate: async (text, target = 'English') => {
         const system = `You are a professional translator. Translate the user's text into ${target}. Keep names, emojis, and formatting. Output only the translation, nothing else.`;
         return chatAI([{ role: 'user', content: String(text).slice(0, 4000) }], system);
     },
 
-    intent: async (text, pluginList = [], history = [], userCtx = {}) => {
-        const { isOwner, pushname, memoryStr, allUsersContext, hasSongMedia, lang = 'en', runTool } = userCtx;
-        const toolsOn = isOwner === true && typeof runTool === 'function';
-        const NL_EXCLUDE = new Set(['s', 'toimg', 'removebg', 'tourl', 'menu', 'ping', 'memory']);
+    summarizeChat: async (previous, messages) => {
+        const transcript = messages
+            .map(m => `${m.role === 'assistant' ? 'Bot' : 'User'}: ${String(m.content || '').slice(0, 500)}`)
+            .join('\n')
+            .slice(0, 9000);
+        const system = 'You compress a WhatsApp chat into a compact memory for the assistant. Merge the previous summary with the new messages. Keep durable facts, decisions, ongoing tasks and the user\'s preferences; drop greetings and small talk. Same language as the chat. Plain text, max 900 characters, no markdown, no preamble.';
+        const content = `Previous summary:\n${previous || '(none)'}\n\nNew messages:\n${transcript}\n\nUpdated summary:`;
+        return chatAI([{ role: 'user', content }], system);
+    },
+
+    intent: async (text, pluginList = [], history = [], userCtx = {}, toolsPrompt = '', scratch = []) => {
+        const { isOwner, pushname, memoryStr, summary, allUsersContext, lang = 'en' } = userCtx;
+        const NL_EXCLUDE = new Set(['s', 'toimg', 'removebg', 'tourl', 'menu', 'ping', 'memory', 'ai', 'tanya', 'porn', 'bokep']);
+
+        const agentNames = new Set(
+            String(toolsPrompt || '')
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.startsWith('- '))
+                .map(line => line.slice(2).split(':')[0].split(' ')[0].split('(')[0].trim())
+                .filter(Boolean)
+        );
 
         const cmdList = pluginList
-            .filter(p => (p.tag !== 'owner' || isOwner) && !NL_EXCLUDE.has(p.cmd[0]))
+            .filter(p => (p.tag !== 'owner' || isOwner) && !NL_EXCLUDE.has(p.cmd[0]) && !agentNames.has(p.cmd[0]))
             .map(p => {
                 const example = p.ai?.examples?.[0];
                 return `- ${p.cmd[0]}: ${p.ai?.trigger || p.desc}${example ? ` | format args example: "${example}" (args = bagian setelah command-nya, salin persis)` : ''}`;
@@ -173,61 +286,56 @@ export const llmApi = {
 
         const personality = isOwner ? PERSONALITY_OWNER : PERSONALITY_GENERAL;
         const ownerBlock = isOwner ? `\n${OWNER_BLOCK}\n` : '';
-        const mediaBlock = hasSongMedia ? `\n[MEDIA] This user's message includes/replies to a ${hasSongMedia} file (it may contain a song). The system already has the file — you just can't listen to its contents directly.\n` : '';
 
         const userInfo = [
             `Nama: ${pushname || 'User'}`,
             `Status: ${isOwner ? 'Owner 👑' : 'User 👤'}`,
             memoryStr ? `Memory: ${memoryStr}` : '',
         ].filter(Boolean).join(' | ');
+        const nowLine = `NOW: ${formatLocal(Date.now(), getTimezone(), 'en')} (${getTimezone()})`;
+        const summaryBlock = summary ? `EARLIER CONVERSATION SUMMARY (older than the recent messages): ${summary}\n` : '';
 
         const langRule = (lang === 'id')
             ? 'LANGUAGE: Balas user in Bahasa Indonesia. Intent/command routing tetap pahami input English maupun Indonesia.'
             : 'LANGUAGE: Reply to the user in English. Intent/command routing must still understand both English and Indonesian input.';
 
-        const system = `${personality}\n${ownerBlock}${mediaBlock}\nUSER: ${userInfo}\n${langRule}\n${allUsersContext ? `${allUsersContext}\n` : ''}AVAILABLE COMMANDS:\n${cmdList || '(no commands registered)'}\n\nRULES:\n${RULES}\n${isOwner ? `${RULES_EXEC}\n` : ''}${toolsOn ? `${RULES_AGENT}\n` : `${RULES_NO_TOOLS}\n`}${hasSongMedia ? `${RULES_SONG_MEDIA}\n` : ''}${isOwner ? 'This user is the verified OWNER — highest priority service.\n' : ''}\n${JSON_SCHEMA}`;
+        const toolsBlock = toolsPrompt
+            ? `\nAGENT TOOLS (workshop tools — pick one when the task needs it, prefer these over guessing):\n${toolsPrompt}\n`
+            : '';
 
-        const messages = [...history.slice(-10), { role: 'user', content: text }];
-        let response = await chatAI(messages, system);
-        let exhausted = false;
+        const system = `${personality}\n${ownerBlock}\nUSER: ${userInfo}\n${nowLine}\n${summaryBlock}${langRule}\n${allUsersContext ? `${allUsersContext}\n` : ''}AVAILABLE COMMANDS:\n${cmdList || '(no commands registered)'}\n${toolsBlock}\nRULES:\n${RULES}\n${toolsPrompt ? `${RULES_TOOLS}\n` : ''}${isOwner ? `${RULES_EXEC}\n` : ''}${isOwner ? 'This user is the verified OWNER — highest priority service.\n' : ''}\n${JSON_SCHEMA}`;
 
-        if (toolsOn) {
-            for (let step = 1; step <= MAX_TOOL_STEPS + 1; step++) {
-                const raw = extractJson(response);
-                let call = null;
-                try {
-                    call = raw ? JSON.parse(raw) : null;
-                } catch {
-                    call = null;
-                }
-                if (!call || !call.tool) break;
-                if (step > MAX_TOOL_STEPS) {
-                    exhausted = true;
-                    break;
-                }
-                const toolArgs = call.toolArgs && typeof call.toolArgs === 'object' ? call.toolArgs : {};
-                const output = await runTool(String(call.tool), toolArgs, step);
-                messages.push({ role: 'assistant', content: JSON.stringify({ command: 'chat', tool: call.tool, toolArgs }) });
-                messages.push({ role: 'user', content: `TOOL_RESULT ${call.tool}: ${output}` });
-                response = await chatAI(messages, system);
+        const messages = [...history.slice(-6), { role: 'user', content: text }, ...scratch];
+        const response = await chatAI(messages, system);
+
+        const plain = (message, extra = {}) => ({ command: 'chat', args: '', message, messages: [], tools: [], remember: {}, mood: null, voice: false, preReply: '', ...extra });
+
+        const p = parseModelJson(response);
+        if (!p) {
+            if (looksLikeBrokenJson(response)) {
+                return plain('⚠️ Respons AI rusak di tengah jalan. Coba kirim ulang pesannya ya.', { isError: true });
             }
+            return plain(response.trim());
         }
 
-        const jsonStr = extractJson(response);
-        if (!jsonStr) return { command: 'chat', args: '', message: response.trim(), remember: {}, mood: null, voice: false, preReply: '' };
-        try {
-            const p = JSON.parse(jsonStr);
-            return {
-                command: p.command || 'chat',
-                args: stripMarkdownLinks(p.args || ''),
-                message: p.message || (exhausted ? 'Tool step limit reached. Send the request again to continue.' : ''),
-                remember: p.remember || {},
-                mood: p.mood || null,
-                voice: p.voice === true,
-                preReply: typeof p.preReply === 'string' ? p.preReply : '',
-            };
-        } catch {
-            return { command: 'chat', args: '', message: response.trim(), remember: {}, mood: null, voice: false, preReply: '' };
-        }
+        const parts = Array.isArray(p.messages)
+            ? p.messages.map(x => String(x || '').trim()).filter(Boolean)
+            : [];
+        const tools = Array.isArray(p.tools)
+            ? p.tools
+                .filter(t => t && typeof t === 'object' && String(t.command || '').trim())
+                .map(t => ({ command: String(t.command).trim(), args: stripMarkdownLinks(String(t.args ?? '')) }))
+            : [];
+        return {
+            command: p.command || 'chat',
+            args: stripMarkdownLinks(p.args || ''),
+            message: p.message || '',
+            messages: parts,
+            tools,
+            remember: p.remember || {},
+            mood: p.mood || null,
+            voice: p.voice === true,
+            preReply: typeof p.preReply === 'string' ? p.preReply : '',
+        };
     },
 };

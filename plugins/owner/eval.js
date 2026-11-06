@@ -35,10 +35,10 @@ function resolveInWorkspace(base, target) {
 
 export default plugin('exec', 'sh', 'term')
     .in('owner')
-    .desc('Run shell commands (ls, cd, cat, curl, etc.) in the bot project folder. Owner only.')
+    .desc('Run shell commands (ls, cd, cat, curl, etc.) in the bot workspace. Owner only.')
     .prefixOnly()
     .ownerOnly()
-    .signal('Owner asks to run/test shell commands, curl APIs, ls/cd/cat files, or anything that needs shell access', ['run this curl: curl https://api.example.com', 'try ls', 'cd folder-test then ls', 'cat file.json'])
+    .signal('Owner asks to run/test shell commands, curl APIs, ls/cd/cat files, or anything that needs shell access', ['run this curl: curl https://api.example.com', 'try ls workspace', 'cd folder-test then ls', 'cat file.json in workspace'])
     .run(async (sock, {
         body,
         raw,

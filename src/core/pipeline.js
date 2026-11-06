@@ -8,7 +8,7 @@ import { isTarget, hold, PROMPT_TEXT } from './praiseGate.js';
 const cooldowns = new Map();
 const DEFAULT_COOLDOWN = 3;
 
-const LIMIT_EXEMPT = new Set([
+export const LIMIT_EXEMPT = new Set([
     'limit', 'ceklimit', 'register', 'daftar', 'plan', 'beli', 'harga',
     'setplan', 'addlimit', 'menu', 'allmenu', 'ping', 'infobot', 'lang', 'sc'
 ]);

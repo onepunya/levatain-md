@@ -1,6 +1,7 @@
 import { api } from '../api/index.js';
 import { logger } from '../util/index.js';
 import { plugins } from '../core/loader.js';
+import { listAgentToolsForPrompt } from './tools.js';
 
 const getPluginList = () => {
     const seen = new Set();
@@ -20,19 +21,25 @@ const getPluginList = () => {
     return list;
 };
 
-export const intentEngine = async (text, history, userCtx) => {
+export const intentEngine = async (text, history, userCtx, scratch = []) => {
     try {
-        return await api.intent(text, getPluginList(), history, userCtx);
+        const toolsPrompt = listAgentToolsForPrompt(!!userCtx?.isOwner);
+        return await api.intent(text, getPluginList(), history, userCtx, toolsPrompt, scratch);
     } catch (e) {
         logger.error(`[engine] ${e.message}`);
+        const refusedText = userCtx?.lang === 'id'
+            ? '⚠️ Gemini menolak menjawab pesan ini. Coba persingkat, ubah kalimatnya, atau kirim bagian kodenya saja.'
+            : '⚠️ Gemini refused to answer this message. Try shortening it, rewording, or sending only part of the code.';
         return {
             command: 'chat',
             args: '',
-            message: '⚠️ AI is unavailable. Try again later!',
+            message: e.refused ? refusedText : '⚠️ AI is unavailable. Try again later!',
             remember: {},
             mood: null,
             voice: false,
+            messages: [],
             preReply: '',
+            isError: true,
         };
     }
 };

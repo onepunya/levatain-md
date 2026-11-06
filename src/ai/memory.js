@@ -1,9 +1,15 @@
 import fs from 'fs/promises';
-import { logger } from '../util/index.js';
+import { logger } from '../util/logger.js';
 
 const AI_DB_PATH = './database/ai_db.json';
-const MAX_HISTORY = 30;
+const MAX_HISTORY = 40;
+const FOLD_AT = 30;
+const FOLD_COUNT = 20;
 const MEMORY_TTL = 7 * 24 * 60 * 60 * 1000;
+const SUMMARY_TTL = 30 * 24 * 60 * 60 * 1000;
+const MAX_SUMMARY_CHARS = 1400;
+const MAX_NOTES = 100;
+const MAX_NOTE_CHARS = 500;
 
 let _db = null;
 let _dirty = false;
@@ -37,16 +43,36 @@ const save = () => {
     }, 2000);
 };
 
+const POLLUTED_RE = /^⚠️|gemini menolak|gemini refused|filter (keamanan|pengaman)|sistem keamanan|safety (system|filters?)|can't generate a response|flagged this request|tidak dapat memproses|tidak diprogram|hanya menghasilkan teks|pembatasan sistem|can't process|only generate text/i;
+
+export const cleanHistory = (history = []) => {
+    const out = [];
+    for (const h of history) {
+        if (h?.role === 'assistant' && POLLUTED_RE.test(String(h.content || ''))) {
+            if (out.length && out[out.length - 1].role === 'user') out.pop();
+            continue;
+        }
+        out.push(h);
+    }
+    return out;
+};
+
 export const getHistory = async (userId) => {
     const db = await load();
     const entry = db.users[userId];
     if (!entry) return [];
     if (entry.lastActive && entry.lastActive < Date.now() - MEMORY_TTL) {
         entry.history = [];
+        if (entry.lastActive < Date.now() - SUMMARY_TTL) delete entry.summary;
         save();
         return [];
     }
-    return entry.history || [];
+    const cleaned = cleanHistory(entry.history || []);
+    if (cleaned.length !== (entry.history || []).length) {
+        entry.history = cleaned;
+        save();
+    }
+    return cleaned;
 };
 
 export const addHistory = async (userId, role, content) => {
@@ -63,6 +89,7 @@ export const clearHistory = async (userId) => {
     const db = await load();
     if (db.users[userId]) {
         db.users[userId].history = [];
+        delete db.users[userId].summary;
         db.users[userId].lastActive = Date.now();
         save();
     }
@@ -110,4 +137,86 @@ export const getAllUsersContext = async (excludeUserId = null) => {
         entries.join('\n\n'),
         `=== END OF USERS DATABASE ===`,
     ].join('\n');
+};
+
+export const getSummary = async (userId) => {
+    const db = await load();
+    return db.users[userId]?.summary || '';
+};
+
+const folding = new Set();
+
+export const foldHistoryIfNeeded = async (userId, summarize) => {
+    const db = await load();
+    const entry = db.users[userId];
+    if (!entry?.history || entry.history.length < FOLD_AT || folding.has(userId)) return false;
+    folding.add(userId);
+    try {
+        const old = cleanHistory(entry.history.slice(0, FOLD_COUNT));
+        const merged = String(await summarize(entry.summary || '', old) || '').trim().slice(0, MAX_SUMMARY_CHARS);
+        if (!merged) return false;
+        entry.history = entry.history.slice(FOLD_COUNT);
+        entry.summary = merged;
+        save();
+        return true;
+    } catch (e) {
+        logger.warn(`[AI memory] fold failed: ${e.message}`);
+        return false;
+    } finally {
+        folding.delete(userId);
+    }
+};
+
+const ensureUser = (db, userId) => {
+    if (!db.users[userId]) db.users[userId] = { history: [], lastActive: Date.now() };
+    return db.users[userId];
+};
+
+const tokens = (text) => String(text || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(t => t.length > 1);
+
+export const addNote = async (userId, text, tags = '') => {
+    const db = await load();
+    const entry = ensureUser(db, userId);
+    const body = String(text || '').trim().slice(0, MAX_NOTE_CHARS);
+    if (!body) throw new Error('Note text required.');
+    entry.notes ||= [];
+    if (entry.notes.length >= MAX_NOTES) throw new Error(`Notes are full (max ${MAX_NOTES}). Delete some first.`);
+    entry.nextNoteId = (entry.nextNoteId || 1);
+    const note = { id: entry.nextNoteId++, text: body, tags: String(tags || '').trim().slice(0, 80), at: Date.now() };
+    entry.notes.push(note);
+    save();
+    return note;
+};
+
+export const listNotes = async (userId, limit = 30) => {
+    const db = await load();
+    return (db.users[userId]?.notes || []).slice(-limit).reverse();
+};
+
+export const findNotes = async (userId, query, limit = 8) => {
+    const db = await load();
+    const notes = db.users[userId]?.notes || [];
+    const q = tokens(query);
+    if (!q.length) return notes.slice(-limit).reverse();
+    return notes
+        .map(n => {
+            const hay = `${n.text} ${n.tags}`.toLowerCase();
+            const score = q.reduce((acc, t) => acc + (hay.includes(t) ? 1 : 0), 0);
+            return { n, score };
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score || b.n.at - a.n.at)
+        .slice(0, limit)
+        .map(x => x.n);
+};
+
+export const deleteNote = async (userId, id) => {
+    const db = await load();
+    const entry = db.users[userId];
+    if (!entry?.notes) return false;
+    const idx = entry.notes.findIndex(n => n.id === Number(id));
+    if (idx === -1) return false;
+    entry.notes.splice(idx, 1);
+    save();
+    return true;
 };
