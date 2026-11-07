@@ -1,1 +1,0 @@
-console.log('Sandbox aman dan siap digunakan, Bos!');
