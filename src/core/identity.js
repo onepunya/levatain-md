@@ -1,4 +1,4 @@
-import { normalizeJid, jidTag, findParticipant } from '../wa/jid.js';
+import { normalizeJid, jidTag, findParticipant, jidNumber } from '../wa/jid.js';
 
 const stripDevice = (id, server) => id ? `${id.split(':')[0].replace(/@.+/, '')}${server}` : null;
 
@@ -17,13 +17,49 @@ export function resolveIdentity(sock, m) {
         primaryId: lid || jid,
         altId: lid ? jid : lid,
         senderIds: [lid, jid, sender.id].filter(v => v && !v.includes('undefined')),
-        botNumber: `${sock.user?.id?.split(':')[0].replace(/@.+/, '')}@s.whatsapp.net`
+        botNumber: `${sock.user?.id?.split(':')[0].replace(/@.+/, '')}@s.whatsapp.net`,
+        botNums: botNumbersOf(sock)
     };
+}
+
+export function botNumbersOf(sock) {
+    return [sock.user?.id, sock.user?.lid, sock.authState?.creds?.me?.id, sock.authState?.creds?.me?.lid]
+        .filter(Boolean)
+        .map(jidNumber)
+        .filter((v, i, a) => v && a.indexOf(v) === i);
+}
+
+const WRAPPERS = ['ephemeralMessage', 'viewOnceMessage', 'viewOnceMessageV2', 'viewOnceMessageV2Extension', 'documentWithCaptionMessage', 'editedMessage'];
+
+export function unwrapMessage(message) {
+    let cur = message;
+    for (let i = 0; i < 5 && cur; i++) {
+        const key = WRAPPERS.find(k => cur[k]?.message);
+        if (!key) break;
+        cur = cur[key].message;
+    }
+    return cur || null;
+}
+
+export function getContextInfo(message) {
+    const inner = unwrapMessage(message);
+    if (!inner) return null;
+    for (const [key, value] of Object.entries(inner)) {
+        if (key === 'messageContextInfo' || key === 'senderKeyDistributionMessage') continue;
+        if (value && typeof value === 'object' && value.contextInfo) return value.contextInfo;
+    }
+    return null;
+}
+
+export function mentionsBot(mentionedJid, botNums) {
+    return (mentionedJid || []).some(j => botNums.includes(jidNumber(j)));
 }
 
 export function buildQuoted(ctx, from, botSelfIds) {
     const quotedMsg = ctx?.quotedMessage;
     if (!quotedMsg) return null;
+
+    const botNums = botSelfIds.filter(Boolean).map(jidNumber);
 
     const sender = ctx.participant || ctx.remoteJid || from;
     const senderAlt = ctx.participantAlt || ctx.participantPn;
@@ -36,7 +72,7 @@ export function buildQuoted(ctx, from, botSelfIds) {
                   || quotedMsg.imageMessage?.caption
                   || quotedMsg.videoMessage?.caption
                   || '',
-        fromMe: botSelfIds.includes(sender) || botSelfIds.includes(senderAlt),
+        fromMe: [sender, senderAlt].filter(Boolean).some(id => botNums.includes(jidNumber(id))),
         stanzaId: ctx.stanzaId,
         raw: { message: quotedMsg, contextInfo: ctx }
     };

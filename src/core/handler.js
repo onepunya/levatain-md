@@ -5,7 +5,7 @@ import { routeSessionInput, getGroupMeta, detectDevice, msg, makeSendHelpers } f
 import { loadDb, saveDb, ensureUser, ensureGroup } from '../storage/db.js';
 import { handleAI } from '../ai/index.js';
 import { plugins } from './loader.js';
-import { resolveIdentity, buildQuoted, mergeAlternateUser, resolvePermissions } from './identity.js';
+import { resolveIdentity, buildQuoted, mergeAlternateUser, resolvePermissions, getContextInfo, mentionsBot } from './identity.js';
 import { enforceAntilink, processAfk } from '../groups/groupGuards.js';
 import { executeCommand } from './pipeline.js';
 import { isTarget, handleAttempt } from './praiseGate.js';
@@ -134,19 +134,18 @@ export async function handler(sock, m) {
     if (!body && !waMsg?.imageMessage && !waMsg?.videoMessage && !waMsg?.stickerMessage) return;
 
     const isGroup = from.endsWith('@g.us');
-    const type = Object.keys(waMsg || {})[0];
-    const ctx = waMsg?.[type]?.contextInfo || waMsg?.extendedTextMessage?.contextInfo;
+    const ctx = getContextInfo(waMsg);
 
     const { isCmd, command } = parseCommand(body);
 
     const identity = resolveIdentity(sock, m);
-    const { lid, jid, primaryId, altId, senderIds, botNumber } = identity;
+    const { lid, jid, primaryId, altId, senderIds, botNumber, botNums } = identity;
     if (!primaryId) return;
 
-    m.quoted = buildQuoted(ctx, from, [sock.user?.id, sock.user?.lid].filter(Boolean));
+    m.quoted = buildQuoted(ctx, from, botNums);
 
     const mentionedJid = ctx?.mentionedJid || [];
-    const isMentioned = mentionedJid.some(j => j.includes(botNumber.split('@')[0]));
+    const isMentioned = mentionsBot(mentionedJid, botNums);
 
     const db = await loadDb();
     for (const bad of ['null', 'undefined']) {
@@ -203,7 +202,7 @@ export async function handler(sock, m) {
         gdb: db,
         isOwner, isAdmin, isBotAdmin, isGroup, isMentioned,
         participants, admins, groupMetadata,
-        senderIds, primaryId, botNumber,
+        senderIds, primaryId, botNumber, botNums,
         mentionedJid, pushname, saveDb,
         device: m.device || detectDevice(raw),
         ...makeSendHelpers(sock, from, raw)
@@ -235,7 +234,5 @@ export async function handler(sock, m) {
 
     if (body) logger.chat(primaryId, body, { isGroup, groupName: groupMetadata?.subject });
 
-    if (!isCmd || !isGroup) {
-        await handleAI(sock, m, { ...baseCtx, m });
-    }
+    await handleAI(sock, m, { ...baseCtx, m });
 }

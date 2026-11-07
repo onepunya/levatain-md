@@ -56,7 +56,7 @@ export async function handleAI(sock, m, ctx) {
         return true;
     }
 
-    const cleanText = cleanTrigger(body) || 'Hi!';
+    const cleanText = cleanTrigger(body, ctx.botNums) || 'Hi!';
 
 
     try {

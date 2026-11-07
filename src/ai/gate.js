@@ -16,8 +16,10 @@ export function shouldHandleAI(body, ctx) {
     return false;
 }
 
-export function cleanTrigger(body) {
-    return body.replace(TRIGGER_WORDS_G, '').replace(/\s+/g, ' ').trim();
+export function cleanTrigger(body, botNums = []) {
+    let text = String(body || '');
+    for (const num of botNums) text = text.split(`@${num}`).join(' ');
+    return text.replace(TRIGGER_WORDS_G, '').replace(/\s+/g, ' ').trim();
 }
 
 export function isOnCooldown(userId) {
