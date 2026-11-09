@@ -12,6 +12,9 @@ import {
     parseLangAndCode,
 } from './sandbox.js';
 import { EXTRA_TOOL_DEFS } from './extra-tools.js';
+import { ATTACHMENT_TOOL_DEFS } from './attachments.js';
+import { USER_TOOL_DEFS } from './user-tools.js';
+import { BROWSER_TOOL_DEFS } from './browser.js';
 
 const execAsync = promisify(execCb);
 const execFileAsync = promisify(execFileCb);
@@ -569,7 +572,7 @@ const BUILTIN_FLAGS = {
     sandbox_exec: { dangerous: true },
 };
 for (const def of TOOL_DEFS) Object.assign(def, BUILTIN_FLAGS[def.name] || {});
-TOOL_DEFS.push(...EXTRA_TOOL_DEFS);
+TOOL_DEFS.push(...EXTRA_TOOL_DEFS, ...ATTACHMENT_TOOL_DEFS, ...USER_TOOL_DEFS, ...BROWSER_TOOL_DEFS);
 
 const byName = new Map();
 for (const def of TOOL_DEFS) {

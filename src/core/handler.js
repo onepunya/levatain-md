@@ -131,7 +131,7 @@ export async function handler(sock, m) {
     const waMsg = raw.message;
     const body = extractText(m, waMsg);
 
-    if (!body && !waMsg?.imageMessage && !waMsg?.videoMessage && !waMsg?.stickerMessage) return;
+    if (!body && !waMsg?.imageMessage && !waMsg?.videoMessage && !waMsg?.stickerMessage && !waMsg?.documentMessage && !waMsg?.documentWithCaptionMessage) return;
 
     const isGroup = from.endsWith('@g.us');
     const ctx = getContextInfo(waMsg);

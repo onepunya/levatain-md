@@ -4,6 +4,8 @@ import { config } from '../config.js';
 import { isAgentTool, runAgentTool } from './tools.js';
 import { getHistory, addHistory, clearHistory, getUserMemory, setUserMemory, getAllUsersContext, getSummary, foldHistoryIfNeeded } from './memory.js';
 import { shouldHandleAI, cleanTrigger, isOnCooldown } from './gate.js';
+import { describeAttachment } from './attachments.js';
+import { describeQuoted } from './user-tools.js';
 import { remainingSteps, recordSteps } from './budget.js';
 import { api, getRandomMoodSticker } from '../api/index.js';
 import { logger, toVoiceNoteOpus, sleep } from '../util/index.js';
@@ -56,7 +58,12 @@ export async function handleAI(sock, m, ctx) {
         return true;
     }
 
-    const cleanText = cleanTrigger(body, ctx.botNums) || 'Hi!';
+    const attachmentNote = describeAttachment(m);
+    const typed = cleanTrigger(body, ctx.botNums);
+    const notes = [describeQuoted(m), attachmentNote].filter(Boolean).join('\n');
+    const cleanText = notes
+        ? `${typed || (attachmentNote ? 'Tolong lihat file ini.' : 'Hi!')}\n${notes}`
+        : (typed || 'Hi!');
 
 
     try {
@@ -68,7 +75,7 @@ export async function handleAI(sock, m, ctx) {
         const memoryStr = Object.keys(memory).length > 0
             ? Object.entries(memory).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
 
-        const asksAboutOthers = /\b(siapa (dia|itu|si)|who is|cari user|data user|info user lain|user lain)\b/i.test(cleanText);
+        const asksAboutOthers = /\b(siapa (dia|itu|si)|who is|cari user|data user|info user lain|user lain)\b/i.test(typed);
         const allUsersContext = asksAboutOthers ? await getAllUsersContext(primaryId) : '';
 
         const userLang = (db?.lang === 'id') ? 'id' : 'en';
