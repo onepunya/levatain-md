@@ -8,7 +8,7 @@ const PAGE_CHARS = 6000;
 let lookup = (host) => dns.lookup(host, { all: true });
 export const setResolver = (fn) => { lookup = fn || ((host) => dns.lookup(host, { all: true })); };
 
-const UA = 'Mozilla/5.0 (compatible; Levatain-Agent/2.0; +https://github.com/onepunya/levatain-md)';
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 const TEXT_TYPES = /^(text\/|application\/(json|xml|xhtml\+xml|rss\+xml|atom\+xml|ld\+json))/i;
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ndash: '–', mdash: '—', hellip: '…', laquo: '«', raquo: '»', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“', copy: '©' };
@@ -129,7 +129,7 @@ export async function safeFetch(rawUrl, { method = 'GET', headers = {}, body, ma
     throw new Error('Too many redirects.');
 }
 
-const DROP_BLOCKS = ['script', 'style', 'noscript', 'svg', 'iframe', 'template', 'canvas', 'form', 'nav', 'footer', 'header', 'aside', 'button', 'select'];
+const DROP_BLOCKS = ['script', 'style', 'noscript', 'svg', 'template', 'canvas', 'form', 'nav', 'footer', 'header', 'aside', 'button', 'select'];
 const BLOCK_TAGS = 'p|div|section|article|main|li|ul|ol|tr|table|h[1-6]|br|hr|blockquote|pre|figure|figcaption|dt|dd|details|summary';
 
 export function htmlToText(html) {
@@ -157,15 +157,137 @@ export function htmlToText(html) {
         .trim();
     return { title, text: s };
 }
+export function extractPageAssets(html, baseUrl = '') {
+    const src = String(html || '');
+    let base;
+    try { base = baseUrl ? new URL(baseUrl) : null; } catch { base = null; }
+    const abs = (href) => {
+        try {
+            if (!href || /^(javascript|mailto|tel|data|blob):/i.test(href)) return '';
+            const u = base ? new URL(href, base) : new URL(href);
+            if (!['http:', 'https:'].includes(u.protocol)) return '';
+            return u.href;
+        } catch { return ''; }
+    };
 
-export async function readPage(rawUrl, offset = 0) {
+    const links = [];
+    const linkSeen = new Set();
+    const linkRe = /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+    let m;
+    while ((m = linkRe.exec(src)) && links.length < 50) {
+        const href = abs(decodeEntities(m[1]));
+        if (!href || linkSeen.has(href)) continue;
+        linkSeen.add(href);
+        const label = decodeEntities(m[2].replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim().slice(0, 80);
+        links.push({ url: href, title: label });
+    }
+
+    const IMG_EXT = /\.(jpe?g|png|gif|webp|avif|bmp|svg)(\?|$)/i;
+    const VID_EXT = /\.(mp4|webm|mkv|mov|m4v|ogv)(\?|$)/i;
+    const AUD_EXT = /\.(mp3|ogg|opus|wav|m4a|aac|flac)(\?|$)/i;
+    const FILE_EXT = /\.(pdf|zip|rar|7z|tar|gz|doc|docx|xls|xlsx|ppt|pptx|csv|txt|json|xml|apk|exe|dmg|iso|rtf|odt)(\?|$)/i;
+
+    const images = [];
+    const videos = [];
+    const audio = [];
+    const files = [];
+    const seen = new Set();
+
+    const push = (list, url, meta = {}) => {
+        const u = abs(decodeEntities(url || ''));
+        if (!u || seen.has(u)) return;
+        seen.add(u);
+        list.push({ url: u, ...meta });
+    };
+
+    const imgRe = /<img\b([^>]*)>/gi;
+    while ((m = imgRe.exec(src)) && images.length < 40) {
+        const attrs = m[1] || '';
+        const get = (name) => {
+            const mm = new RegExp(`\\b${name}\\s*=\\s*["']([^"']+)["']`, 'i').exec(attrs);
+            return mm ? mm[1] : '';
+        };
+        const alt = get('alt');
+        const srcset = get('srcset');
+        if (srcset) {
+            const last = srcset.split(',').map(s => s.trim().split(/\s+/)[0]).filter(Boolean).pop();
+            if (last) push(images, last, { alt: decodeEntities(alt).slice(0, 80), kind: 'image' });
+        }
+        push(images, get('src') || get('data-src') || get('data-original') || get('data-full'), {
+            alt: decodeEntities(alt).slice(0, 80),
+            kind: 'image',
+        });
+    }
+    const mediaTagRe = /<(video|audio)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
+    while ((m = mediaTagRe.exec(src))) {
+        const tag = m[1].toLowerCase();
+        const attrs = m[2] || '';
+        const inner = m[3] || '';
+        const list = tag === 'video' ? videos : audio;
+        const srcAttr = /\bsrc\s*=\s*["']([^"']+)["']/i.exec(attrs)?.[1];
+        if (srcAttr) push(list, srcAttr, { kind: tag });
+        const sourceRe = /<source\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+        let sm;
+        while ((sm = sourceRe.exec(inner))) push(list, sm[1], { kind: tag });
+    }
+    const looseMediaRe = /<(?:video|audio|source)\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+    while ((m = looseMediaRe.exec(src))) {
+        const u = m[1];
+        if (VID_EXT.test(u)) push(videos, u, { kind: 'video' });
+        else if (AUD_EXT.test(u)) push(audio, u, { kind: 'audio' });
+        else push(videos, u, { kind: 'media' });
+    }  
+    const embedRe = /<(?:embed|object|iframe)\b([^>]*)>/gi;
+    while ((m = embedRe.exec(src)) && files.length < 30) {
+        const attrs = m[1] || '';
+        const get = (name) => {
+            const mm = new RegExp(`\\b${name}\\s*=\\s*["']([^"']+)["']`, 'i').exec(attrs);
+            return mm ? mm[1] : '';
+        };
+        const u = get('src') || get('data') || get('href');
+        if (!u) continue;
+        if (VID_EXT.test(u)) push(videos, u, { kind: 'video' });
+        else if (AUD_EXT.test(u)) push(audio, u, { kind: 'audio' });
+        else if (FILE_EXT.test(u) || IMG_EXT.test(u)) push(FILE_EXT.test(u) ? files : images, u, { kind: FILE_EXT.test(u) ? 'file' : 'image' });
+    }
+    for (const l of links) {
+        const u = l.url;
+        const title = l.title || '';
+        if (IMG_EXT.test(u)) push(images, u, { alt: title, kind: 'image' });
+        else if (VID_EXT.test(u)) push(videos, u, { title, kind: 'video' });
+        else if (AUD_EXT.test(u)) push(audio, u, { title, kind: 'audio' });
+        else if (FILE_EXT.test(u)) push(files, u, { title, kind: 'file' });
+        else if (/\b(download|attachment|file|export|getfile)\b/i.test(u) && !u.includes('#')) {
+            push(files, u, { title: title || 'download', kind: 'file' });
+        }
+    }
+
+    const ogVideo = /<meta\b[^>]+property\s*=\s*["']og:video(?::url)?["'][^>]+content\s*=\s*["']([^"']+)["']/gi;
+    while ((m = ogVideo.exec(src))) push(videos, m[1], { kind: 'video', title: 'og:video' });
+    const ogImage = /<meta\b[^>]+property\s*=\s*["']og:image["'][^>]+content\s*=\s*["']([^"']+)["']/gi;
+    while ((m = ogImage.exec(src))) push(images, m[1], { alt: 'og:image', kind: 'image' });
+
+    return {
+        links,
+        images: images.slice(0, 40),
+        videos: videos.slice(0, 20),
+        audio: audio.slice(0, 20),
+        files: files.slice(0, 30),
+    };
+}
+
+export async function readPage(rawUrl, offset = 0, { links = false, images = false, media = false } = {}) {
     const res = await safeFetch(rawUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status} for ${res.url}`);
     const isHtml = /html|xml/i.test(res.contentType) || /^\s*<(!doctype|html)/i.test(res.text);
     let title = '';
     let text = res.text;
-    if (isHtml) ({ title, text } = htmlToText(res.text));
-    else if (/json/i.test(res.contentType)) {
+    let assets = { links: [], images: [], videos: [], audio: [], files: [] };
+    const wantAssets = links || images || media;
+    if (isHtml) {
+        ({ title, text } = htmlToText(res.text));
+        if (wantAssets) assets = extractPageAssets(res.text, res.url);
+    } else if (/json/i.test(res.contentType)) {
         try {
             text = JSON.stringify(JSON.parse(res.text), null, 1);
         } catch {}
@@ -173,12 +295,18 @@ export async function readPage(rawUrl, offset = 0) {
     const start = Math.max(0, Number(offset) || 0);
     const slice = text.slice(start, start + PAGE_CHARS);
     const rest = text.length - (start + slice.length);
+    const showMedia = images || media;
     return {
         url: res.url,
         title,
         total: text.length,
         content: slice,
         next: rest > 0 ? start + slice.length : null,
+        links: links ? assets.links : [],
+        images: showMedia ? assets.images : [],
+        videos: showMedia ? assets.videos : [],
+        audio: showMedia ? assets.audio : [],
+        files: showMedia ? assets.files : [],
     };
 }
 

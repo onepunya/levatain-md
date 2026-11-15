@@ -127,7 +127,7 @@ export function describeAttachment(m) {
     return `[Lampiran: ${att.fileName}${size} (${KIND_LABEL[att.kind]} ${where}) — simpan dengan save_attachment${read}; jangan minta user kirim ulang]`;
 }
 
-async function downloadAttachment(att) {
+export async function downloadAttachment(att) {
     if (att.size > MAX_DOWNLOAD_BYTES) throw new Error(`File terlalu besar (${humanSize(att.size)}, maks ${humanSize(MAX_DOWNLOAD_BYTES)}).`);
     const { downloadContentFromMessage } = await import('@whiskeysockets/baileys');
     const stream = await downloadContentFromMessage(att.media, att.kind);

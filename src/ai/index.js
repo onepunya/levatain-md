@@ -4,6 +4,7 @@ import { config } from '../config.js';
 import { isAgentTool, runAgentTool } from './tools.js';
 import { getHistory, addHistory, clearHistory, getUserMemory, setUserMemory, getAllUsersContext, getSummary, foldHistoryIfNeeded } from './memory.js';
 import { shouldHandleAI, cleanTrigger, isOnCooldown } from './gate.js';
+import { collectImages, visionNote } from './vision.js';
 import { describeAttachment } from './attachments.js';
 import { describeQuoted } from './user-tools.js';
 import { remainingSteps, recordSteps } from './budget.js';
@@ -60,7 +61,11 @@ export async function handleAI(sock, m, ctx) {
 
     const attachmentNote = describeAttachment(m);
     const typed = cleanTrigger(body, ctx.botNums);
-    const notes = [describeQuoted(m), attachmentNote].filter(Boolean).join('\n');
+    const images = await collectImages(m, body).catch(e => {
+        logger.warn(`[AI vision] ${e.message}`);
+        return [];
+    });
+    const notes = [describeQuoted(m), attachmentNote, visionNote(images)].filter(Boolean).join('\n');
     const cleanText = notes
         ? `${typed || (attachmentNote ? 'Tolong lihat file ini.' : 'Hi!')}\n${notes}`
         : (typed || 'Hi!');
@@ -105,6 +110,7 @@ export async function handleAI(sock, m, ctx) {
                 summary,
                 allUsersContext,
                 lang: userLang,
+                images,
             },
             toolCtx: { isOwner, primaryId, from, lang: userLang, sock, pluginCtx: ctx, m },
             notify: notifyProgress,

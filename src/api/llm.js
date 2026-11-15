@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '../config.js';
 import { formatLocal, getTimezone } from '../runtime/scheduler.js';
+import { uploadGeminiImage } from './gemini-upload.js';
 
 const stripThinking = (text) => {
     let out = String(text || '');
@@ -103,7 +104,14 @@ const parseModelJson = (str) => {
 
 const looksLikeBrokenJson = (str) => /```json|\{\s*"(?:command|tools)"\s*:/i.test(String(str || ''));
 
-const callGemini = async (messages, system) => {
+const callGemini = async (messages, system, images = []) => {
+    const cookie = config.ai.gemini.cookie;
+    if (!cookie) throw new Error("GEMINI_COOKIE is empty in .env");
+    const files = [];
+    for (const img of images) {
+        if (!img.path) img.path = await uploadGeminiImage(img.buffer, img.filename, cookie);
+        files.push([[img.path], img.filename]);
+    }
     let promptText = system ? `[SYSTEM INSTRUCTIONS]:\n${system}\n\n` : '';
     messages.forEach(m => {
         promptText += `[${m.role.toUpperCase()}]: ${m.content}\n`;
@@ -120,7 +128,7 @@ const callGemini = async (messages, system) => {
     const rawData = [
         null,
         JSON.stringify([
-            [promptText, 0, null, null, null, null, 0],
+            [promptText, 0, null, files.length ? files : null, null, null, 0],
             ["id"],
             ["", "", "", null, null, null, null, null, null, ""]
         ])
@@ -140,8 +148,6 @@ const callGemini = async (messages, system) => {
         "x-same-domain": "1",
         "cookie": config.ai.gemini.cookie
     };
-
-    if (!config.ai.gemini.cookie) throw new Error("GEMINI_COOKIE is empty in .env");
 
     const res = await fetch(url, {
         method: 'POST',
@@ -183,7 +189,7 @@ const isRefusal = (text) => {
     return t.length > 0 && t.length < 260 && REFUSAL_RE.test(t);
 };
 
-const callGeminiApi = async (messages, system) => {
+const callGeminiApi = async (messages, system, images = []) => {
     const { apiKey, model } = config.ai.gemini;
     if (!apiKey) throw new Error('GEMINI_API_KEY is empty in .env');
     const merged = [];
@@ -195,6 +201,10 @@ const callGeminiApi = async (messages, system) => {
         else merged.push({ role, parts: [{ text }] });
     }
     if (!merged.length || merged[0].role !== 'user') merged.unshift({ role: 'user', parts: [{ text: '(start)' }] });
+    if (images.length) {
+        const lastUser = [...merged].reverse().find(x => x.role === 'user');
+        for (const img of images) lastUser.parts.push({ inlineData: { mimeType: img.mimetype, data: img.buffer.toString('base64') } });
+    }
 
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST',
@@ -218,24 +228,24 @@ const callGeminiApi = async (messages, system) => {
     return stripThinking(text);
 };
 
-const callProvider = async (messages, system) => {
+const callProvider = async (messages, system, images = []) => {
     const { cookie, apiKey } = config.ai.gemini;
     if (cookie) {
         try {
-            return await callGemini(messages, system);
+            return await callGemini(messages, system, images);
         } catch (e) {
             if (!apiKey) throw e;
             console.warn(`[llm] cookie provider failed (${e.message}), falling back to Gemini API`);
         }
     }
-    if (apiKey) return callGeminiApi(messages, system);
+    if (apiKey) return callGeminiApi(messages, system, images);
     throw new Error('No AI provider configured. Set GEMINI_COOKIE or GEMINI_API_KEY in .env');
 };
 
-const chatAI = async (messages, system = '') => {
+const chatAI = async (messages, system = '', images = []) => {
     let last;
     for (let attempt = 0; attempt < 2; attempt++) {
-        last = await callProvider(messages, system);
+        last = await callProvider(messages, system, images);
         if (!isRefusal(last)) return last;
     }
     const err = new Error('AI refused to answer.');
@@ -264,7 +274,7 @@ export const llmApi = {
     },
 
     intent: async (text, pluginList = [], history = [], userCtx = {}, toolsPrompt = '', scratch = []) => {
-        const { isOwner, pushname, memoryStr, summary, allUsersContext, lang = 'en' } = userCtx;
+        const { isOwner, pushname, memoryStr, summary, allUsersContext, lang = 'en', images = [] } = userCtx;
         const NL_EXCLUDE = new Set(['s', 'toimg', 'removebg', 'tourl', 'menu', 'ping', 'memory', 'ai', 'tanya', 'porn', 'bokep']);
 
         const agentNames = new Set(
@@ -303,10 +313,23 @@ export const llmApi = {
             ? `\nAGENT TOOLS (workshop tools — pick one when the task needs it, prefer these over guessing):\n${toolsPrompt}\n`
             : '';
 
-        const system = `${personality}\n${ownerBlock}\nUSER: ${userInfo}\n${nowLine}\n${summaryBlock}${langRule}\n${allUsersContext ? `${allUsersContext}\n` : ''}AVAILABLE COMMANDS:\n${cmdList || '(no commands registered)'}\n${toolsBlock}\nRULES:\n${RULES}\n${toolsPrompt ? `${RULES_TOOLS}\n` : ''}${isOwner ? `${RULES_EXEC}\n` : ''}${isOwner ? 'This user is the verified OWNER — highest priority service.\n' : ''}\n${JSON_SCHEMA}`;
+        const visionLine = images.length
+            ? `\nVISION: ${images.length} gambar dari user terlampir langsung ke kamu. Lihat dan jawab sendiri isinya dengan command="chat"; jangan bilang tidak bisa melihat gambar dan jangan panggil tool hanya untuk membaca gambar ini.\n`
+            : '';
+
+        const system = `${personality}\n${ownerBlock}\nUSER: ${userInfo}\n${nowLine}\n${summaryBlock}${langRule}${visionLine}\n${allUsersContext ? `${allUsersContext}\n` : ''}AVAILABLE COMMANDS:\n${cmdList || '(no commands registered)'}\n${toolsBlock}\nRULES:\n${RULES}\n${toolsPrompt ? `${RULES_TOOLS}\n` : ''}${isOwner ? `${RULES_EXEC}\n` : ''}${isOwner ? 'This user is the verified OWNER — highest priority service.\n' : ''}\n${JSON_SCHEMA}`;
 
         const messages = [...history.slice(-6), { role: 'user', content: text }, ...scratch];
-        const response = await chatAI(messages, system);
+        let response;
+        try {
+            response = await chatAI(messages, system, images);
+        } catch (e) {
+            if (!images.length) throw e;
+            console.warn(`[llm] image request failed (${e.message}), retrying without image`);
+            const note = `${text}\n[Sistem: gambar gagal dibaca. Jawab tanpa melihat gambarnya dan sampaikan dengan jujur kalau kamu tidak bisa melihatnya.]`;
+            const textOnly = [...history.slice(-6), { role: 'user', content: note }, ...scratch];
+            response = await chatAI(textOnly, system.replace(visionLine, ''));
+        }
 
         const plain = (message, extra = {}) => ({ command: 'chat', args: '', message, messages: [], tools: [], remember: {}, mood: null, voice: false, preReply: '', ...extra });
 

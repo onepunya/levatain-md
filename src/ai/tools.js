@@ -15,6 +15,7 @@ import { EXTRA_TOOL_DEFS } from './extra-tools.js';
 import { ATTACHMENT_TOOL_DEFS } from './attachments.js';
 import { USER_TOOL_DEFS } from './user-tools.js';
 import { BROWSER_TOOL_DEFS } from './browser.js';
+import { safeFetch, htmlToText } from './web.js';
 
 const execAsync = promisify(execCb);
 const execFileAsync = promisify(execFileCb);
@@ -297,9 +298,33 @@ async function httpRequest({ method, url, headers = {}, body }, ctx) {
         throw new Error('Invalid URL.');
     }
     if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Only http/https allowed.');
+    if (method === 'GET' && !body) {
+        const res = await safeFetch(url, {
+            headers: {
+                accept: 'text/html,application/xhtml+xml,application/json,text/plain;q=0.9,*/*;q=0.5',
+                ...headers,
+            },
+            maxBytes: MAX_FETCH_BYTES,
+            timeoutMs: 20_000,
+        });
+        let bodyText = res.text;
+        const ct = res.contentType || '';
+        if (/html/i.test(ct) || /^\s*<(!doctype|html)/i.test(bodyText)) {
+            const { title, text } = htmlToText(bodyText);
+            bodyText = (title ? `Title: ${title}\n\n` : '') + text;
+        } else if (/json/i.test(ct)) {
+            try { bodyText = JSON.stringify(JSON.parse(bodyText), null, 2); } catch {}
+        }
+        return `🌐 ${method} ${res.status} ${res.ok ? 'OK' : ''}\nURL: ${res.url}\n\`\`\`\n${truncate(bodyText, outLimit(ctx))}\n\`\`\``;
+    }
+
     const res = await fetch(url, {
         method,
-        headers: { 'user-agent': 'Levatain-Agent/1.0', accept: 'application/json,text/plain,*/*', ...headers },
+        headers: {
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            accept: 'application/json,text/plain,text/html;q=0.9,*/*;q=0.5',
+            ...headers,
+        },
         body,
         signal: AbortSignal.timeout(20_000),
     });
@@ -475,8 +500,8 @@ const TOOL_DEFS = [
         name: 'httpget',
         aliases: ['fetch', 'http_get'],
         ownerOnly: true,
-        description: 'HTTP GET a URL and return status + body text (for checking APIs or pages)',
-        examples: ['httpget https://example.com', 'httpget https://api.github.com'],
+        description: 'HTTP GET a URL and return status + body. Prefer web_read for reading articles/pages (cleaner text + links/images). Use httpget for APIs, raw JSON, or quick status checks',
+        examples: ['httpget https://api.github.com', 'httpget https://example.com'],
         argsHint: 'full http/https URL',
         run: toolHttpGet,
     },

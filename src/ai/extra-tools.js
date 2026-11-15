@@ -145,15 +145,53 @@ export const EXTRA_TOOL_DEFS = [
         ownerOnly: false,
         parallelSafe: true,
         untrusted: true,
-        description: 'Open a public web page and return its readable text (scripts/menus removed). Long pages are paged: pass the offset from the "next" hint as a second token to continue. Private/local addresses are blocked',
-        examples: ['web_read https://example.com/article', 'web_read https://example.com/article 6000'],
-        argsHint: 'url [offset]',
+        description: 'Open a public web page and return readable text (scripts/menus removed). Optional flags: "links" (page URLs), "images"/"media"/"files" (images, video, audio, pdf/zip/docs found in HTML), numeric offset for long pages. Static HTML only — use browser_render for JS-heavy sites',
+        examples: [
+            'web_read https://example.com/article',
+            'web_read https://example.com/page\nlinks\nmedia',
+            'web_read https://example.com/article 6000',
+        ],
+        argsHint: 'url [offset]\n[links]\n[media|images|files]',
         run: async (args) => {
-            const [url, offset] = String(args || '').trim().split(/\s+/);
-            if (!url) throw new Error('URL required. Example: web_read https://example.com');
-            const page = await readPage(url, offset);
+            const lines = String(args || '').replace(/\r/g, '').split('\n').map(s => s.trim()).filter(Boolean);
+            const tokens = (lines.shift() || '').split(/\s+/).filter(Boolean);
+            const url = tokens.shift() || '';
+            if (!url) throw new Error('URL required. Example: web_read https://example.com\nlinks\nmedia');
+            let offset = 0;
+            let wantLinks = false;
+            let wantMedia = false;
+            const mediaTok = /^(images?|imgs?|media|files?|assets)$/i;
+            for (const t of tokens) {
+                if (/^\d+$/.test(t)) offset = Number(t);
+                else if (/^links?$/i.test(t)) wantLinks = true;
+                else if (mediaTok.test(t)) wantMedia = true;
+            }
+            for (const line of lines) {
+                if (/^\d+$/.test(line)) offset = Number(line);
+                else if (/^links?$/i.test(line)) wantLinks = true;
+                else if (mediaTok.test(line)) wantMedia = true;
+            }
+            const page = await readPage(url, offset, { links: wantLinks, images: wantMedia, media: wantMedia });
             const head = `📄 ${page.title || '(no title)'}\n${page.url}\n(${page.total} chars total${page.next !== null ? `, next offset ${page.next}` : ', end of page'})`;
-            return `${head}\n${UNTRUSTED_NOTE}\n\n${page.content}`;
+            let extra = '';
+            if (wantLinks) {
+                const rows = page.links || [];
+                extra += rows.length
+                    ? `\n\nLinks (${rows.length}):\n${rows.map(l => `- ${l.title || '(no text)'} → ${l.url}`).join('\n')}`
+                    : '\n\nLinks: (none found in static HTML)';
+            }
+            if (wantMedia) {
+                const block = (arr, label) => {
+                    if (!arr?.length) return '';
+                    return `\n\n${label} (${arr.length}):\n` + arr.map((item, i) => {
+                        const note = item.alt || item.title || '';
+                        return `${i + 1}. ${item.url}${note ? ` — ${note}` : ''}`;
+                    }).join('\n');
+                };
+                const mediaExtra = block(page.images, 'Images') + block(page.videos, 'Videos') + block(page.audio, 'Audio') + block(page.files, 'Files');
+                extra += mediaExtra || '\n\nMedia/Files: (none found in static HTML — try browser_render with "media" if assets load via JavaScript)';
+            }
+            return `${head}\n${UNTRUSTED_NOTE}\n\n${page.content}${extra}`;
         },
     },
     {
