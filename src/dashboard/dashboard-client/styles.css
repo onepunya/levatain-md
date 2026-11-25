@@ -308,3 +308,14 @@ header.top > div:last-child{ width:100%; justify-content:space-between; }
   .card:hover{ transform:none; }
   .logrow:hover{ padding-left:4px; }
 }
+
+html.sb .page > *{ animation:none !important; }
+.sb-hide{ opacity:0; clip-path:inset(-12px 100% -12px -12px); }
+.sb-canvas{ position:fixed; inset:0; z-index:55; pointer-events:none; }
+.sb-skip{
+  position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:56;
+  background:rgba(8,10,14,.75); border:1px solid var(--line); color:var(--muted);
+  border-radius:3px; padding:10px 14px; min-height:40px; font-size:11px; letter-spacing:.08em;
+  text-transform:uppercase; cursor:pointer; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+.sb-skip:hover{ color:var(--fg); border-color:var(--accent); }

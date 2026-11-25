@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { config } from '../config.js';
 import { formatLocal, getTimezone } from '../runtime/scheduler.js';
 import { uploadGeminiImage } from './gemini-upload.js';
+import { geminiGenerate } from './gemini-session.js';
 
 const stripThinking = (text) => {
     let out = String(text || '');
@@ -118,68 +119,8 @@ const callGemini = async (messages, system, images = []) => {
     });
     promptText += "\n[ASSISTANT]:";
 
-    const url = new URL("https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate");
-    url.searchParams.append("bl", "boq_assistant-bard-web-server_20260912.08_p0");
-    url.searchParams.append("f.sid", "-4966488158871472830");
-    url.searchParams.append("hl", "id");
-    url.searchParams.append("_reqid", "2266864");
-    url.searchParams.append("rt", "c");
-
-    const rawData = [
-        null,
-        JSON.stringify([
-            [promptText, 0, null, files.length ? files : null, null, null, 0],
-            ["id"],
-            ["", "", "", null, null, null, null, null, null, ""]
-        ])
-    ];
-
-    const body = new URLSearchParams();
-    body.append("f.req", JSON.stringify(rawData));
-
-    const headers = {
-        "authority": "gemini.google.com",
-        "accept": "*/*",
-        "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-        "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
-        "origin": "https://gemini.google.com",
-        "referer": "https://gemini.google.com/",
-        "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36",
-        "x-same-domain": "1",
-        "cookie": config.ai.gemini.cookie
-    };
-
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: headers,
-        body: body,
-        signal: AbortSignal.timeout(45_000),
-    });
-
-    if (res.status === 429 || res.status === 402) throw new Error("Rate limit tercapai.");
-    if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
-
-    const rawText = await res.text();
-    let finalAnswer = "";
-    const lines = rawText.split('\n');
-
-    for (const line of lines) {
-        if (line.startsWith('[[') && line.includes('"wrb.fr"')) {
-            try {
-                const parsedLine = JSON.parse(line);
-                const wrbData = parsedLine[0];
-                if (wrbData && typeof wrbData[2] === 'string') {
-                    const innerData = JSON.parse(wrbData[2]);
-                    if (innerData?.[4]?.[0]?.[1]?.[0]) {
-                        finalAnswer = innerData[4][0][1][0];
-                    }
-                }
-            } catch {}
-        }
-    }
-
-    if (finalAnswer) return stripThinking(finalAnswer);
-    throw new Error("Failed to retrieve reply text");
+    const answer = await geminiGenerate({ cookie, promptText, files });
+    return stripThinking(answer);
 };
 
 

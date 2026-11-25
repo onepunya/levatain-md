@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { Sticker, StickerTypes } from 'wa-sticker-formatter';
+import { makeSticker } from '../../src/util/sticker.js';
 import { downloadMedia, getArgs } from '../../src/util/index.js';
 import { msg } from '../../src/wa/index.js';
 import { plugin } from '../../src/core/plugin.js';
@@ -58,7 +58,8 @@ export default plugin('smeme')
         raw,
         pushname,
         typing,
-        reply
+        reply,
+        send
     }) => {
         const args = getArgs(body);
         if (!args) {
@@ -101,14 +102,13 @@ export default plugin('smeme')
                 .png()
                 .toBuffer();
 
-            const sticker = new Sticker(composed, {
+            const buffer = await makeSticker(composed, {
+                type: 'image',
                 pack: global.botName,
                 author: pushname || 'Levatain',
-                type: StickerTypes.FULL,
-                quality: 70,
+                mode: 'orig',
             });
-
-            await reply({ sticker: await sticker.toBuffer() });
+            await send({ sticker: buffer });
         } catch (e) {
             await reply(msg('fail.generic', { msg: e.message }));
         }

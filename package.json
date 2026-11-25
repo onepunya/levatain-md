@@ -25,7 +25,8 @@
     "dev": "node --watch index.js",
     "check": "node scripts/check-plugins.js",
     "check:imports": "node scripts/check-imports.js",
-    "test:agent": "node scripts/test-agent.js && node scripts/test-agent-v2.js"
+    "test:agent": "node scripts/test-agent.js && node scripts/test-agent-v2.js",
+    "apply:site": "node scripts/apply-site-patch.js"
   },
   "overrides": {
     "sharp": "$sharp"

@@ -92,7 +92,7 @@ function downloadFile(url, dest, redirects = 0) {
     });
 }
 
-async function ensureBinary() {
+export async function ensureBinary() {
     const existing = findBinary();
     if (existing) return existing;
 

@@ -14,20 +14,20 @@ import { sendLangPicker, msg } from '../wa/index.js';
 import { plugins } from '../core/loader.js';
 import { denyReason } from '../core/access.js';
 import { isTarget, hold, PROMPT_TEXT } from '../core/praiseGate.js';
-import { Sticker, StickerTypes } from 'wa-sticker-formatter';
+import { makeSticker } from '../util/sticker.js';
 
 async function sendMoodSticker(sock, from, mood, raw) {
     try {
         const buffer = await getRandomMoodSticker(mood);
         if (!buffer) return;
 
-        const sticker = new Sticker(buffer, {
+        const out = await makeSticker(buffer, {
+            type: 'image',
             pack: global.botName || 'Levatain',
             author: 'Levatain',
-            type: StickerTypes.FULL,
-            quality: 70,
+            mode: 'orig',
         });
-        await sock.sendMessage(from, { sticker: await sticker.toBuffer() }, { quoted: raw });
+        await sock.sendMessage(from, { sticker: out }, { quoted: raw });
     } catch (e) {
         logger.error(`[mood-sticker] ${e.message}`);
     }
